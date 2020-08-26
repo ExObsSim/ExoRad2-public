@@ -6,7 +6,7 @@ from astropy.table import QTable
 from scipy.interpolate import interp1d
 
 from exorad.log.logger import Logger
-from exorad.models.opticalPath import OpticalPath
+from exorad.models.optics.opticalPath import OpticalPath
 from exorad.models.signal import Signal
 from exorad.utils.diffuse_light_propagation import prepare, convolve_with_slit, AOmega
 

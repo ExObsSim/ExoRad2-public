@@ -240,10 +240,3 @@ class CountsPerSeconds(CustomSignal):
         super().__init__(wl_grid, data, 'ct/s', time_grid)
 
 
-class Noise(CustomSignal):
-    """
-    It's a Signal class with data having units of [hr^1/2]
-    """
-
-    def __init__(self, wl_grid, data, time_grid=[0] * u.hr):
-        super().__init__(wl_grid, data, u.hr ** 0.5, time_grid)

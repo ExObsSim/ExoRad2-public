@@ -144,22 +144,5 @@ class LoadOptions(Task):
                                   format='ascii.csv')
             return data
 
-
-        elif datatype == 'modtran':
-            if 'transmission' in datafile:
-                rawdata = np.loadtxt(os.path.expanduser(datafile))
-                data = Table()
-                data['Frequency'] = rawdata[:, 0] / u.cm
-                data['Wavelength'] = data['Frequency'].to(u.micron, equivalencies=u.spectral())
-                data['Transmission'] = rawdata[:, 1]
-            if 'emission' in datafile:
-                rawdata = np.loadtxt(os.path.expanduser(datafile))
-                data = Table()
-                data['Frequency'] = rawdata[:, 0] / u.cm
-                data['Wavelength'] = data['Frequency'].to(u.micron, equivalencies=u.spectral())
-                data['Emission per frequency'] = rawdata[:, 1] * u.W / u.sr / u.cm ** 2 / u.cm
-                data['Emission'] = data['Emission per frequency'].to(
-                    u.W / u.sr / u.micron / u.m ** 2, equivalencies=u.spectral())
-            return data
         else:
             self.error('inconsistent table')

@@ -22,6 +22,7 @@ copyright = '2020, Lorenzo V. Mugnai'
 author = 'Lorenzo V. Mugnai'
 
 from exorad.__version__ import __version__
+
 release = __version__
 version = str(__version__)
 
@@ -30,8 +31,16 @@ version = str(__version__)
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-]
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.napoleon',
+              'sphinx.ext.doctest',
+              'sphinx.ext.todo',
+              'sphinx.ext.coverage',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.githubpages',
+              'nbsphinx',
+              ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -58,6 +67,8 @@ html_theme_options = {
     'includehidden': True,
     'titles_only': False
 }
+
+html_show_sourcelink = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

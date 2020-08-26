@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from exorad.log import setLogLevel
-from exorad.models.zodiacalForeground import ZodiacalFrg
+from exorad.models.foregrounds.zodiacalForeground import ZodiacalFrg
 from exorad.tasks import PreparePayload, PrepareTarget, LoadTargetList
 
 path = pathlib.Path(__file__).parent.absolute()

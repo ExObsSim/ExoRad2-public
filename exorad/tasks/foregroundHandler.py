@@ -3,8 +3,8 @@ from collections import OrderedDict
 import astropy.units as u
 import numpy as np
 
-from exorad.models.skyForegrounds import SkyForeground
-from exorad.models.zodiacalForeground import ZodiacalFrg
+from exorad.models.foregrounds.skyForegrounds import SkyForeground
+from exorad.models.foregrounds.zodiacalForeground import ZodiacalFrg
 from .task import Task
 
 

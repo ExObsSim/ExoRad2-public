@@ -17,8 +17,8 @@ except NameError:
     base_dir = None
 
 __title__ = "ExoRad2"
-__summary__ = "The exoplanet observation simulator"
-__url__ = "https://github.com/ExoRad/ExoRad2"
+__summary__ = "The generic point source radiometric model"
+__url__ = "https://github.com/ExObsSim/ExoRad2-public"
 
 if base_dir is not None and os.path.exists(os.path.join(base_dir, ".commit")):
     with open(os.path.join(base_dir, ".commit")) as fp:
@@ -29,5 +29,5 @@ else:
 __author__ = "Lorenzo V. Mugnai"
 __email__ = "lorenzo.mugnai@uniroma1.it"
 
-__license__ = "BSD-2-Claus"
+__license__ = "BSD-3-Clause"
 __copyright__ = "2020 %s" % __author__

@@ -34,15 +34,8 @@
                     <comment> Sky map for zodiacal emission computed with Kelsall 1998 idl routine</comment>
                 </zodicalFrgMap -->
         </foreground>
-        <foreground> custom
-                <radiance>
-                    <datafile>__ConfigPath__/examples/emission_38km_sun_180az_55zd_los_45zd.dat</datafile>
-                    <datatype> modtran </datatype>
-                </radiance>
-                <transmission>
-                    <datafile>__ConfigPath__/examples/transmission_38km_sun_180az_55zd_los_45zd.dat</datafile>
-                    <datatype> modtran </datatype>
-                </transmission>
+        <foreground> skyFilter
+                    <datafile>__ConfigPath__/examples/modtran_38km_sun_180az_55zd_los_45zd.csv</datafile>
         </foreground>
 
         <!--customNoise> custom
@@ -164,7 +157,6 @@
                 </comment>
             </f_well_depth>
             <qe unit="">0.55
-                <!--datafile>__ConfigPath__/data/QE.csv </datafile-->
                 <comment>QE can either be a single value or a table expressing QE vs Wavelength</comment>
             </qe>
             <wl_min unit="micron">0.4</wl_min>

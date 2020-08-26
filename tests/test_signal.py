@@ -5,7 +5,8 @@ import astropy.units as u
 import numpy as np
 
 from exorad.log import setLogLevel
-from exorad.models.signal import Signal, CountsPerSeconds, Noise, Sed
+from exorad.models.noise import Noise
+from exorad.models.signal import Signal, CountsPerSeconds, Sed
 
 setLogLevel(logging.DEBUG)
 

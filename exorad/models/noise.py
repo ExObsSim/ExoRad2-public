@@ -1,10 +1,10 @@
 import logging
 from collections import OrderedDict
 
-import astropy.units as u
 import numpy as np
+from astropy import units as u
 
-from exorad.models.signal import Signal
+from exorad.models.signal import Signal, CustomSignal
 
 logger = logging.getLogger('exorad.noise')
 
@@ -140,3 +140,12 @@ def add_custom_noise(custom, wl, out):
         out['total_noise'] = np.sqrt(out['total_noise'] * out['total_noise'] +
                                      custom_noise * custom_noise)
     return out
+
+
+class Noise(CustomSignal):
+    """
+    It's a Signal class with data having units of [hr^1/2]
+    """
+
+    def __init__(self, wl_grid, data, time_grid=[0] * u.hr):
+        super().__init__(wl_grid, data, u.hr ** 0.5, time_grid)

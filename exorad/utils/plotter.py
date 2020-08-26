@@ -103,7 +103,7 @@ class Plotter(Logger):
                 ax.plot(self.inputTable['Wavelength'], noise, zorder=9, lw=1, alpha=0.5, marker='.',
                         label=n)  # color=palette[k])  # c='None')
 
-        ax.set_ylim(1e-6)
+        ax.set_ylim(1e-7)
         ax.grid(zorder=0)
         ax.legend(bbox_to_anchor=(1, 1))
         ax.set_title('Noise Budget')
@@ -124,7 +124,7 @@ class Plotter(Logger):
             ax.plot(self.inputTable['Wavelength'], self.inputTable[s], zorder=9, lw=1, alpha=0.5, marker='.', label=s)
             # color=palette[k])  # , c='None')
 
-        ax.set_ylim(1e-1)
+        ax.set_ylim(1e-3)
         ax.grid(zorder=0)
         ax.legend(bbox_to_anchor=(1, 1))
         ax.set_title('Signals')

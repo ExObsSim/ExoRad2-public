@@ -18,7 +18,7 @@ Also, in this example we only have one target in the file, but ExoRad is made to
 Payload description file
 -------------------------
 The payload description file is a xml file with all the payload specifics.
-In the example one you will find a full example of all the possibilities you can have from ExoRad v 1.0.
+In the example one you will find a full example of all the possibilities you can have from ExoRad v 2.0.
 Other will come and will be described separately.
 
 In order to make ExoRad work you have now to edit this file.
@@ -45,7 +45,7 @@ flags               description
 -p, --payload       Input payload description file
 -t, --targetlist    Input target list file
 -o, --outDir        Output directory
--c, --full_contrib  Output format file (`csv` or `pickle`)
+-c, --full_contrib  plot all the contributions to the signal
 -d, --debug         Log output on screen
 -P, --plot          automatically produce plots
 ==================  =======================================================================
@@ -62,7 +62,17 @@ to the command::
     exorad -i examples/test_target.csv -p examples/payload_example.xml -o examples/first_run.h5 -P
 
 Now ExoRad will produce a `png` file for each target in the targetlist and one for the instrument efficiency.
-The picture will contain a panel for the signal information with a cut for contributes lower than 1e-3, and a panel for the noise budget with a cut for contributions lower than 1e-7.
+
+.. image:: _static/efficiency.png
+   :width: 600
+
+The efficiency plot shows for the investigated wavelength range the instrument quantum efficiency, transmission
+and the resulting photon conversion efficiency.
+
+.. image:: _static/myTest.png
+   :width: 600
+
+The target picture will contain a panel for the signal information with a cut for contributes lower than 1e-3, and a panel for the noise budget with a cut for contributions lower than 1e-7.
 
 You can also produce a plot of an ExoRad `.h5` output file by::
 

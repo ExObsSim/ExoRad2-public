@@ -9,7 +9,7 @@ import numpy as np
 
 from exorad.log import setLogLevel
 from exorad.models.instruments import Photometer, Spectrometer
-from exorad.models.opticalPath import OpticalPath
+from exorad.models.optics.opticalPath import OpticalPath
 from exorad.output.hdf5 import HDF5Output
 from exorad.tasks import MergeChannelsOutput
 from exorad.tasks.instrumentHandler import BuildChannels, LoadPayload

@@ -14,8 +14,9 @@ stripUnitString = lambda string: string.replace('[', '').replace(']', '')
 
 
 class Target(Logger, object):
-    # foreground = OrderedDict()
-    # skyTransmission = None
+    '''
+    Target base class
+    '''
 
     def __init__(self):
         self.set_log_name()
