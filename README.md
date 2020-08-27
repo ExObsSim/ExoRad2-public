@@ -1,3 +1,5 @@
+[![Documentation Status](https://readthedocs.org/projects/exorad2-public/badge/?version=latest)](https://exorad2-public.readthedocs.io/en/latest/?badge=latest)
+
 ![ExoRad Logo](docs/source/_static/logo.png)
 
 # ExoRad 2.0: The generic point source radiometric model
@@ -40,7 +42,9 @@ An example to ExoRad is provide in the `ExoRad/examples` folder. From the `Exora
 The code output will appear in a directory called `example_run`
 
 ## Documentation
-You can build the documentation using `sphinx` . To install it run
+The documentation is available [here](https://exorad2-public.readthedocs.io/en/latest/) 
+
+Or you can build the documentation yourself using `sphinx` . To install it run
     
     pip install sphinx sphinx_rtd_theme
     
