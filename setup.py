@@ -3,7 +3,7 @@ import os
 
 from setuptools import setup, find_packages
 
-packages = find_packages(exclude=('tests', 'doc'))
+packages = find_packages(exclude=('tests', 'docs'))
 
 provides = ['exorad', ]
 console_scripts = [

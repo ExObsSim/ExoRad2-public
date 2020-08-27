@@ -135,7 +135,7 @@ class OpticalPath(Logger):
         if len(wl) == 1:
             wl_min = self.description['detector']['wl_min']['value'].to(u.um)
             cut_off = self.description['detector']['cut_off']['value'].to(u.um)
-            out_wl = np.logspace(np.log10(wl_min.value), np.log10(cut_off.value), 100) * u.um
+            out_wl = np.logspace(np.log10(wl_min.value), np.log10(cut_off.value), 6000) * u.um
             self.debug('wl grid of a single value found. Instead we use : {}'.format(out_wl))
 
         else:
@@ -209,7 +209,7 @@ class OpticalPath(Logger):
                 rad.spectral_rebin(qe.wl_grid)
                 if rad.position == 'detector':
                     self.debug('this is the detector box')
-                    rad.data *= A * np.pi * qe.data * u.sr * (qe.wl_grid / const.c / const.h).to(
+                    rad.data *= A * np.pi * u.sr * qe.data * (qe.wl_grid / const.c / const.h).to(
                         1. / u.W / u.s) * u.count
                 elif rad.position == 'optics box':
                     self.debug('this is the optics box')

@@ -57,6 +57,10 @@ def rebin(x, xp, fp):
     else:
         # Interpolate !
         new_f = np.interp(x, xp, fp, left=0.0, right=0.0)
+        #         from scipy.interpolate import interp1d
+        #         interpolator = interp1d(xp, fp, kind='cubic', fill_value=0.0, assume_sorted=False, bounds_error=False)
+        #         new_f = interpolator(x)
+
         if not isinstance(new_f, u.Quantity):
             new_f *= fp.unit
 

@@ -104,7 +104,8 @@ class Instrument(Logger):
         # what wl do I wanna use here?
         wl_grid = np.logspace(np.log10(self.description['wl_min']['value'].value),
                               np.log10(self.description['wl_max']['value'].value), 6000) * u.um
-
+        # wl_grid = np.linspace(self.description['wl_min']['value'].value,
+        #                       self.description['wl_max']['value'].value, 6000) * u.um
         common_optical_path = OpticalPath(wl=wl_grid, description=self.payload)
         channel_optical_path = OpticalPath(wl=wl_grid, description=self.description)
         channel_optical_path.prepend_optical_elements(common_optical_path.optical_element_dict)
@@ -205,6 +206,11 @@ class Instrument(Logger):
                                 self.table['Wavelength']
                                 > self.description['wl_max']['value'].to(self.table['Wavelength'].unit))
             transmission[idx] = 0.0
+            idx = np.logical_or(transmission_data.wl_grid
+                                < self.description['wl_min']['value'].to(self.table['Wavelength'].unit),
+                                transmission_data.wl_grid
+                                > self.description['wl_max']['value'].to(self.table['Wavelength'].unit))
+            transmission_data.data[idx] = 0.0
 
         self.debug('transmission in channel : {}'.format(transmission))
         return transmission, transmission_data
