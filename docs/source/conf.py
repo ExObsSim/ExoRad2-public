@@ -21,6 +21,8 @@ project = 'ExoRad2'
 copyright = '2020, Lorenzo V. Mugnai'
 author = 'Lorenzo V. Mugnai'
 
+import sys, os
+sys.path.insert(0, os.path.abspath('../../'))
 from exorad.__version__ import __version__
 
 release = __version__
@@ -44,11 +46,12 @@ extensions = ['sphinx.ext.autodoc',
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ['_build']
 
 # -- Options for HTML output -------------------------------------------------
 
