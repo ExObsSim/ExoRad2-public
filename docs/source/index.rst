@@ -25,9 +25,9 @@ Please, report any issue or inaccuracy to the developers to support the implemen
 
 Cite
 -----
-ExoRad has been developed from ArielRad (Mugnai et al. 2020).
+ExoRad has been developed from ArielRad (Mugnai et al. submitted).
 If you use this software please cite:
-Mugnai et al, "ArielRad: the ARIEL radiometric model", 2020
+Mugnai et al, "ArielRad: the ARIEL radiometric model", submitted
 
 
 .. toctree::

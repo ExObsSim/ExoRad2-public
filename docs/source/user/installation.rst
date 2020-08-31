@@ -27,19 +27,6 @@ should now be available in the command line::
 
     exorad
 
-Build the documentation
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can build the documentation using `sphinx` . To install it run::
-
-    pip install sphinx sphinx_rtd_theme
-
-From the `Exorad/doc` folder running::
-
-    make html
-
-Then you will find the html version of the documentation in `Exorad/docs/build/html/index.html`.
-
 
 Uninstall ExoRad
 -------------------

@@ -21,7 +21,9 @@ project = 'ExoRad2'
 copyright = '2020, Lorenzo V. Mugnai'
 author = 'Lorenzo V. Mugnai'
 
-import sys, os
+import os
+import sys
+
 sys.path.insert(0, os.path.abspath('../../'))
 from exorad.__version__ import __version__
 
@@ -95,7 +97,6 @@ latex_documents = [
      'Lorenzo V. Mugnai', 'manual'),
 ]
 
-
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
@@ -104,7 +105,6 @@ man_pages = [
     (master_doc, 'ExoRad 2', 'ExoRad 2 Documentation',
      [author], 1)
 ]
-
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -116,7 +116,6 @@ texinfo_documents = [
      author, 'exorad', 'One line description of project.',
      'Miscellaneous'),
 ]
-
 
 # -- Options for Epub output -------------------------------------------------
 
