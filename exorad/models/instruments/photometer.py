@@ -63,6 +63,8 @@ class Photometer(Instrument):
         out = QTable()
         wl = target.star.sed.wl_grid
         qe, transmission, wave_window = self._get_efficiency(wl, target)
+        if 'sky TR' in self.table.keys():
+            out['foreground_transmission'] = self.table['sky TR']
 
         if self.payload['optics']['ForceChannelWlEdge']['value']:
             self.debug('force channel wl edge enabled')

@@ -73,7 +73,7 @@ def standard_pipeline(options, target_list, output=None, plot=False, full_contri
     targets = loadTargetList(target_list=target_list)
 
     # step 3 observe targetlist
-    targets = observeTargetList(target=targets.target, payload=payload, channels=channels, wl_range=(wl_min, wl_max),
+    targets = observeTargetList(targets=targets.target, payload=payload, channels=channels, wl_range=(wl_min, wl_max),
                                 plot=plot, out_dir=out_dir)
     # step 4 save to output
     if output is not None:

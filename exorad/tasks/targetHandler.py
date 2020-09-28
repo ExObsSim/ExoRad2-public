@@ -236,8 +236,8 @@ class ObserveTargetlist(Task):
 
     Parameters
     ----------
-    target: Target
-        target to prepare
+    targets: Target
+        targets to prepare
     payload : dict
         payload description
     channels : dict
@@ -256,7 +256,7 @@ class ObserveTargetlist(Task):
     """
 
     def __init__(self):
-        self.addTaskParam('target', 'target to prepare')
+        self.addTaskParam('targets', 'targets to prepare')
         self.addTaskParam('payload', 'payload description')
         self.addTaskParam('channels', 'channel dictionary')
         self.addTaskParam('wl_range', 'wavelength range to investigate. (wl_min, wl_max)')
@@ -267,7 +267,7 @@ class ObserveTargetlist(Task):
         from exorad.utils.util import chunks
         from multiprocessing import Process, Manager
 
-        targets = self.get_task_param('target')
+        targets = self.get_task_param('targets')
 
         manager = Manager()
         outputDict = manager.dict()

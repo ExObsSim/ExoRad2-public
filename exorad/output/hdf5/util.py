@@ -43,6 +43,8 @@ def recursively_read_dict_contents(input):
                     if attr in header_cols[col.name]:
                         setattr(col, attr, header_cols[col.name][attr])
             table = serialize._construct_mixins_from_columns(table)
+            header['meta'].pop('__serialized_columns__')
+            table.meta = header['meta']
             input[k] = table
     for key in new_keys:
         if isinstance(input[key], dict):

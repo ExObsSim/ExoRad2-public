@@ -1,3 +1,4 @@
+import copy
 from collections import OrderedDict
 
 import astropy.constants as const
@@ -123,7 +124,7 @@ class OpticalPath(Logger):
         for el in self.optical_element_dict:
             self.transmission_table[el] = self.optical_element_dict[el].transmission
             total_transmission *= self.optical_element_dict[el].transmission
-        self.transmission_table['total'] = total_transmission
+        self.transmission_table['total'] = copy.deepcopy(total_transmission)
         self.debug('transmission table : {}'.format(self.transmission_table))
         return self.transmission_table
 
@@ -189,8 +190,8 @@ class OpticalPath(Logger):
             #         out_radiance.position = 'optics box'
             # except IndexError:
             #     out_radiance.position = 'detector'
-            self.radiance_dict[el.name] = out_radiance
-            self.radiance_table[el.name] = out_radiance.data
+            self.radiance_dict[el.name] = copy.deepcopy(out_radiance)
+            self.radiance_table[el.name] = copy.deepcopy(out_radiance.data)
             self.debug('final radiance : {}'.format(out_radiance.data))
         return self.radiance_dict
 
@@ -198,7 +199,7 @@ class OpticalPath(Logger):
         total_max_signal, total_signal, wl_table, A, qe, omega_pix, _ = prepare(ch_table, ch_built_instr,
                                                                                 self.description)
         for item in self.radiance_dict:
-            rad = self.radiance_dict[item]
+            rad = copy.deepcopy(self.radiance_dict[item])
             self.debug('computing signal for {}'.format(item))
             if rad.slit and 'slit_width' in ch_built_instr:
                 max_signal_per_pix, signal = convolve_with_slit(self.description, ch_built_instr,

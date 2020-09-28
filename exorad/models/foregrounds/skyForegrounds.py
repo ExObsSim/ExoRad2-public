@@ -39,7 +39,7 @@ class SkyForeground(Logger):
         tr_func = interp1d(skyFilter_data['Wavelength'].to(self.wl.unit),
                            skyFilter_data['Transmission'],
                            assume_sorted=False,
-                           fill_value=0.0,
+                           fill_value=1.0,
                            bounds_error=False)
         skyFilter.transmission = tr_func(self.wl)
         self.debug('transmission : {}'.format(skyFilter.transmission))

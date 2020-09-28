@@ -108,9 +108,9 @@ class HDF5Output(Output):
         self.fd = None
 
     def open(self):
-        self.fd = self._openFile(self.filename, self._append)
+        self.fd = self._openFile(self.filename)
 
-    def _openFile(self, fname, append):
+    def _openFile(self, fname):
 
         mode = 'w'
         if self._append:

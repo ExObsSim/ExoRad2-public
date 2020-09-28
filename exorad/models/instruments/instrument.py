@@ -1,3 +1,4 @@
+import copy
 from abc import abstractmethod
 
 import astropy.units as u
@@ -171,9 +172,9 @@ class Instrument(Logger):
                 signal = np.trapz(radiance.data * self._window_function(radiance), x=radiance.wl_grid).to(u.ct / u.s)
                 # max_signal_per_pix, signal = integrate_light(radiance, qe.wl_grid, wl_table, self._window_function(radiance))
                 max_signal_per_pix = signal
-            total_signal = signal
+            total_signal = copy.deepcopy(signal)
             self.debug('sed : {}'.format(total_signal))
-            total_max_signal = max_signal_per_pix
+            total_max_signal = copy.deepcopy(max_signal_per_pix)
 
             out['{}_signal'.format(frg)] = total_signal
             out['{}_MaxSignal_inPixel'.format(frg)] = total_max_signal
@@ -254,7 +255,7 @@ class Instrument(Logger):
         transmission.spectral_rebin(wl)
 
         if hasattr(target, 'skyTransmission'):
-            target_transmission = target.skyTransmission
+            target_transmission = copy.deepcopy(target.skyTransmission)
             self.table['sky TR'], _ = self._get_transmission(target_transmission.wl_grid, target_transmission.data)
             target_transmission.spectral_rebin(wl)
             transmission.data *= target_transmission.data
