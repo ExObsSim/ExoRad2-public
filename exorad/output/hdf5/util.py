@@ -35,16 +35,18 @@ def recursively_read_dict_contents(input):
         table_keys = (elem.split('.')[0] for elem in table_keys)
         for k in table_keys:
             table = Table(np.array(input[k]))
-            header = meta.get_header_from_yaml(
-                h.decode('utf-8') for h in input['{}.__table_column_meta__'.format(k)])
+            header = meta.get_header_from_yaml(h.decode('utf-8') for h in input['{}.__table_column_meta__'.format(k)])
             header_cols = dict((x['name'], x) for x in header['datatype'])
             for col in table.columns.values():
                 for attr in ('description', 'format', 'unit', 'meta'):
                     if attr in header_cols[col.name]:
                         setattr(col, attr, header_cols[col.name][attr])
             table = serialize._construct_mixins_from_columns(table)
-            header['meta'].pop('__serialized_columns__')
-            table.meta = header['meta']
+            try:
+                header['meta'].pop('__serialized_columns__')
+                table.meta = header['meta']
+            except KeyError:
+                pass
             input[k] = table
     for key in new_keys:
         if isinstance(input[key], dict):

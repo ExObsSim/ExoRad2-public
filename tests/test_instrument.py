@@ -3,13 +3,10 @@ import os
 import pathlib
 import unittest
 
-import astropy.units as u
 import h5py
-import numpy as np
 
 from exorad.log import setLogLevel
 from exorad.models.instruments import Photometer, Spectrometer
-from exorad.models.optics.opticalPath import OpticalPath
 from exorad.output.hdf5 import HDF5Output
 from exorad.tasks import MergeChannelsOutput
 from exorad.tasks.instrumentHandler import BuildChannels, LoadPayload
@@ -86,77 +83,3 @@ class MergeOutputTest(unittest.TestCase):
 
     def test_table_output(self):
         table = self.mergeChannelsOutput(channels=self.channels)
-
-
-class InstrumentDiffuseLightTest(unittest.TestCase):
-    wl_grid = np.logspace(np.log10(0.45),
-                          np.log10(2.2), 6000) * u.um
-
-    print(wl_grid)
-
-    def test_transmission(self):
-        telescope = OpticalPath(wl=self.wl_grid, description=options)
-        tel = telescope.chain()
-
-        phot = OpticalPath(wl=self.wl_grid, description=options['channel']['Phot'])
-        phot.prepend_optical_elements(telescope.optical_element_dict)
-        phot.build_transmission_table()
-        phot = phot.chain()
-        #
-        spec = OpticalPath(wl=self.wl_grid, description=options['channel']['Spec'])
-        spec.prepend_optical_elements(telescope.optical_element_dict)
-        spec.build_transmission_table()
-
-        import matplotlib.pyplot as plt
-        fig = plt.figure(11)
-        tab = spec.transmission_table
-        for o in tab.keys():
-            if o == 'Wavelength': continue
-            plt.plot(tab['Wavelength'], tab[o], label=o)
-        plt.legend()
-        plt.show()
-
-        spec = spec.chain()
-
-        fig, ax = plt.subplots(1, 1)
-        for o in phot:
-            phot[o].plot(fig=fig, ax=ax, label=o, yscale='log')
-        for o in spec:
-            spec[o].plot(fig=fig, ax=ax, label=o, yscale='log')
-        plt.legend()
-        plt.show()
-
-    def test_signal(self):
-        setLogLevel(logging.INFO)
-        photometer = Photometer('Phot', options['channel']['Phot'], options)
-        photometer.build()
-
-        spectrometer = Spectrometer('Spec', options['channel']['Spec'], options)
-        spectrometer.build()
-
-        setLogLevel(logging.DEBUG)
-
-        telescope = OpticalPath(wl=self.wl_grid, description=options)
-        phot = OpticalPath(wl=self.wl_grid, description=options['channel']['Phot'])
-        phot.prepend_optical_elements(telescope.optical_element_dict)
-        phot.build_transmission_table()
-        phot.chain()
-        phot.compute_signal(photometer.table, photometer.built_instr)
-        print(phot.signal_table)
-
-        telescope = OpticalPath(wl=self.wl_grid, description=options)
-        spec = OpticalPath(wl=self.wl_grid, description=options['channel']['Spec'])
-        spec.prepend_optical_elements(telescope.optical_element_dict)
-        spec.build_transmission_table()
-        spec.chain()
-        table_signal = spec.compute_signal(spectrometer.table, spectrometer.built_instr)
-        print(spec.signal_table)
-
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(1, 1)
-        wl = spectrometer.table['Wavelength']
-        for col in spec.signal_table.keys():
-            ax.plot(wl, spec.signal_table[col], label=col)
-        ax.set_yscale('log')
-        plt.legend()
-        plt.show()

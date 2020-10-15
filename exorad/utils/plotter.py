@@ -17,14 +17,41 @@ mpl_logger.setLevel(logging.WARNING)
 
 
 class Plotter(Logger):
-    def __init__(self, channels=None, input_table=None):
+    """
+        Plotter class. It offers a fast and easy way to produce diagnostic plots on the produced data.
+
+        Parameters
+        -----------
+        input_table: Qtable
+            table where to grab data and wl grid to plot.
+        channels: dict
+            dictionary describing the channels in the payload. Default is None
+    """
+
+    def __init__(self, input_table, channels=None):
         self.set_log_name()
         self.inputTable = input_table
         self.channels = channels
         self.fig = None
         self.fig_efficiency = None
 
-    def _plot_bands(self, ax):
+    def plot_bands(self, ax):
+        """
+        It plots the channels bands behind the indicated axes.
+
+        Parameters
+        -----------
+        ax: matplotlib.axes
+            axes where to plot the bands
+
+        Returns
+        --------
+        matplotlib.axes.axes
+
+        Note
+        ----
+        The Class input_table input parameter is required for this method to work.
+        """
         channels = set(self.inputTable['chName'])
         palette = sns.color_palette('colorblind')
 
@@ -35,56 +62,89 @@ class Plotter(Logger):
         return ax
 
     def plot_efficiency(self):
-        from matplotlib.lines import Line2D
-        from exorad.models.signal import Signal
+        """
+        It produces a figure with payload efficiency over wavelength.
+        The quantities reported are quantum efficiency, transmission and the photon conversion efficiency (pce)
+        computed as the product of the quantum efficiency and transmission.
 
-        palette = sns.color_palette('bright')
+        Returns
+        --------
+        matplotlib.pyplot.figure
 
-        fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-        fig.suptitle('Payload photon conversion efficiency')
-
+        Note
+        ----
+        The Class channels input parameter is required for this method to work.
+        """
         if self.channels:
-            keys = ['transmission', 'qe']
-            for ch in self.channels:
-                pce = None
+            from matplotlib.lines import Line2D
+            from exorad.models.signal import Signal
+
+            palette = sns.color_palette('bright')
+
+            fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+            fig.suptitle('Payload photon conversion efficiency')
+
+            if self.channels:
+                keys = ['transmission', 'qe']
+                for ch in self.channels:
+                    pce = None
+                    for i, key in enumerate(keys):
+                        data = self.channels[ch].built_instr['{}_data'.format(key)]
+                        sig = Signal(wl_grid=data['wl_grid']['value'] * u.Unit(data['wl_grid']['unit']),
+                                     data=data['data']['value'])
+                        ax.plot(sig.wl_grid, sig.data, color=palette[i], zorder=10)
+                        if not pce:
+                            pce = sig
+                        else:
+                            sig.spectral_rebin(pce.wl_grid)
+                            pce.data *= sig.data
+                    ax.plot(pce.wl_grid, pce.data, color=palette[i + 1], zorder=10)
+
+                lines, labels = [], []
                 for i, key in enumerate(keys):
-                    data = self.channels[ch].built_instr['{}_data'.format(key)]
-                    sig = Signal(wl_grid=data['wl_grid']['value'] * u.Unit(data['wl_grid']['unit']),
-                                 data=data['data']['value'])
-                    ax.plot(sig.wl_grid, sig.data, color=palette[i], zorder=10)
-                    if not pce:
-                        pce = sig
-                    else:
-                        sig.spectral_rebin(pce.wl_grid)
-                        pce.data *= sig.data
-                ax.plot(pce.wl_grid, pce.data, color=palette[i + 1], zorder=10)
+                    lines.append(Line2D([0], [0], color=palette[i], lw=4))
+                    labels.append(key)
+                lines.append(Line2D([0], [0], color=palette[i + 1], lw=4))
+                labels.append('pce')
+            else:
+                pce = self.inputTable['TR'] * self.inputTable['QE']
+                self.inputTable['pce'] = pce
+                keys = ['TR', 'QE', 'pce']
+                self.debug('efficiency keys : {}'.format(keys))
+                for e in keys:
+                    ax.plot(self.inputTable['Wavelength'], self.inputTable[e], label=e, zorder=10)
+                    # ax.plot(self.inputTable['Wavelength'], self.inputTable[e], c='None')
+            ax.grid(zorder=0)
+            ax = self.plot_bands(ax)
+            ax.legend(handles=lines, labels=labels)
+            ax.set_title('Photon conversion efficiency')
+            ax.set_xlabel('Wavelength [$\mu m$]')
+            ax.set_ylabel('efficiency')
+            # ax.set_xscale('log')
 
-            lines, labels = [], []
-            for i, key in enumerate(keys):
-                lines.append(Line2D([0], [0], color=palette[i], lw=4))
-                labels.append(key)
-            lines.append(Line2D([0], [0], color=palette[i + 1], lw=4))
-            labels.append('pce')
+            self.fig_efficiency = fig
+            return fig
+
         else:
-            pce = self.inputTable['TR'] * self.inputTable['QE']
-            self.inputTable['pce'] = pce
-            keys = ['TR', 'QE', 'pce']
-            self.debug('efficiency keys : {}'.format(keys))
-            for e in keys:
-                ax.plot(self.inputTable['Wavelength'], self.inputTable[e], label=e, zorder=10)
-                # ax.plot(self.inputTable['Wavelength'], self.inputTable[e], c='None')
-        ax.grid(zorder=0)
-        ax = self._plot_bands(ax)
-        ax.legend(handles=lines, labels=labels)
-        ax.set_title('Photon conversion efficiency')
-        ax.set_xlabel('Wavelength [$\mu m$]')
-        ax.set_ylabel('efficiency')
-        ax.set_xscale('log')
-
-        self.fig_efficiency = fig
-        return fig
+            self.error('channels parameter is required for this method to work')
 
     def plot_noise(self, ax):
+        """
+        It plots the noise components found in the input table in the indicated axes.
+
+        Parameters
+        -----------
+        ax: matplotlib.axes
+            axes where to plot the noises
+
+        Returns
+        --------
+        matplotlib.axes.axes
+
+        Note
+        ----
+        The Class input_table input parameter is required for this method to work.
+        """
         palette = sns.color_palette('bright')
 
         noise_keys = [x for x in self.inputTable.keys() if 'noise' in x or 'custom' in x]
@@ -104,17 +164,33 @@ class Plotter(Logger):
                         label=n)  # color=palette[k])  # c='None')
 
         ax.set_ylim(1e-7)
-        ax.grid(zorder=0)
+        ax.grid(zorder=0, which='both')
         ax.legend(bbox_to_anchor=(1, 1))
         ax.set_title('Noise Budget')
         ax.set_xlabel('Wavelength [$\mu m$]')
         ax.set_ylabel('relative noise [$\sqrt{{hr}}$]')
         ax.set_yscale('log')
-        ax.set_xscale('log')
-        ax = self._plot_bands(ax)
+        # ax.set_xscale('log')
+        ax = self.plot_bands(ax)
         return ax
 
     def plot_signal(self, ax):
+        """
+        It plots the signal components found in the input table in the indicated axes.
+
+        Parameters
+        -----------
+        ax: matplotlib.axes
+            axes where to plot the signals
+
+        Returns
+        --------
+        matplotlib.axes.axes
+
+        Note
+        ----
+        The Class input_table input parameter is required for this method to work.
+        """
         palette = sns.color_palette('bright')
 
         keys = [x for x in self.inputTable.keys() if 'signal' in x and 'noise' not in x]
@@ -125,18 +201,30 @@ class Plotter(Logger):
             # color=palette[k])  # , c='None')
 
         ax.set_ylim(1e-3)
-        ax.grid(zorder=0)
+        ax.grid(zorder=0, which='both')
         ax.legend(bbox_to_anchor=(1, 1))
         ax.set_title('Signals')
         ax.set_xlabel('Wavelength [$\mu m$]')
         ax.set_ylabel('$ct/s$')
         ax.set_yscale('log')
-        ax.set_xscale('log')
-        ax = self._plot_bands(ax)
+        # ax.set_xscale('log')
+        ax = self.plot_bands(ax)
 
         return ax
 
     def plot_table(self):
+        """
+        It produces a figure with signal and noise for the input table.
+
+        Returns
+        --------
+        matplotlib.pyplot.figure
+        (matplotlib.axes.axes, matplotlib.axes.axes)
+
+        Note
+        ----
+        The Class input_table input parameter is required for this method to work.
+        """
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
         fig.suptitle(self.inputTable.meta['name'])
         ax1 = self.plot_signal(ax1)
@@ -144,16 +232,28 @@ class Plotter(Logger):
         plt.tight_layout()
         plt.subplots_adjust(right=0.7, top=0.9)
         self.fig = fig
-        return fig
+        return fig, (ax1, ax2)
 
     def save_fig(self, name, efficiency=False):
-        if efficiency:
-            self.fig_efficiency.savefig('{}'.format(name))
-        else:
-            self.fig.savefig('{}'.format(name))
+        """
+        It saves the produced figure.
 
-        self.info('plot saved in {}'.format(name))
+        Parameters
+        --------
+        name: str
+            figure name
+        efficiency: bool
+            if True it wll save the efficiency plot instead of the table plot. Default is False.
+        """
+        try:
+            if efficiency:
+                self.fig_efficiency.savefig('{}'.format(name))
+            else:
+                self.fig.savefig('{}'.format(name))
 
+            self.info('plot saved in {}'.format(name))
+        except AttributeError:
+            self.error("the indicated figure is not available. Check if you have produced it.")
 
 def main():
     import argparse
@@ -204,7 +304,7 @@ def main():
         table_dir = target_dir['table']
         table = read_table_hdf5(table_dir, path='table')
 
-        plotter = Plotter(table)
+        plotter = Plotter(input_table=table)
         plotter.plot_table()
         plotter.save_fig(os.path.join(args.out, '{}.png'.format(target)))
         plt.close()

@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'ExoRad2'
-copyright = '2020, Lorenzo V. Mugnai'
-author = 'Lorenzo V. Mugnai'
+copyright = '2020 - Lorenzo V. Mugnai, Enzo Pascale'
+author = 'Lorenzo V. Mugnai, Enzo Pascale'
 
 import os
 import sys

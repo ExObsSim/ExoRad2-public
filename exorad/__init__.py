@@ -23,3 +23,9 @@ __all__ = [
 ]
 
 from exorad.exorad import standard_pipeline
+
+from exorad.cache import GlobalCache
+
+gc = GlobalCache()
+gc['n_thread'] = 1
+gc['debug'] = False

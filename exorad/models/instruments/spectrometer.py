@@ -18,9 +18,9 @@ class Spectrometer(Instrument):
         number_of_spectral_bins = np.ceil(
             np.log(self.description['wl_max']['value']
                    / self.description['wl_min']['value'])
-            / np.log(1 + 1 / self.description['targetR']['value'])) + 1
+            / np.log(1.0 + 1.0 / self.description['targetR']['value'])) + 1
         wl_bin = self.description['wl_min']['value'] \
-                 * (1 + 1 / self.description['targetR']['value']) ** np.arange(number_of_spectral_bins)
+                 * (1.0 + 1.0 / self.description['targetR']['value']) ** np.arange(number_of_spectral_bins)
         wl_bin_c = 0.5 * (wl_bin[0:-1] + wl_bin[1:])
         wl_bin_width = wl_bin[1:] - wl_bin[0:-1]
 
@@ -51,24 +51,26 @@ class Spectrometer(Instrument):
             raise
 
         self._add_data_to_built('wl_solution_data', wl_solution_data.to_dict())
-
         wl_sol_func = interp1d(wl_solution_data.data, wl_solution_data.wl_grid,
-                               assume_sorted=False, fill_value=0.0, bounds_error=False)
+                               assume_sorted=False, fill_value='extrapolate', bounds_error=False)
 
         wl_sol_func_reverse = interp1d(wl_solution_data.wl_grid, wl_solution_data.data,
-                                       assume_sorted=False, fill_value=0.0, bounds_error=False)
+                                       assume_sorted=False, fill_value='extrapolate', bounds_error=False)
 
         first_pixel = wl_sol_func_reverse(wl_bin.min()) * wl_solution_data.data.unit
         last_pixel = wl_sol_func_reverse(wl_bin.max()) * wl_solution_data.data.unit
+        self.debug('first pixel: {}, last pixel: {}'.format(first_pixel, last_pixel))
         if last_pixel < first_pixel: last_pixel, first_pixel = first_pixel, last_pixel
 
         delta = self.description['detector']['delta_pix']['value'].to(first_pixel.unit)
 
         # coordinates of detector  pixel centres
         coord_pix_center = np.arange(first_pixel.value, last_pixel.value, delta.value) * delta.unit
+        self.debug('pix_center: {}'.format(coord_pix_center))
         self._add_data_to_built('pix_center', coord_pix_center)
         # wavelength sampled by the pixels
         pixel_wavelength = wl_sol_func(coord_pix_center) * wl_solution_data.wl_grid.unit
+        self.debug('wl_pix_center: {}'.format(pixel_wavelength))
         self._add_data_to_built('wl_pix_center', pixel_wavelength)
         pixel_bandwidth = np.abs(wl_sol_func(coord_pix_center - 0.5 * delta) -
                                  wl_sol_func(coord_pix_center + 0.5 * delta)) * delta.unit
@@ -76,8 +78,7 @@ class Spectrometer(Instrument):
 
         # window sizes
         pixel_window_edge = wl_sol_func_reverse(wl_bin) * wl_solution_data.data.unit
-        window_spectral_width = (np.abs(pixel_window_edge[1:] - pixel_window_edge[0:-1]) / \
-                                 delta).to('')
+        window_spectral_width = (np.abs(pixel_window_edge[1:] - pixel_window_edge[0:-1]) / delta).to('')
 
         if 'EncESolution' in self.description.keys():
             self.debug('Encircle energy solution found')
@@ -92,6 +93,8 @@ class Spectrometer(Instrument):
         window_spatial_width = (2.0 * radius * self.description['Fnum_y']['value'] * self.table['Wavelength'] / \
                                 delta).to('')
         window_size_px = window_spectral_width * window_spatial_width
+        self._add_data_to_built('window_spectral_width', window_spectral_width)
+        self._add_data_to_built('window_spatial_width', window_spatial_width)
         self._add_data_to_built('window_size_px', window_size_px)
         self.table['WindowSize'] = window_size_px
         self.debug('window size : {}'.format(window_size_px))

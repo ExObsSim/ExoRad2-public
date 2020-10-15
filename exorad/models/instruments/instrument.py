@@ -1,6 +1,7 @@
 import copy
 from abc import abstractmethod
 
+import astropy.constants as const
 import astropy.units as u
 import numpy as np
 from astropy.table import QTable
@@ -9,7 +10,7 @@ from scipy.interpolate import interp1d
 from exorad.log.logger import Logger
 from exorad.models.optics.opticalPath import OpticalPath
 from exorad.models.signal import Signal
-from exorad.utils.diffuse_light_propagation import prepare, convolve_with_slit, AOmega
+from exorad.utils.diffuse_light_propagation import prepare, convolve_with_slit, integrate_light
 
 
 class Instrument(Logger):
@@ -103,10 +104,9 @@ class Instrument(Logger):
 
         self.info('building optical path')
         # what wl do I wanna use here?
-        wl_grid = np.logspace(np.log10(self.description['wl_min']['value'].value),
-                              np.log10(self.description['wl_max']['value'].value), 6000) * u.um
-        # wl_grid = np.linspace(self.description['wl_min']['value'].value,
-        #                       self.description['wl_max']['value'].value, 6000) * u.um
+        wl_grid = np.logspace(np.log10(self.description['detector']['wl_min']['value'].value),
+                              np.log10(self.description['detector']['cut_off']['value'].value), 6000) * u.um
+
         common_optical_path = OpticalPath(wl=wl_grid, description=self.payload)
         channel_optical_path = OpticalPath(wl=wl_grid, description=self.description)
         channel_optical_path.prepend_optical_elements(common_optical_path.optical_element_dict)
@@ -125,6 +125,7 @@ class Instrument(Logger):
         self.table = self.opticalPath.compute_signal(self.table, self.built_instr)
         optical_path_dict['max_signal_per_pixel'] = self.opticalPath.max_signal_per_pixel
         optical_path_dict['signal_table'] = self.opticalPath.signal_table
+        optical_path_dict['radiance_table'] = self.opticalPath.radiance_table
         self._add_data_to_built('optical_path', optical_path_dict)
 
     @abstractmethod
@@ -152,26 +153,35 @@ class Instrument(Logger):
                                                                                            self.built_instr,
                                                                                            self.description)
         foregrounds = list(target.foreground.keys())
+        foregrounds = reversed(foregrounds)
         for i, frg in enumerate(foregrounds):
             self.debug('propagating {}'.format(frg))
             radiance = copy.deepcopy(target.foreground[frg])
             self.debug('{} radiance . {}'.format(frg, radiance.data))
 
+            if hasattr(frg, 'transmission'):
+                frg.transmission.spectral_rebin(transmission.wl_grid)
+                transmission.data *= frg.transmission.data
+                self.debug('added {} transmission'.format(frg))
+
             transmission.spectral_rebin(radiance.wl_grid)
             radiance.data *= transmission.data
-            for other_el in foregrounds:
-                if hasattr(target.foreground[other_el], 'transmission'):
-                    self.debug('passing through {}'.format(other_el))
-                    radiance.data *= target.foreground[other_el].transmission
+
+            # for other_el in foregrounds[i+1:]:
+            #     if hasattr(target.foreground[other_el], 'transmission'):
+            #         self.debug('passing through {}'.format(other_el))
+            #         radiance.data *= target.foreground[other_el].transmission
             if 'slit_width' in self.built_instr:
                 max_signal_per_pix, signal = convolve_with_slit(self.description, self.built_instr,
                                                                 A, self.table, omega_pix, qe, radiance)
             else:
                 qe.spectral_rebin(radiance.wl_grid)
-                radiance.data *= AOmega(omega_pix, A, qe.data, qe.wl_grid)
-                signal = np.trapz(radiance.data * self._window_function(radiance), x=radiance.wl_grid).to(u.ct / u.s)
-                # max_signal_per_pix, signal = integrate_light(radiance, qe.wl_grid, wl_table, self._window_function(radiance))
-                max_signal_per_pix = signal
+                radiance.data *= omega_pix * A * qe.data * (qe.wl_grid / const.c / const.h).to(1. / u.W / u.s) * u.count
+                # try:
+                #     signal = np.trapz(radiance.data * self._window_function(radiance), x=radiance.wl_grid).to(u.ct / u.s)
+                #     signal *= self.built_instr['window_spatial_width']
+                # except KeyError:
+                max_signal_per_pix, signal = integrate_light(radiance, radiance.wl_grid, self.built_instr)
             total_signal = copy.deepcopy(signal)
             self.debug('sed : {}'.format(total_signal))
             total_max_signal = copy.deepcopy(max_signal_per_pix)

@@ -9,7 +9,7 @@ from astropy.table import QTable, hstack
 from exorad.log import Logger
 from exorad.models.optics.opticalElement import OpticalElement
 from exorad.models.signal import Radiance
-from exorad.utils.diffuse_light_propagation import integrate_light, prepare, AOmega, convolve_with_slit
+from exorad.utils.diffuse_light_propagation import integrate_light, prepare, convolve_with_slit
 from exorad.utils.exolib import planck
 
 
@@ -138,7 +138,6 @@ class OpticalPath(Logger):
             cut_off = self.description['detector']['cut_off']['value'].to(u.um)
             out_wl = np.logspace(np.log10(wl_min.value), np.log10(cut_off.value), 6000) * u.um
             self.debug('wl grid of a single value found. Instead we use : {}'.format(out_wl))
-
         else:
             out_wl = wl
             self.debug('selected wl grid : {}'.format(wl))
@@ -200,6 +199,7 @@ class OpticalPath(Logger):
                                                                                 self.description)
         for item in self.radiance_dict:
             rad = copy.deepcopy(self.radiance_dict[item])
+            qe.spectral_rebin(rad.wl_grid)
             self.debug('computing signal for {}'.format(item))
             if rad.slit and 'slit_width' in ch_built_instr:
                 max_signal_per_pix, signal = convolve_with_slit(self.description, ch_built_instr,
@@ -207,7 +207,6 @@ class OpticalPath(Logger):
                                                                 )
             else:
                 self.debug('no slit found')
-                rad.spectral_rebin(qe.wl_grid)
                 if rad.position == 'detector':
                     self.debug('this is the detector box')
                     rad.data *= A * np.pi * u.sr * qe.data * (qe.wl_grid / const.c / const.h).to(
@@ -217,11 +216,8 @@ class OpticalPath(Logger):
                     rad.data *= A * (np.pi * u.sr - omega_pix) * qe.data \
                                 * (qe.wl_grid / const.c / const.h).to(1. / u.W / u.s) * u.count
                 else:
-                    rad.data *= AOmega(omega_pix, A, qe.data, qe.wl_grid)
-                max_signal_per_pix, signal = integrate_light(rad, qe.wl_grid, wl_table)
-                if 'window_size_px' in [ch_built_instr.keys()]:
-                    signal *= ch_built_instr['window_size_px']
-                    max_signal_per_pix *= ch_built_instr['window_size_px']
+                    rad.data *= omega_pix * A * qe.data * (qe.wl_grid / const.c / const.h).to(1. / u.W / u.s) * u.count
+                max_signal_per_pix, signal = integrate_light(rad, rad.wl_grid, ch_built_instr)
 
             self.signal_table['{} signal'.format(item)] = signal
             self.max_signal_per_pixel[item] = max_signal_per_pix

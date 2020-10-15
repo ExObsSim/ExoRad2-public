@@ -26,7 +26,7 @@ if base_dir is not None and os.path.exists(os.path.join(base_dir, ".commit")):
 else:
     __commit__ = None
 
-__author__ = "Lorenzo V. Mugnai"
+__author__ = "Lorenzo V. Mugnai, Enzo Pascale"
 __email__ = "lorenzo.mugnai@uniroma1.it"
 
 __license__ = "BSD-3-Clause"

@@ -50,12 +50,13 @@ class Photometer(Instrument):
         self._add_data_to_built('pixelRF', pixel_rf)
         self._add_data_to_built('extent', extent)
 
-        aperture_area = self.description['aperture']['radius']['value'] ** 2 * \
-                        self.description['Fnum_x']['value'] * self.table['Wavelength'] * \
-                        self.description['Fnum_y']['value'] * self.table['Wavelength'] / \
-                        self.description['detector']['delta_pix']['value'] ** 2
-        self._add_data_to_built('aperture_area', aperture_area)
-        self.table['WindowSize'] = aperture_area
+        window_size_px = self.description['aperture']['radius']['value'] ** 2 * \
+                         self.description['Fnum_x']['value'] * self.table['Wavelength'] * \
+                         self.description['Fnum_y']['value'] * self.table['Wavelength'] / \
+                         self.description['detector']['delta_pix']['value'] ** 2
+        self.debug('window size : {}'.format(window_size_px))
+        self._add_data_to_built('window_size_px', window_size_px)
+        self.table['WindowSize'] = window_size_px
 
         self._add_data_to_built('table', self.table)
 

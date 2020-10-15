@@ -33,8 +33,6 @@ def prepare(ch_table, ch_built_instr, description):
     return total_max_signal, total_signal, wl_table, A, qe, omega_pix, transmission
 
 
-def AOmega(omega_pix, A, qe, wl):
-    return omega_pix * A * qe.data * (wl / const.c / const.h).to(1. / u.W / u.s) * u.count
 
 
 def convolve_with_slit(ch_description, ch_built_instr, A, ch_table, omega_pix, qe, radiance):
@@ -42,27 +40,39 @@ def convolve_with_slit(ch_description, ch_built_instr, A, ch_table, omega_pix, q
     wl_pix = ch_built_instr['wl_pix_center']
     dwl_pic = ch_built_instr['pixel_bandwidth']
     radiance.spectral_rebin(wl_pix)
+    logger.debug('radiance : {}'.format(radiance.data))
+
     qe_func = interp1d(qe.wl_grid,
                        qe.data,
                        assume_sorted=False,
                        fill_value=0.0,
                        bounds_error=False)
-    radiance.data *= AOmega(omega_pix, A, qe_func(wl_pix), wl_pix)
+    aomega = omega_pix * A * qe_func(wl_pix) * (wl_pix / const.c / const.h).to(1. / u.W / u.s) * u.count
+    logger.debug('AOmega : {}'.format(aomega))
+    radiance.data *= aomega
     logger.debug('sed : {}'.format(radiance.data))
     logger.debug('convolving with slit')
     slit_kernel = np.ones(int(slit_width / ch_description['detector']['delta_pix']['value'].to(u.um)))
     signal_tmp = (np.convolve(radiance.data * dwl_pic, slit_kernel, 'same')).to(u.count / u.s)
+    logger.debug('signal_tmp: {}'.format(signal_tmp))
     idx = [np.logical_and(wl_pix > wlow, wl_pix <= whigh)
            for wlow, whigh in zip(ch_table['LeftBinEdge'], ch_table['RightBinEdge'])]
     signal = [signal_tmp[idx[k]].sum() for k in range(len(idx))]
-    max_signal_per_pix = [signal_tmp[idx[k]].max() for k in range(len(idx))]
+    signal = [sig * w for sig, w in zip(signal, np.array(ch_built_instr['window_spatial_width']))]
+    logger.debug('signal: {}'.format(signal))
+    try:
+        max_signal_per_pix = [signal_tmp[idx[k]].max() for k in range(len(idx))]
+    except ValueError:
+        logger.error('no max value in the array')
+        raise
     return max_signal_per_pix, signal
 
 
-def integrate_light(radiance, wl_qe, wl_table):
+def integrate_light(radiance, wl_qe, ch_built_instr):
     logger.debug('sed : {}'.format(radiance.data))
-    signal_tmp = (np.trapz(radiance.data[~np.isnan(radiance.data)], x=wl_qe[~np.isnan(radiance.data)])).to(
-        u.count / u.s)
-    signal = np.ones(wl_table.size) * signal_tmp
+    signal_tmp = np.trapz(radiance.data, x=wl_qe).to(u.count / u.s)
+    # signal_tmp = (np.trapz(radiance.data[~np.isnan(radiance.data)], x=wl_qe[~np.isnan(radiance.data)])).to(
+    #     u.count / u.s)
+    signal = signal_tmp * np.asarray(ch_built_instr['window_size_px'])
     max_signal_per_pix = signal
     return max_signal_per_pix, signal
