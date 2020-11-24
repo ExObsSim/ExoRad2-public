@@ -48,6 +48,7 @@ flags               description
 -c, --full_contrib  plot all the contributions to the signal
 -d, --debug         Log output on screen
 -P, --plot          automatically produce plots
+-n, --nThreads      number of threads for parallel processing
 ==================  =======================================================================
 
 Now you can navigate into `examples` and you will find ExoRad outcomes.

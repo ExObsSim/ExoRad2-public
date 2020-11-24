@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.36] - 2020-11-24
+
+### Added
+- plotter: signal and noise ylim
+- plotter: channel edges in bands
+- plotter: scale selection in bands
+- parallel option description in docs 
+
+### Changed
+- paper citation in docs  
+- ExoRad logo in docs
+- plotter: new legend visualization
+- plotter: new minor and major grids
+
 ## [2.0.28] - 2020-10-15
 ### Added
 - test for optical path emission values

@@ -27,8 +27,7 @@ Cite
 -----
 ExoRad has been developed from ArielRad (Mugnai et al. 2020).
 If you use this software please cite:
-Mugnai et al, "ArielRad: the ARIEL radiometric model", accepted in Exp. Astron (arXiv_)
-
+Mugnai et al., 2020, "ArielRad: the ARIEL radiometric model", Exp. Astron, 50, 303-328 (link_)
 
 
 .. toctree::
@@ -41,5 +40,5 @@ Mugnai et al, "ArielRad: the ARIEL radiometric model", accepted in Exp. Astron (
     API Guide <api/index>
     Project Page <https://github.com/ExObsSim/ExoRad2-public>
 
-.. _arXiv: https://arxiv.org/abs/2009.07824
+.. _link: https://doi.org/10.1007/s10686-020-09676-7
 

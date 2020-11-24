@@ -3,6 +3,7 @@ import os
 
 import astropy.units as u
 import h5py
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -35,7 +36,7 @@ class Plotter(Logger):
         self.fig = None
         self.fig_efficiency = None
 
-    def plot_bands(self, ax):
+    def plot_bands(self, ax, scale='log', channel_edges=True):
         """
         It plots the channels bands behind the indicated axes.
 
@@ -54,14 +55,22 @@ class Plotter(Logger):
         """
         channels = set(self.inputTable['chName'])
         palette = sns.color_palette('colorblind')
+        tick_list = []
 
         for k, channelName in enumerate(channels):
             wl_min = min(self.inputTable['LeftBinEdge'][np.where(self.inputTable['chName'] == channelName)]).value
             wl_max = max(self.inputTable['RightBinEdge'][np.where(self.inputTable['chName'] == channelName)]).value
-            ax.axvspan(wl_min, wl_max, alpha=0.2, zorder=0, color=palette[k])
+            ax.axvspan(wl_min, wl_max, alpha=0.1, zorder=0, color=palette[k])
+            tick_list.append(wl_min)
+        tick_list.append(wl_max)
+        ax.set_xscale(scale)
+        if channel_edges:
+            ax.set_xticks(tick_list)
+            ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+
         return ax
 
-    def plot_efficiency(self):
+    def plot_efficiency(self, scale='log', channel_edges=True):
         """
         It produces a figure with payload efficiency over wavelength.
         The quantities reported are quantum efficiency, transmission and the photon conversion efficiency (pce)
@@ -115,7 +124,7 @@ class Plotter(Logger):
                     ax.plot(self.inputTable['Wavelength'], self.inputTable[e], label=e, zorder=10)
                     # ax.plot(self.inputTable['Wavelength'], self.inputTable[e], c='None')
             ax.grid(zorder=0)
-            ax = self.plot_bands(ax)
+            ax = self.plot_bands(ax, scale, channel_edges)
             ax.legend(handles=lines, labels=labels)
             ax.set_title('Photon conversion efficiency')
             ax.set_xlabel('Wavelength [$\mu m$]')
@@ -128,7 +137,7 @@ class Plotter(Logger):
         else:
             self.error('channels parameter is required for this method to work')
 
-    def plot_noise(self, ax):
+    def plot_noise(self, ax, ylim=None, scale='log', channel_edges=True):
         """
         It plots the noise components found in the input table in the indicated axes.
 
@@ -136,6 +145,8 @@ class Plotter(Logger):
         -----------
         ax: matplotlib.axes
             axes where to plot the noises
+        ylim: float
+            if present, it sets the axes y bottom lim. Default is None.
 
         Returns
         --------
@@ -163,18 +174,30 @@ class Plotter(Logger):
                 ax.plot(self.inputTable['Wavelength'], noise, zorder=9, lw=1, alpha=0.5, marker='.',
                         label=n)  # color=palette[k])  # c='None')
 
-        ax.set_ylim(1e-7)
-        ax.grid(zorder=0, which='both')
-        ax.legend(bbox_to_anchor=(1, 1))
+        if not ylim:
+            ax.set_ylim(1e-7)
+        else:
+            ax.set_ylim(ylim)
+        #        ax.grid(zorder=0, which='both')
+        locmaj = matplotlib.ticker.LogLocator(base=10, numticks=12)
+        ax.yaxis.set_major_locator(locmaj)
+        locmin = matplotlib.ticker.LogLocator(base=10.0, subs=(0.2, 0.4, 0.6, 0.8), numticks=12)
+        ax.yaxis.set_minor_locator(locmin)
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        ax.grid(axis='y', which='minor', alpha=0.3)
+        ax.grid(axis='y', which='major', alpha=0.5)
+        #        ax.legend(bbox_to_anchor=(1, 1))
+        ax.legend(prop={'size': 12}, loc='upper left',
+                  ncol=3, bbox_to_anchor=(0.05, -0.2), labelspacing=1.2, handlelength=1)
         ax.set_title('Noise Budget')
         ax.set_xlabel('Wavelength [$\mu m$]')
         ax.set_ylabel('relative noise [$\sqrt{{hr}}$]')
         ax.set_yscale('log')
         # ax.set_xscale('log')
-        ax = self.plot_bands(ax)
+        ax = self.plot_bands(ax, scale, channel_edges)
         return ax
 
-    def plot_signal(self, ax):
+    def plot_signal(self, ax, ylim=None, scale='log', channel_edges=True):
         """
         It plots the signal components found in the input table in the indicated axes.
 
@@ -182,6 +205,8 @@ class Plotter(Logger):
         -----------
         ax: matplotlib.axes
             axes where to plot the signals
+        ylim: float
+            if present, it sets the axes y bottom lim. Default is None.
 
         Returns
         --------
@@ -200,19 +225,31 @@ class Plotter(Logger):
             ax.plot(self.inputTable['Wavelength'], self.inputTable[s], zorder=9, lw=1, alpha=0.5, marker='.', label=s)
             # color=palette[k])  # , c='None')
 
-        ax.set_ylim(1e-3)
-        ax.grid(zorder=0, which='both')
-        ax.legend(bbox_to_anchor=(1, 1))
+        if not ylim:
+            ax.set_ylim(1e-3)
+        else:
+            ax.set_ylim(ylim)
+        #        ax.grid(zorder=0, which='both')
+        locmaj = matplotlib.ticker.LogLocator(base=10, numticks=12)
+        ax.yaxis.set_major_locator(locmaj)
+        locmin = matplotlib.ticker.LogLocator(base=10.0, subs=(0.2, 0.4, 0.6, 0.8), numticks=12)
+        ax.yaxis.set_minor_locator(locmin)
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        ax.grid(axis='y', which='minor', alpha=0.3)
+        ax.grid(axis='y', which='major', alpha=0.5)
+        #        ax.legend(bbox_to_anchor=(1, 1))
+        ax.legend(prop={'size': 12}, loc='upper left',
+                  ncol=3, bbox_to_anchor=(0.05, -0.2), labelspacing=1.2, handlelength=1)
         ax.set_title('Signals')
         ax.set_xlabel('Wavelength [$\mu m$]')
         ax.set_ylabel('$ct/s$')
         ax.set_yscale('log')
         # ax.set_xscale('log')
-        ax = self.plot_bands(ax)
+        ax = self.plot_bands(ax, scale, channel_edges)
 
         return ax
 
-    def plot_table(self):
+    def plot_table(self, sig_ylim=None, noise_ylim=None, scale='log', channel_edges=True):
         """
         It produces a figure with signal and noise for the input table.
 
@@ -225,12 +262,12 @@ class Plotter(Logger):
         ----
         The Class input_table input parameter is required for this method to work.
         """
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
         fig.suptitle(self.inputTable.meta['name'])
-        ax1 = self.plot_signal(ax1)
-        ax2 = self.plot_noise(ax2)
+        ax1 = self.plot_signal(ax1, ylim=sig_ylim, scale=scale, channel_edges=channel_edges)
+        ax2 = self.plot_noise(ax2, ylim=noise_ylim, scale=scale, channel_edges=channel_edges)
         plt.tight_layout()
-        plt.subplots_adjust(right=0.7, top=0.9)
+        plt.subplots_adjust(top=0.9, bottom=0.22, hspace=0.7)
         self.fig = fig
         return fig, (ax1, ax2)
 
