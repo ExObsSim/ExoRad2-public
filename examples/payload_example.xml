@@ -4,7 +4,7 @@
     </ConfigPath>
     <fileName>payload_example</fileName>
     <common>
-        <sourceSpectrum>phoenix
+        <sourceSpectrum>planck
             <comment>Source spectrum can be 'planck', 'phoenix' or 'custom'.
                 If it's 'planck', no more information are needed here.
                 If it's 'phoenix' the phoenix spectra directory must be indicated in "StellarModel".

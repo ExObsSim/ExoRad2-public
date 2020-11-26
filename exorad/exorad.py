@@ -51,8 +51,14 @@ def standard_pipeline(options, target_list, output=None, plot=False, full_contri
             os.makedirs(out_dir)
             logger.info('output directory created')
         logger.info('output directory set as {}'.format(out_dir))
-        shutil.copy(options, out_dir)
-        shutil.copy(target_list, out_dir)
+        try:
+            shutil.copy(options, out_dir)
+        except shutil.SameFileError:
+            pass
+        try:
+            shutil.copy(target_list, out_dir)
+        except shutil.SameFileError:
+            pass
     else:
         out_dir = None
 

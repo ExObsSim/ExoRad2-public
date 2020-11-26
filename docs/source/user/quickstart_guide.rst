@@ -60,7 +60,7 @@ Producing some plots
 ExoRad can produce some simple diagnostic plots from the output. You can enable this option just by adding the flag `-P`
 to the command::
 
-    exorad -i examples/test_target.csv -p examples/payload_example.xml -o examples/first_run.h5 -P
+    exorad -t examples/test_target.csv -p examples/payload_example.xml -o examples/first_run.h5 -P
 
 Now ExoRad will produce a `png` file for each target in the targetlist and one for the instrument efficiency.
 

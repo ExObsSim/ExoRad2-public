@@ -104,9 +104,10 @@ class LoadSource(Task):
         metadata['starTeff'] = star.Teff
         metadata['starR'] = star.R
         metadata['starDistance'] = star.D
-        metadata['starMagK'] = star.magk
         metadata['starL'] = star.luminosity
         metadata['starModel'] = star.model
+        if hasattr(star, 'magk'):
+            metadata['starMagK'] = star.magk
 
         table.meta.update(metadata)
         return table
