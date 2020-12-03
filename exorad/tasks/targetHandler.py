@@ -218,7 +218,7 @@ class ObserveTarget(Task):
             target = estimateForegrounds(foregrounds=payload['common']['foreground'],
                                          target=target,
                                          wl_range=(wl_min, wl_max))
-            target = propagateForegroundLight(channels=channels, target=target)
+        target = propagateForegroundLight(channels=channels, target=target)
 
         target, sed = loadSource(target=target,
                                  source=payload['common']['sourceSpectrum'],
@@ -297,13 +297,17 @@ class ObserveTargetlist(Task):
 
         self.info('observing {}'.format(target.name))
         if not GlobalCache()['debug']: disableLogging()
-        target = observeTarget(target=target, payload=payload, channels=channels, wl_range=wl_range)
-        enableLogging()
-        outputDict[target.name] = target
+        try:
+            target = observeTarget(target=target, payload=payload, channels=channels, wl_range=wl_range)
+            enableLogging()
+            outputDict[target.name] = target
 
-        if plot:
             if plot:
                 plotter = Plotter(input_table=target.table)
                 plotter.plot_table()
                 plotter.save_fig(os.path.join(out_dir, '{}.png'.format(target.name)))
                 plt.close()
+
+        except:
+            enableLogging()
+            self.warning('target {} skipped. Please check for previous error messages'.format(target.name))

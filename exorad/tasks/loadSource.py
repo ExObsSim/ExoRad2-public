@@ -30,6 +30,11 @@ class LoadSource(Task):
     --------
     >>> loadSource = LoadSource()
     >>> target, source = loadSource(target= target, source={'sourceSpectrum': {'value':'Planck'}})
+
+    Raises
+    ------
+    AttributeError:
+        if some target information are missing
     """
 
     def __init__(self):
@@ -44,6 +49,13 @@ class LoadSource(Task):
         if isinstance(source, str):
             source = {'value': source}
             self.warning('source should be dict, not string.')
+
+        # check if star information are complete
+        for attr in ['D', 'Teff','M','R']:
+            if not hasattr(target.star.__getattribute__(attr),'value'):
+                self.error('target information incomplete')
+                raise AttributeError('target information incomplete')
+
         self.debug('source spectrum : {}'.format(source['value'].lower()))
         if source['value'].lower() == 'planck':
             self.debug('Plack sed selected')
