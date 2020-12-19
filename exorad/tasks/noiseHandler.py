@@ -41,7 +41,7 @@ class EstimateNoiseInChannel(Task):
         read_gain, shot_gain = noise.multiaccum(channel, out['frameTime'][0])
         self.debug('read gain : {} , shot gain : {}'.format(read_gain, shot_gain))
 
-        out, photon_noise_variance = noise.photon_noise(target, channel, shot_gain, out)
+        out = noise.photon_noise(target.table, channel, shot_gain, out)
 
         out['darkcurrent_noise'] = np.sqrt(shot_gain * target.table['WindowSize'][target.table['chName'] == name] *
                                            channel['detector']['dark_current']['value'] * u.ct / u.hr).to(
@@ -59,14 +59,15 @@ class EstimateNoiseInChannel(Task):
             NoiseX = 0.0
         self.debug('NoiseX: {}'.format(NoiseX))
 
+        photon_noise_variance = noise.photon_noise_variance(target.table, out)
         signal = target.table['star_signal_inAperture'][target.table['chName'] == name].copy()
         signal[signal == 0.0] = np.nan
         out['total_noise'] = np.sqrt(
-            out['darkcurrent_noise'] ** 2 +
-            (1.0 + NoiseX) *
-            (photon_noise_variance) +
-            out['read_noise'] ** 2
-        ) / signal
+                            out['darkcurrent_noise'] ** 2 +
+                            (1.0 + NoiseX) *
+                            (photon_noise_variance) +
+                            out['read_noise'] ** 2
+                        ) / signal
 
         wl = target.table['Wavelength'][target.table['chName'] == name]
         if payload:

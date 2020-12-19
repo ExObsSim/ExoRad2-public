@@ -8,7 +8,7 @@ Installing from git
 -------------------
 You can clone ExoRad from our main git repository::
 
-    git clone https://github.com/ExObsSim/ExoRad2-public.git
+    git clone https://github.com/ExObsSim/ExoRad.git
 
 Move into the ExoRad folder::
 

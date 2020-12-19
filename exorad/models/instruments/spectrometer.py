@@ -92,6 +92,10 @@ class Spectrometer(Instrument):
 
         window_spatial_width = (2.0 * radius * self.description['Fnum_y']['value'] * self.table['Wavelength'] / \
                                 delta).to('')
+        if 'window_spatial_scale' in list(self.description.keys()):
+            window_spatial_width *= self.description['window_spatial_scale']['value']
+            self.debug('window spatial width scaled by {}'.format(self.description['window_spatial_scale']['value']))
+
         window_size_px = window_spectral_width * window_spatial_width
         self._add_data_to_built('window_spectral_width', window_spectral_width)
         self._add_data_to_built('window_spatial_width', window_spatial_width)

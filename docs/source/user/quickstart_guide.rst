@@ -27,7 +27,21 @@ This is important because it tells ExoRad where to find all the payload related 
 
 Our First run
 --------------
-We can now run ExoRad for the firs time. From the installation folder open the command line and write::
+We can now run ExoRad for the firs time.
+Navigate into your installation folder::
+
+    cd /your_path/ExoRad
+
+and open the file `examples/payload_example.xml`.
+Replace the value of the keyword `ConfigPath` located at the second row, with your installation folder path as
+
+    .. code-block:: xml
+
+        <ConfigPath> /your_path/ExoRad
+            <comment>Main directory for the configuration files</comment>
+        </ConfigPath>
+
+From the installation folder open the command line and write::
 
     exorad -t examples/test_target.csv -p examples/payload_example.xml -o examples/first_run.h5
 

@@ -2,10 +2,9 @@ import os
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 
-import numpy as np
 from astropy import units as u
 from astropy.io.ascii.core import InconsistentTableError
-from astropy.table import Table
+from astropy.io import ascii
 
 from .task import Task
 
@@ -137,12 +136,19 @@ class LoadOptions(Task):
     def __read_datatable__(self, datafile, datatype):
         if datatype == 'ecsv':
             try:
-                data = Table.read(os.path.expanduser(datafile),
-                                  format='ascii.ecsv')
+                data = ascii.read(os.path.expanduser(datafile),
+                                  format='ecsv')
+                # data = Table.read(os.path.expanduser(datafile),
+                #                   format='ascii.ecsv')
             except InconsistentTableError:
-                data = Table.read(os.path.expanduser(datafile),
-                                  format='ascii.csv')
+                data = ascii.read(os.path.expanduser(datafile),
+                                  format='csv')
+                # data = Table.read(os.path.expanduser(datafile),
+                #                   format='ascii.csv')
+
             return data
 
         else:
             self.error('inconsistent table')
+            raise IOError
+

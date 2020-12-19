@@ -17,10 +17,10 @@ As an example, for each target and for each photometric and spectroscopic channe
 Please, report any issue or inaccuracy to the developers to support the implementation.
 
 
-.. warning:: You are using a `beta` version of ExoRad. We are completing and testing the software right now, and more functions are coming. We will be more than happy to receive your support and feedback: let us know of any inaccuracy.
+.. note:: We are still completing and testing the software right now, and more functions are coming.
+        if you want to be kept update, subscribe to the gitHub repository.
 
-
-.. warning:: This documentation is not completed yet. If you intend to use the software, please contact the developers for help.
+.. warning:: This documentation is not completed yet. If you find any issue or difficulty, please contact the developers_ for help.
 
 
 Cite
@@ -41,4 +41,5 @@ Mugnai et al., 2020, "ArielRad: the ARIEL radiometric model", Exp. Astron, 50, 3
     Project Page <https://github.com/ExObsSim/ExoRad2-public>
 
 .. _link: https://doi.org/10.1007/s10686-020-09676-7
+.. _developers: mailto:lorenzo.mugnai@uniroma1.it
 

@@ -78,7 +78,7 @@ def multiaccum(channel, t_frame):
     return read_gain, shot_gain
 
 
-def photon_noise(target, channel, shot_gain, out):
+def photon_noise(table, channel, shot_gain, out):
     """
     Given the channel and channel descriptions, populates the output table with photon noises
 
@@ -86,8 +86,8 @@ def photon_noise(target, channel, shot_gain, out):
     -----------
     channel: dict
         channel description
-    target: Target
-        Target to investigate
+    target: Table
+        Target table to investigate
     shot_gain: float
         multiaccum factor for photon noise
     out: QTable
@@ -97,20 +97,41 @@ def photon_noise(target, channel, shot_gain, out):
     --------
     QTable
         output table populated
-    array
-        photon noise variances
     """
     name = channel['value']
 
-    signals = [key for key in target.table.keys() if 'signal' in key]
+    signals = [key for key in table.keys() if 'signal' in key]
+    for key in signals:
+        noise_key = '{}_noise'.format(key)
+        out[noise_key] = np.sqrt(shot_gain * table[key][table['chName'] == name] * u.count / u.hr).to(
+            u.count / u.s) * u.hr ** 0.5
+        logger.debug('{} : {}'.format(noise_key, out[noise_key]))
+    return out
+
+def photon_noise_variance(table, out):
+    '''
+    """
+    Given the target table return the sum of photon variances
+
+    Parameters
+    -----------
+    target: Table
+        Target table to investigate
+    out: QTable
+        output table
+
+    Returns
+    --------
+    Array
+        sum of photon variances
+    """
+    '''
+    signals = [key for key in table.keys() if 'signal' in key]
     photon_noise_variance = np.zeros(out['saturation_time'].size) * (u.count / u.s) ** 2 * u.hr
     for key in signals:
         noise_key = '{}_noise'.format(key)
-        out[noise_key] = np.sqrt(shot_gain * target.table[key][target.table['chName'] == name] * u.count / u.hr).to(
-            u.count / u.s) * u.hr ** 0.5
-        logger.debug('{} : {}'.format(noise_key, out[noise_key]))
         photon_noise_variance += out[noise_key] * out[noise_key]
-    return out, photon_noise_variance
+    return photon_noise_variance
 
 
 def add_custom_noise(custom, wl, out):
@@ -140,7 +161,6 @@ def add_custom_noise(custom, wl, out):
         out['total_noise'] = np.sqrt(out['total_noise'] * out['total_noise'] +
                                      custom_noise * custom_noise)
     return out
-
 
 class Noise(CustomSignal):
     """

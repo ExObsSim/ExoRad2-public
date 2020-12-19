@@ -51,8 +51,8 @@ class LoadSource(Task):
             self.warning('source should be dict, not string.')
 
         # check if star information are complete
-        for attr in ['D', 'Teff','M','R']:
-            if not hasattr(target.star.__getattribute__(attr),'value'):
+        for attr in ['D', 'Teff', 'M', 'R']:
+            if not hasattr(target.star.__getattribute__(attr), 'value'):
                 self.error('target information incomplete')
                 raise AttributeError('target information incomplete')
 

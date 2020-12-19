@@ -1,5 +1,5 @@
 import os
-
+from copy import deepcopy
 from exorad.__version__ import __version__
 from exorad.cache import GlobalCache
 from exorad.log import disableLogging, enableLogging
@@ -271,17 +271,17 @@ class ObserveTargetlist(Task):
 
         manager = Manager()
         outputDict = manager.dict()
-        job = [Process(target=self.pipeline_to_dict,
-                       args=(target, outputDict))
-               for target in targets]
-        for i in chunks(job, GlobalCache()['n_thread']):
-            for j in i:
+        for tt in chunks(targets, GlobalCache()['n_thread']):
+            job = [Process(target=self.pipeline_to_dict,
+                           args=(target, outputDict))
+                   for target in tt]
+            for j in job:
                 j.start()
-            for j in i:
+            for j in job:
                 j.join()
         self.set_output(outputDict)
 
-    def pipeline_to_dict(self,  target, outputDict ):
+    def pipeline_to_dict(self,  target, outputDict):
         from . import ObserveTarget
         from exorad.utils.plotter import Plotter
         import matplotlib.pyplot as plt
@@ -300,7 +300,7 @@ class ObserveTargetlist(Task):
         try:
             target = observeTarget(target=target, payload=payload, channels=channels, wl_range=wl_range)
             enableLogging()
-            outputDict[target.name] = target
+            outputDict[target.name] = deepcopy(target)
 
             if plot:
                 plotter = Plotter(input_table=target.table)

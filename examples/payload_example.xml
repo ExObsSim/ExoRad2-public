@@ -1,5 +1,5 @@
 <root>
-    <ConfigPath>/home/lorenzo/git/ExoRad2
+    <ConfigPath> ~/git/ExoRad2
         <comment>Main directory for the configuration files</comment>
     </ConfigPath>
     <fileName>payload_example</fileName>
@@ -7,7 +7,7 @@
         <sourceSpectrum>planck
             <comment>Source spectrum can be 'planck', 'phoenix' or 'custom'.
                 If it's 'planck', no more information are needed here.
-                If it's 'phoenix' the phoenix spectra directory must be indicated in "StellarModel".
+                If it's 'phoenix' the phoenix spectra directory must be indicated in "StellarModels".
                 if it's 'custom' the custom Sed file must be indicated in "CustomSed".
             </comment>
             <StellarModels>/usr/local/project_data/sed
@@ -181,6 +181,9 @@
             <datafile>__ConfigPath__/examples/Spec-wl_sol.csv</datafile>
             <comment>wavelength solution for spectrometers</comment>
         </wlSolution>
+        <window_spatial_scale> 1
+            <comment> This is a multiplicative factor for the spectrometer window width in the spatial direction </comment>
+        </window_spatial_scale>
         <!--WFErms unit = "micron"> 0.28
             <comment> Wave front error rms value. Is used to estimate the maximum signal per pixel.
             If not present the diffraction limit is considered. </comment>
@@ -252,14 +255,3 @@
         </detector>
     </channel>
 </root>
-
-
-
-
-
-
-
-
-
-
-
