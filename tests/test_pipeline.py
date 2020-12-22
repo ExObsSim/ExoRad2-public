@@ -5,6 +5,7 @@ import unittest
 
 import exorad.tasks as tasks
 from exorad.log import setLogLevel
+from test_options import payload_file
 
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')
@@ -19,7 +20,7 @@ class PipelineTest(unittest.TestCase):
     loadPayload = tasks.LoadPayload()
     loadTargetList = tasks.LoadTargetList()
 
-    payload = loadOptions(filename=os.path.join(data_dir, 'payload_example.xml'))
+    payload = loadOptions(filename=payload_file())
     wl_min, wl_max = payload['common']['wl_min']['value'], payload['common']['wl_max']['value']
     channels = buildChannels(payload=payload, write=False, output=None)
     targets = loadTargetList(target_list=os.path.join(data_dir, 'test_target.csv'))

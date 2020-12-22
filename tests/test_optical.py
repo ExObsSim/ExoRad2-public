@@ -10,12 +10,13 @@ from exorad.log import setLogLevel
 from exorad.models.instruments import Photometer, Spectrometer
 from exorad.models.optics.opticalPath import OpticalPath
 from exorad.tasks.loadOptions import LoadOptions
+from test_options import payload_file
 
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')
 
 loadOptions = LoadOptions()
-options = loadOptions(filename=os.path.join(data_dir, 'payload_example.xml'))
+options = loadOptions(filename=payload_file())
 
 
 class InstrumentDiffuseLightTest(unittest.TestCase):

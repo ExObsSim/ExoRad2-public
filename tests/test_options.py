@@ -12,12 +12,25 @@ data_dir = os.path.join(path.parent.absolute(), 'examples')
 test_dir = os.path.join(path, 'test_data')
 setLogLevel(logging.DEBUG)
 
+def payload_file():
+    payload_file = os.path.join(data_dir, 'payload_example.xml')
+    new_configPath = '    <ConfigPath> {}\n'.format(path.parent.absolute())
+    tmp = os.path.join(test_dir,'payload_test.xml')
+    with open(tmp, 'w') as new_file:
+        with open(payload_file) as old_file:
+            for line in old_file:
+                if '<ConfigPath>' in line:
+                    new_file.write(new_configPath)
+                else:
+                    new_file.write(line)
+    return tmp
+
 
 class LoadOptionsTest(unittest.TestCase):
     loadOptions = LoadOptions()
 
     def test_loadFile(self):
-        self.loadOptions(filename=os.path.join(data_dir, 'payload_example.xml'))
+        self.loadOptions(filename=payload_file())
         with self.assertRaises(IOError): self.loadOptions(
             filename=os.path.join(test_dir, 'payload_example_missing_data_file.xml'))
         with self.assertRaises(IOError): self.loadOptions(filename=os.path.join(path, 'test_data/payload_example.csv'))

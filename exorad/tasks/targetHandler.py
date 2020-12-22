@@ -3,7 +3,7 @@ from copy import deepcopy
 from exorad.__version__ import __version__
 from exorad.cache import GlobalCache
 from exorad.log import disableLogging, enableLogging
-from exorad.models.target import XLXSTargetList, CSVTargetList
+from ..models.targetlist import XLXSTargetList, CSVTargetList, QTableTargetList
 from .task import Task
 
 
@@ -44,8 +44,11 @@ class LoadTargetList(Task):
             self.debug('target list format : {}'.format(ext))
             target_klass = target_list_format[ext]
         except KeyError:
-            self.error('unknown target list format')
-            raise KeyError
+            self.error('unsupported target list format: {}'.format(ext))
+            raise IOError('unsupported target list format: {}'.format(ext))
+        except TypeError:
+            self.debug('target list is not a file. It is assumed to be QTable')
+            target_klass = QTableTargetList
 
         tt = target_klass(target_list_file)
         self.set_output(tt)

@@ -6,6 +6,7 @@ import unittest
 from exorad.log import setLogLevel
 from exorad.tasks import PreparePayload, PrepareTarget, PropagateTargetLight, LoadTargetList, LoadSource, \
     PropagateForegroundLight, EstimateZodi
+from test_options import payload_file
 
 preparePayload = PreparePayload()
 loadTargetList = LoadTargetList()
@@ -16,7 +17,7 @@ estimateBackground = EstimateZodi()
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')
 
-options_filename = os.path.join(data_dir, 'payload_example.xml')
+options_filename = payload_file()
 target_list = os.path.join(data_dir, 'test_target.csv')
 
 

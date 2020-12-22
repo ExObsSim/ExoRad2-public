@@ -2,6 +2,7 @@ import logging
 import os
 import pathlib
 import unittest
+from test_options import payload_file
 
 from exorad.log import setLogLevel, disableLogging, enableLogging
 from exorad.tasks import PreparePayload, PrepareTarget, PropagateTargetLight, LoadTargetList, LoadSource, \
@@ -19,13 +20,12 @@ estimateForeground = EstimateZodi()
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')
 
-options_filename = os.path.join(data_dir, 'payload_example.xml')
 target_list = os.path.join(data_dir, 'test_target.csv')
 
 
 class NoiseTest(unittest.TestCase):
     disableLogging()
-    payload, channels, (wl_min, wl_max) = preparePayload(payload_file=options_filename, output=None)
+    payload, channels, (wl_min, wl_max) = preparePayload(payload_file=payload_file(), output=None)
     targets = loadTargetList(target_list=target_list)
     target = targets.target[0]
     target = prepareTarget(target=target, channels=channels)

@@ -63,11 +63,11 @@ class EstimateNoiseInChannel(Task):
         signal = target.table['star_signal_inAperture'][target.table['chName'] == name].copy()
         signal[signal == 0.0] = np.nan
         out['total_noise'] = np.sqrt(
-                            out['darkcurrent_noise'] ** 2 +
-                            (1.0 + NoiseX) *
-                            (photon_noise_variance) +
-                            out['read_noise'] ** 2
-                        ) / signal
+                                out['darkcurrent_noise'] ** 2 +
+                                (1.0 + NoiseX) *
+                                (photon_noise_variance) +
+                                out['read_noise'] ** 2
+                            ) / signal
 
         wl = target.table['Wavelength'][target.table['chName'] == name]
         if payload:

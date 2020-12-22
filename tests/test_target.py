@@ -4,11 +4,13 @@ import pathlib
 import unittest
 
 import astropy.units as u
+from astropy.table import QTable, Column
 
 from exorad.log import setLogLevel
 from exorad.output.hdf5 import HDF5Output
 from exorad.tasks import LoadSource
 from exorad.tasks.targetHandler import LoadTargetList, PrepareTarget
+from test_options import payload_file
 
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')
@@ -22,6 +24,24 @@ class TargetTest(unittest.TestCase):
     def test_load_target_list(self):
         loadTargetList = LoadTargetList()
         targets = loadTargetList(target_list=self.target_list)
+        with self.assertRaises(IOError):
+            targets = loadTargetList(target_list='test_target.abc')
+
+    def test_load_QTable_target_list(self):
+        loadTargetList = LoadTargetList()
+        names = Column(['test1','test2'], name='star name')
+        masses = Column([1,2]*u.M_sun, name='star M')
+        temperatures = Column([5000,6000]*u.K, name='star Teff')
+        radii = Column([1, 2] * u.R_sun, name='star R')
+        distances = Column([10, 12] * u.pc, name='star D')
+        raw_targetlist = QTable([names, masses,temperatures, radii, distances])
+
+        targets = loadTargetList(target_list=raw_targetlist)
+
+        distances = Column([10, 12], name='star D')
+        raw_targetlist = QTable([names, masses, temperatures, radii, distances])
+        with self.assertRaises(TypeError):
+            targets = loadTargetList(target_list=raw_targetlist)
 
     def test_write(self):
         loadTargetList = LoadTargetList()
@@ -73,7 +93,7 @@ class PrepareTargeTest(unittest.TestCase):
     target, sed = loadSource(target=target, source='planck', wl_range=(0.45, 2.2))
 
     preparePayload = PreparePayload()
-    payload, channels, (wl_min, wl_max) = preparePayload(payload_file=os.path.join(data_dir, 'payload_example.xml'),
+    payload, channels, (wl_min, wl_max) = preparePayload(payload_file=payload_file(),
                                                          output=None)
 
     setLogLevel(logging.DEBUG)

@@ -1,5 +1,5 @@
 <root>
-    <ConfigPath> ~/git/ExoRad2
+    <ConfigPath> .
         <comment>Main directory for the configuration files</comment>
     </ConfigPath>
     <fileName>payload_example</fileName>
