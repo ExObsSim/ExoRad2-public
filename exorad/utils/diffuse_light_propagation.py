@@ -33,8 +33,6 @@ def prepare(ch_table, ch_built_instr, description):
     return total_max_signal, total_signal, wl_table, A, qe, omega_pix, transmission
 
 
-
-
 def convolve_with_slit(ch_description, ch_built_instr, A, ch_table, omega_pix, qe, radiance):
     slit_width = ch_built_instr['slit_width']
     wl_pix = ch_built_instr['wl_pix_center']
@@ -74,5 +72,5 @@ def integrate_light(radiance, wl_qe, ch_built_instr):
     # signal_tmp = (np.trapz(radiance.data[~np.isnan(radiance.data)], x=wl_qe[~np.isnan(radiance.data)])).to(
     #     u.count / u.s)
     signal = signal_tmp * np.asarray(ch_built_instr['window_size_px'])
-    max_signal_per_pix = signal
+    max_signal_per_pix = signal_tmp
     return max_signal_per_pix, signal

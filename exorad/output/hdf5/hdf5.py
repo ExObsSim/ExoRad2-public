@@ -16,6 +16,7 @@ class HDF5OutputGroup(OutputGroup):
     def __init__(self, entry):
         self.set_log_name()
         self._entry = entry
+
     def write_array(self, array_name, array, metadata=None):
         if isinstance(array, list):
             for idx, a in enumerate(array):
@@ -77,6 +78,14 @@ class HDF5OutputGroup(OutputGroup):
             for k, v in metadata.items():
                 ds.attrs[k] = v
 
+    def write_quantity(self, quantity_name, quantity):
+        if quantity_name == 'value':
+            self._entry.create_dataset('value', data=quantity.value,)
+        else:
+            qg_c = self._entry.create_group(str(quantity_name))
+            qg_c.create_dataset('value', data=quantity.value,)
+            qg_c.create_dataset('unit', data=str(quantity.unit))
+            pass
 
 def _encode_mixins(tbl):
     from astropy.table import serialize
@@ -102,7 +111,7 @@ def _encode_mixins(tbl):
 
 class HDF5Output(Output):
     def __init__(self, filename, append=False):
-        self.set_log_name()
+        super().__init__()
         self.filename = filename
         self._append = append
         self.fd = None
@@ -141,19 +150,19 @@ class HDF5Output(Output):
             self.fd.close()
 
 
-def load(input):
+def load(input_group):
     """
     Reads and convert an HDF5 group into a dictionary
 
     Parameters
     ----------
-    input: HDF5Group
+    input_group: HDF5Group
         input dumped group
 
     Returns
     -------
     dict
     """
-    input = hdfdict.load(input, lazy=False)
-    input = recursively_read_dict_contents(input)
-    return input
+    input_group = hdfdict.load(input_group, lazy=False)
+    input_group = recursively_read_dict_contents(input_group)
+    return input_group

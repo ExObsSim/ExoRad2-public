@@ -55,7 +55,6 @@ After the common section you will have an `optics` section, that will contain al
 Then you can start listing the `channel` description.
 
 .. _targetlist:
-
 Target
 ====================
 The target list file is a simple `csv` file containing a list of target stars described by

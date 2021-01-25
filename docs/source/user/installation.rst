@@ -8,7 +8,7 @@ Installing from git
 -------------------
 You can clone ExoRad from our main git repository::
 
-    git clone https://github.com/ExObsSim/ExoRad.git
+    git clone https://github.com/ExObsSim/ExoRad_public.git
 
 Move into the ExoRad folder::
 
@@ -57,7 +57,7 @@ or simply::
 Modify ExoRad
 ~~~~~~~~~~~~~~~~
 
-You can modify ExoRad main code, editing as you prefer, but in order to make the changes effective, you need to update your Alfnoor installation::
+You can modify ExoRad main code, editing as you prefer, but in order to make the changes effective::
 
     pip install . --upgrade
 

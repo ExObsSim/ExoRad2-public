@@ -1,3 +1,5 @@
+from abc import ABC
+
 import numpy as np
 
 from exorad.log import Logger
@@ -6,7 +8,7 @@ from exorad.log import Logger
 class Output(Logger):
 
     def __init__(self):
-        self.set_log_name()
+        super().__init__()
 
     def open(self):
         raise NotImplementedError
@@ -34,7 +36,7 @@ class Output(Logger):
         recursively_save_dict_contents_to_output(out, dictionary)
 
 
-class OutputGroup(Output):
+class OutputGroup(Output, ABC):
 
     def __init__(self, name):
         super().__init__(name)

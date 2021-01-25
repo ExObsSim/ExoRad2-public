@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [2.1.61] - 2021-01-25
+### Added
+- detector keyword `frame_time`. If used, ExoRad won't compute the frames time,
+  but it uses the value indicated instead
+- payload_file in PreparePayload can now be an already parsed dictionary  
+- HDF5Output can now write astropy Quantity
+- log file using`-l` flag. Log file uses DEBUG level.
+- LoadOptions now parses also hdf5 file. They must be pointed as `datadict` in the payload configuration file. 
+- Pypi compatibility
+
+### Fixed
+- plot_bands now works also for Table with no quantities
+- HDF5Output can now handle np.array with strings as lists with strings
+- *major fix*: fixed diffuse light maximum signal in pixel
 
 ## [2.0.52] - 2020-12-22
 ### Added
@@ -21,7 +35,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [2.0.48] - 2020-12-19
 ### Added
 - added load_table function to hdf5/util to extract table from hdf5
-- added keyword to scale the spectrometer window spatial width: "window_spatial_scale"
+- added a keyword to scale the spectrometer window spatial width: "window_spatial_scale"
 
 ### Changed
 - using ascii.read instead of Table.read in loadOptions 
@@ -114,6 +128,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.61]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.52...v2.1.61
 [2.0.52]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.48...v2.0.52
 [2.0.48]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.41...v2.0.48
 [2.0.41]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.40...v2.0.41

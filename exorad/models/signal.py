@@ -175,15 +175,6 @@ class Signal(Logger):
         """
         from exorad.utils.util import to_dict
         signal_dict = to_dict(self)
-        # signal_dict = {'Wavelength': self.wl_grid,
-        #                'data': self.data,
-        #                'time': self.time_grid,
-        #                }
-        # if hasattr(self.data, 'unit'):
-        #     units_dict ={'Wavelength': str(self.wl_grid.unit),
-        #                            'data': str(self.data.unit),
-        #                            'time': str(self.time_grid.unit)}
-        #     signal_dict['units'] = units_dict
         return signal_dict
 
     def plot(self, fig=None, ax=None, yscale=None, xscale=None, label=None):

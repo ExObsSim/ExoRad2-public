@@ -3,6 +3,8 @@ import logging
 __all__ = ['Logger']
 
 root_logger = logging.getLogger('exorad')
+root_logger.setLevel(logging.DEBUG)
+
 root_logger.propagate = False
 
 class ExoRadHandler(logging.StreamHandler):
@@ -24,11 +26,10 @@ class ExoRadHandler(logging.StreamHandler):
 
 
 formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-# fh = logging.FileHandler('exorad.log')
 ch = ExoRadHandler()
 ch.setFormatter(formatter)
-root_logger.handlers = [ch]
-root_logger.setLevel(logging.INFO)
+ch.setLevel(logging.INFO)
+root_logger.addHandler(ch)
 
 
 class Logger:
