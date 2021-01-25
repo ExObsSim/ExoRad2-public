@@ -29,12 +29,14 @@ def frame_time(target, channel, out):
         output table populated
     """
     name = channel['value']
-
     max_signal_in_pix = target.table['MaxSignal_inPixel'][target.table['chName'] == name]
     out['saturation_time'] = channel['detector']['well_depth']['value'] / max_signal_in_pix
     logger.debug('saturation time : {}'.format(out['saturation_time']))
-    out['frameTime'] = channel['detector']['f_well_depth']['value'] * np.min(out['saturation_time']) \
-                       * np.ones(out['saturation_time'].size)
+    if 'frame_time' in channel['detector'].keys():
+        out['frameTime'] = channel['detector']['frame_time']['value'] * np.ones(out['saturation_time'].size)
+    else:
+        out['frameTime'] = channel['detector']['f_well_depth']['value'] * np.min(out['saturation_time']) \
+                           * np.ones(out['saturation_time'].size)
     logger.debug('frame time : {}'.format(out['frameTime']))
     return out
 
@@ -127,11 +129,11 @@ def photon_noise_variance(table, out):
     """
     '''
     signals = [key for key in table.keys() if 'signal' in key]
-    photon_noise_variance = np.zeros(out['saturation_time'].size) * (u.count / u.s) ** 2 * u.hr
+    _photon_noise_variance = np.zeros(out['frameTime'].size) * (u.count / u.s) ** 2 * u.hr
     for key in signals:
         noise_key = '{}_noise'.format(key)
-        photon_noise_variance += out[noise_key] * out[noise_key]
-    return photon_noise_variance
+        _photon_noise_variance += out[noise_key] * out[noise_key]
+    return _photon_noise_variance
 
 
 def add_custom_noise(custom, wl, out):

@@ -1,7 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/exorad2-public/badge/?version=latest)](https://exorad2-public.readthedocs.io/en/latest/?badge=latest)
 
-![ExoRad Logo](docs/source/_static/logo.png)
-
 # ExoRad 2.0: The generic point source radiometric model
 
 
@@ -22,9 +20,9 @@ As an example, for each target and for each photometric and spectroscopic channe
 The code is under development, so, please report any issue or inaccuracy to the developers to support the implementation.
 
 ### Cite
-ExoRad has been developed from ArielRad (Mugnai et al. submitted). 
+ExoRad has been developed from ArielRad. 
 If you use this software please cite:
-Mugnai et al, "ArielRad: the ARIEL radiometric model", 2020  
+Mugnai et al, "ArielRad: the ARIEL radiometric model", 2020 ([doi: 10.1007/s10686-020-09676-7](https://link.springer.com/article/10.1007%2Fs10686-020-09676-7))
 
 ## Installation
 To install ExoRad download the git archive and from the `ExoRad` folder run

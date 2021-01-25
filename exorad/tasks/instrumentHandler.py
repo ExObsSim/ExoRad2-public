@@ -213,9 +213,16 @@ class PreparePayload(Task):
         payload_file = self.get_task_param('payload_file')
         output = self.get_task_param('output')
 
-        ext = os.path.splitext(payload_file)[1]
-        if ext == '.xml':
-            payload = loadOptions(filename=payload_file)
+        if isinstance(payload_file, str):
+            ext = os.path.splitext(payload_file)[1]
+        else:
+            ext=None
+
+        if (ext == '.xml') or isinstance(payload_file, dict):
+            if (ext == '.xml'):
+                payload = loadOptions(filename=payload_file)
+            if isinstance(payload_file, dict):
+                payload=payload_file
             if output is not None:
                 with HDF5Output(output) as out:
                     channels = buildChannels(payload=payload, write=True, output=out)

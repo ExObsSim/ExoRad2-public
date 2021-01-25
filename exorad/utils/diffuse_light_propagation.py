@@ -74,5 +74,5 @@ def integrate_light(radiance, wl_qe, ch_built_instr):
     # signal_tmp = (np.trapz(radiance.data[~np.isnan(radiance.data)], x=wl_qe[~np.isnan(radiance.data)])).to(
     #     u.count / u.s)
     signal = signal_tmp * np.asarray(ch_built_instr['window_size_px'])
-    max_signal_per_pix = signal
+    max_signal_per_pix = signal_tmp * np.ones_like(ch_built_instr['window_size_px'])
     return max_signal_per_pix, signal

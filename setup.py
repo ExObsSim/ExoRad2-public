@@ -25,7 +25,7 @@ install_requires = ['astropy',
 entry_points = {'console_scripts': console_scripts, }
 
 classifiers = [
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 5 - Production/Stable',
     'Environment :: Console',
     'Intended Audience :: Developers',
     'Intended Audience :: Science/Research',
@@ -67,6 +67,7 @@ setup(name='exorad',
       author_email=get_info("exorad/__about__.py", 'email'),
       license=get_info("exorad/__about__.py", 'license'),
       long_description=long_description,
+      long_description_content_type="text/markdown",
       packages=packages,
       classifiers=classifiers,
       install_requires=install_requires,
