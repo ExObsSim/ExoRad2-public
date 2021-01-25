@@ -58,12 +58,8 @@ class Plotter(Logger):
         tick_list = []
 
         for k, channelName in enumerate(channels):
-            wl_min = min(self.inputTable['LeftBinEdge'][np.where(self.inputTable['chName'] == channelName)])
-            if hasattr(wl_min,'unit'):
-                wl_min = wl_min.value
-            wl_max = max(self.inputTable['RightBinEdge'][np.where(self.inputTable['chName'] == channelName)])
-            if hasattr(wl_max,'unit'):
-                wl_max = wl_max.value
+            wl_min = min(self.inputTable['LeftBinEdge'][np.where(self.inputTable['chName'] == channelName)]).value
+            wl_max = max(self.inputTable['RightBinEdge'][np.where(self.inputTable['chName'] == channelName)]).value
             ax.axvspan(wl_min, wl_max, alpha=0.1, zorder=0, color=palette[k])
             tick_list.append(wl_min)
         tick_list.append(wl_max)

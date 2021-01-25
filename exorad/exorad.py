@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import exorad.__version__ as version
 import exorad.tasks as tasks
 from exorad.cache import GlobalCache
-from exorad.log import setLogLevel, addLogFile
+from exorad.log import setLogLevel
 from exorad.output.hdf5 import HDF5Output
 from exorad.utils.plotter import Plotter
 
@@ -34,8 +34,7 @@ def efficiency_plot(channels, output_dir=None):
     plt.close()
 
 
-def standard_pipeline(options, target_list, output=None, plot=False, full_contrib=False,
-                      n_thread=1, debug=False, log=False):
+def standard_pipeline(options, target_list, output=None, plot=False, full_contrib=False, n_thread=1, debug=False):
     from exorad.utils.ascii_art import ascii_art
     logger.info(ascii_art)
     logger.info('code version {}'.format(version))
@@ -45,8 +44,6 @@ def standard_pipeline(options, target_list, output=None, plot=False, full_contri
     gc['debug'] = debug
 
     if debug: setLogLevel(logging.DEBUG)
-    if isinstance(log, str): addLogFile(fname=log)
-    elif log: addLogFile()
 
     if output is not None:
         out_dir = pathlib.Path(output).parent.absolute()
@@ -107,8 +104,6 @@ def main():
                         required=False, help="number of threads for parallel processing")
     parser.add_argument("-d", "--debug", dest='debug', default=False,
                         required=False, help="log output on screen", action='store_true')
-    parser.add_argument("-l", "--log", dest='log', default=False,
-                        required=False, help="log output on file", action='store_true')
     parser.add_argument("-P", "--plot", dest='plot', default=False,
                         required=False, help="save target plots", action='store_true')
 
@@ -116,4 +111,4 @@ def main():
 
     standard_pipeline(options=args.opt, target_list=args.targetList,
                       output=args.output, plot=args.plot, full_contrib=args.contrib,
-                      debug=args.debug, n_thread=args.numberOfThreads, log=args.log)
+                      debug=args.debug, n_thread=args.numberOfThreads)

@@ -128,17 +128,6 @@ class LoadOptions(Task):
             except IOError:
                 self.error("Cannot read input file")
                 raise IOError
-
-        if 'datadict' in root_dict:
-            attrValue = root_dict['datadict']
-            datafile = attrValue
-            datafile = datafile['value'].replace('__ConfigPath__', self.configPath)
-            try:
-                data = self.__read_datadict__(datafile)
-                root_dict['data'] = data
-            except IOError:
-                self.error("Cannot read input file")
-                raise IOError
         return root_dict
 
     def getopt(self):
@@ -149,23 +138,16 @@ class LoadOptions(Task):
             try:
                 data = ascii.read(os.path.expanduser(datafile),
                                   format='ecsv')
+                # data = Table.read(os.path.expanduser(datafile),
+                #                   format='ascii.ecsv')
             except InconsistentTableError:
                 data = ascii.read(os.path.expanduser(datafile),
                                   format='csv')
+                # data = Table.read(os.path.expanduser(datafile),
+                #                   format='ascii.csv')
+
             return data
 
-        else:
-            self.error('inconsistent table')
-            raise IOError
-
-    def __read_datadict__(self, datadict):
-        ext = os.path.splitext(datadict)[1]
-        if ext in ['.h5', '.hdf5']:
-            from exorad.output.hdf5 import load
-            data = load(datadict)
-            return data
-        elif ext == '.pickle':
-            raise NotImplementedError
         else:
             self.error('inconsistent table')
             raise IOError
