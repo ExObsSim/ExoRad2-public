@@ -29,10 +29,11 @@ class Plotter(Logger):
             dictionary describing the channels in the payload. Default is None
     """
 
-    def __init__(self, input_table, channels=None):
+    def __init__(self, input_table, channels=None, payload=None):
         self.set_log_name()
         self.inputTable = input_table
         self.channels = channels
+        self.payload = payload
         self.fig = None
         self.fig_efficiency = None
 

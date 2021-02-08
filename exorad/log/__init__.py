@@ -14,17 +14,20 @@ def setLogLevel(level):
 
 
 def disableLogging():
-    import logging
-    from .logger import root_logger
-    root_logger.setLevel(logging.ERROR)
-
+    # import logging
+    # from .logger import root_logger
+    # root_logger.setLevel(logging.ERROR)
+    setLogLevel(logging.ERROR)
 
 def enableLogging():
-    global last_log
-    import logging
-    if last_log is None:
-        last_log = logging.INFO
-    setLogLevel(last_log)
+    # global last_log
+    # import logging
+    # from .logger import root_logger
+    # root_logger.setLevel(logging.INFO)
+    #
+    # # if last_log is None:
+    # #     last_log = logging.INFO
+    setLogLevel(logging.INFO)
 
 
 def addLogFile(fname='exorad.log'):

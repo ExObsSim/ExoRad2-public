@@ -6,20 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [2.1.65] - 2021-02-08
+### Added
+- added `wavelength` (no capital) as one of wavelength column default names in optical elements and QE 
+- added `wl_col_name` as keyword to specify wavelength column name for optical elements
+- added `emissivity` (no capital) as one of emissivity column default names in optical elements 
+### Fixed
+- enable and disable log for multiple handlers
+
 ## [2.1.61] - 2021-01-25
 ### Added
 - detector keyword `frame_time`. If used, ExoRad won't compute the frames time,
   but it uses the value indicated instead
 - payload_file in PreparePayload can now be an already parsed dictionary  
 - HDF5Output can now write astropy Quantity
-- log file using`-l` flag. Log file uses DEBUG level.
+- log file using`-l` or `--log` flag. Log file uses DEBUG level. A file name can be specified.
 - LoadOptions now parses also hdf5 file. They must be pointed as `datadict` in the payload configuration file. 
 - Pypi compatibility
 
 ### Fixed
 - plot_bands now works also for Table with no quantities
 - HDF5Output can now handle np.array with strings as lists with strings
-- *major fix*: fixed diffuse light maximum signal in pixel
+- **major fix**: fixed diffuse light maximum signal in pixel
 
 ## [2.0.52] - 2020-12-22
 ### Added
@@ -128,6 +136,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.65]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.61...v2.1.65
 [2.1.61]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.52...v2.1.61
 [2.0.52]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.48...v2.0.52
 [2.0.48]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.41...v2.0.48

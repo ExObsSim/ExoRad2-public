@@ -45,6 +45,15 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.githubpages',
               'nbsphinx',
               ]
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'undoc-members': True,
+    'exclude-members': '__weakref__'
+}
+napoleon_use_ivar = True
+autodoc_typehints = 'description'  # show type hints in doc body instead of signature
+autoclass_content = 'both'  # get docstring from class level and init simultaneously
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

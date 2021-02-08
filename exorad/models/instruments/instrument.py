@@ -11,6 +11,7 @@ from exorad.log.logger import Logger
 from exorad.models.optics.opticalPath import OpticalPath
 from exorad.models.signal import Signal
 from exorad.utils.diffuse_light_propagation import prepare, convolve_with_slit, integrate_light
+from exorad.models.utils import get_wl_col_name
 
 
 class Instrument(Logger):
@@ -229,7 +230,8 @@ class Instrument(Logger):
     def _get_qe(self):
         if 'datafile' in self.description['detector']['qe']:
             self.debug('QE data file found')
-            qe_data = Signal(self.description['detector']['qe']['data']['Wavelength'], \
+            wl_colname = get_wl_col_name(self.description['detector']['qe']['data'])
+            qe_data = Signal(self.description['detector']['qe']['data'][wl_colname], \
                              self.description['detector']['qe']['data'][self.name])
         else:
             wl_grid = np.logspace(np.log10(self.description['detector']['wl_min']['value'].to(u.um).value),

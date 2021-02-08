@@ -1,6 +1,7 @@
 import numpy as np
 from astropy import units as u
 from scipy.interpolate import interp1d
+from exorad.models.utils import get_wl_col_name
 
 from exorad.log import Logger
 
@@ -89,7 +90,9 @@ class OpticalElement(Logger):
                     except KeyError:
                         self.error('{} column name not found in transmission data file'.format(colname))
                         raise KeyError('{} column name not found in transmission data file'.format(colname))
-            tr_func = interp1d(self.description['data']['Wavelength'],
+
+            wl_colname = get_wl_col_name(self.description['data'], description=self.description)
+            tr_func = interp1d(self.description['data'][wl_colname],
                                self.description['data'][colname],
                                assume_sorted=False,
                                fill_value=0.0,
@@ -127,15 +130,23 @@ class OpticalElement(Logger):
     def _get_emissivity(self):
         if 'data' in self.description:
             self.debug('found emissivity file')
-            try:
-                em_func = interp1d(self.description['data']['Wavelength'],
-                                   self.description['data']['Emissivity'],
-                                   assume_sorted=False,
-                                   fill_value=0.0,
-                                   bounds_error=False)
-            except KeyError:
-                self.error('emissivity column name not found in data file')
-                raise KeyError('emissivity column name not found in data file')
+
+            wl_colname = get_wl_col_name(self.description['data'], description=self.description)
+
+            em_colname = None
+            for em_key in ['Emissivity', 'emissivity']:
+                if em_key in self.description['data'].keys():
+                    em_colname= em_key
+            if em_colname is None:
+                self.error('Emissivity column not found in transmission data file')
+                raise KeyError('Emissivity column not found in transmission data file')
+
+            em_func = interp1d(self.description['data'][wl_colname],
+                               self.description['data'][em_colname],
+                               assume_sorted=False,
+                               fill_value=0.0,
+                               bounds_error=False)
+
             emissivity = em_func(self.wl)
         elif 'emissivity' in self.description:
             emissivity = np.ones(self.wl.size) * self.description['emissivity']['value']
