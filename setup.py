@@ -20,7 +20,7 @@ install_requires = ['astropy',
                     'h5py',
                     'hdfdict',
                     'xlrd',
-                    # 'xlwt'
+                    'xlwt'
                     ]
 entry_points = {'console_scripts': console_scripts, }
 
