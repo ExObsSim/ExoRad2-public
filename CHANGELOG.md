@@ -6,16 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Fixed
-- included 'xlwt' into install requires 
 
-## [2.1.65] - 2021-02-08
+## [2.1.67] - 2021-02-08
 ### Added
 - added `wavelength` (no capital) as one of wavelength column default names in optical elements and QE 
 - added `wl_col_name` as keyword to specify wavelength column name for optical elements
 - added `emissivity` (no capital) as one of emissivity column default names in optical elements 
 ### Fixed
 - enable and disable log for multiple handlers
+- included 'xlwt' into install requires 
+- included package versions in setup.py
 
 ## [2.1.61] - 2021-01-25
 ### Added

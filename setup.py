@@ -10,16 +10,16 @@ console_scripts = [
     'exorad=exorad.exorad:main',
     'exorad-plot=exorad.utils.plotter:main [Plot]']
 
-install_requires = ['astropy',
-                    'matplotlib',
+install_requires = ['astropy==4.0',
+                    'matplotlib==3.3.3',
                     'seaborn',
                     'mpmath',
-                    'numpy',
+                    'numpy==1.19.4',
                     'pyyaml',
-                    'scipy',
-                    'h5py',
-                    'hdfdict',
-                    'xlrd',
+                    'scipy==1.5.2',
+                    'h5py==2.10.0',
+                    'hdfdict==0.3.1',
+                    'xlrd==1.2.0',
                     'xlwt'
                     ]
 entry_points = {'console_scripts': console_scripts, }
