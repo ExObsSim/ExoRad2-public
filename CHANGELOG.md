@@ -139,7 +139,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
-[2.1.65]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.61...v2.1.65
+[2.1.67]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.61...v2.1.67
 [2.1.61]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.52...v2.1.61
 [2.0.52]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.48...v2.0.52
 [2.0.48]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.41...v2.0.48
