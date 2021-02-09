@@ -268,16 +268,18 @@ class ObserveTargetlist(Task):
 
     def execute(self):
         from exorad.utils.util import chunks
-        from multiprocessing import Process, Manager
+        import multiprocessing as mp
+        try:
+            mp.set_start_method('fork')
+        except RuntimeError:
+            pass
 
         targets = self.get_task_param('targets')
 
-        manager = Manager()
+        manager = mp.Manager()
         outputDict = manager.dict()
         for tt in chunks(targets, GlobalCache()['n_thread']):
-            job = [Process(target=self.pipeline_to_dict,
-                           args=(target, outputDict))
-                   for target in tt]
+            job = [mp.Process(target=self.pipeline_to_dict, args=(target, outputDict)) for target in tt]
             for j in job:
                 j.start()
             for j in job:
