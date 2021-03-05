@@ -25,12 +25,28 @@ class ZodiacalTest(unittest.TestCase):
     def test_radiance(self):
         setLogLevel(logging.DEBUG)
 
-        payload = {'zodiacal': {'zodiacFactor': {'value': 2.5}}}
+        payload = {'zodiacal': {'zodiacFactor': {'value': 2.5},
+                                'zodicalFrgMap': False}}
 
         zodi = ZodiacalFrg(wl=self.wl, description=payload['zodiacal'])
 
         zodi.radiance.plot()
         plt.show()
+
+    def test_fit_coordinate(self):
+        setLogLevel(logging.DEBUG)
+
+        payload = {'zodiacal': {'zodiacalMap': True}}
+
+        zodi = ZodiacalFrg(wl=self.wl, description=payload['zodiacal'],
+                           coordinates=(90.03841366076144 * u.deg, -66.55432012293919 * u.deg))
+
+        payload = {'zodiacal': {'zodiacFactor': {'value': 1.4536394185097168},
+                                'zodiacalMap': False}}
+
+        zodi_validation = ZodiacalFrg(wl=self.wl, description=payload['zodiacal'])
+
+        self.assertListEqual(list(zodi.radiance.data.value), list(zodi_validation.radiance.data.value))
 
 
 class BackgroundHanderTest(unittest.TestCase):

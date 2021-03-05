@@ -13,6 +13,9 @@ stripUnitString = lambda string: string.replace('[', '').replace(']', '')
 
 
 class BaseTargetList(Logger, object):
+    """
+    Target list base class
+    """
 
     def __init__(self):
         self.set_log_name()
@@ -94,7 +97,11 @@ class BaseTargetList(Logger, object):
 
         return returnList
 
+
 class XLXSTargetList(BaseTargetList):
+    """
+    It parses a .xlsx file into a :class:`BaseTargetList` class
+    """
     star_data_columns = (1, 6)
     planet_data_columns = (8, 18)
     number_to_be_observed_column = 20
@@ -153,6 +160,10 @@ class XLXSTargetList(BaseTargetList):
 
 
 class CSVTargetList(BaseTargetList):
+    """
+    It parses a csv file into a :class:`BaseTargetList` class
+    """
+
     def __init__(self, filename):
         self.filename = filename
         super().__init__()
@@ -208,6 +219,9 @@ class CSVTargetList(BaseTargetList):
 
 
 class OldExcelTargetList(Logger, object):
+    """
+    It parses an .xls file into a :class:`BaseTargetList` class
+    """
     star_data_columns = (1, 6)
     number_to_be_observed_column = 20
     data_row0 = 4
@@ -269,7 +283,12 @@ class OldExcelTargetList(Logger, object):
 
         return returnList
 
+
 class QTableTargetList(BaseTargetList):
+    """
+    It parses an :class:`astropy.table.QTable` into a :class:`BaseTargetList` class
+    """
+
     def __init__(self, table):
         self.input_table = table
         super().__init__()

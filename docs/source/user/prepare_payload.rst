@@ -121,10 +121,12 @@ Then you need to add a detector to your channel.
 As shown in the example, the detector need information such as
 pixel size (:xml:`delta_pix`), read noise (:xml:`read_noise`), dark current (:xml:`dark_current`), well depth (:xml:`well_depth`)
 and the fraction of well depth that the channel is allowed to fill (:xml:`f_well_depth`),
-the frequency at which the detector can collect NDRs (:xml:`freqNDR`), minimum wavelength that the detector can detect (:xml:`wl_min`) and the maximum,
+minimum wavelength that the detector can detect (:xml:`wl_min`) and the maximum,
 a.k.a. the cut off (:xml:`cut_off`). Then you also need to specify the detector quantum efficiency (:xml:`qe`):
 this can be expressed as a single value or you can point to a `.csv` file where the quantum efficiency is reported as a function of wavelength.
 You will find both examples in the `payload_example.xml` file.
+:xml:`freqNDR` is the frequency at which the detector can collect NDRs, but you can also use :xml:`frame_time` to force
+the frame time of each observation. Using this keyword, ExoRad won't compute this quantity using the indicated value instead.
 In the case you decide to use a file to describe the quantum efficiency, it must be a comma separated file or an encapsulated comma separated file,
 containing a column called `Wavelength` with the wavelength grid and one column with the channel name.
 You can store the description of all your channels in the same file just adding columns named after the channels and point to the same file.

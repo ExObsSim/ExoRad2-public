@@ -82,7 +82,18 @@ To include the zodiacal foreground in your simulation add it in the payload desc
 
 In this case the `zodiacal` name is important because it tells ExoRad the model to use.
 
-.. warning:: A model for zodiacal foreground depending on target position is under study, but has not been validated yet.
+A model for zodiacal foreground depending on target position is also available by using the keyword
+
+    .. code-block:: xml
+
+        <foreground> zodiacal
+                <zodiacFactor>2.5 </zodiacFactor>
+                <zodiacalMap> True </zodiacalMap>
+        </foreground>
+
+The fitted coefficient refers to Kelsall et al. 1998 model considering a 90 deg elongation from the Sun
+
+.. warning:: The model for zodiacal foreground depending on target position is still under validation.
 
 This foreground is added to the target by :class:`~exorad.tasks.foregroundHandler.EstimateZodi`, that is containted in :class:`~exorad.tasks.foregroundHandler.EstimateForegrounds`.
 

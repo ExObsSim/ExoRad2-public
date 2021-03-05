@@ -29,10 +29,9 @@
                 <zodiacFactor>2.5
                     <comment>multiplicative factor to use if no coord are used for the target</comment>
                 </zodiacFactor>
-                <!-- zodicalFrgMap>
-                    <datafile> your map here </datafile>
+                <zodiacalMap> False
                     <comment> Sky map for zodiacal emission computed with Kelsall 1998 idl routine</comment>
-                </zodicalFrgMap -->
+                </zodiacalMap>
         </foreground>
         <foreground> skyFilter
                     <datafile>__ConfigPath__/examples/modtran_38km_sun_180az_55zd_los_45zd.csv</datafile>

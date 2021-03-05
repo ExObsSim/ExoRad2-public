@@ -63,6 +63,7 @@ flags               description
 -d, --debug         Log output on screen
 -P, --plot          automatically produce plots
 -n, --nThreads      number of threads for parallel processing
+-l, --log           store the log output on file
 ==================  =======================================================================
 
 Now you can navigate into `examples` and you will find ExoRad outcomes.

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [2.1.70] - 2021-03-04
+### Added
+- The zodiacal factor can now be scaled according to the planet position in the sky. 
+  The fitted coefficient refers to Kelsall et al. 1998 model considering a 90 deg elongation from the Sun. 
+  This option is activated by the keyword `zodiacalMap` set to `True` in the payload description. 
+- pypi support
+
 ## [2.1.68] - 2021-02-09
 ### Fixed
 - multiprocessing compatibility with macOS
@@ -142,6 +149,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.70]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.68...v2.1.70
 [2.1.68]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.67...v2.1.68
 [2.1.67]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.61...v2.1.67
 [2.1.61]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.0.52...v2.1.61
