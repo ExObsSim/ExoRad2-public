@@ -1,4 +1,4 @@
-[![PyPI version](https://badge.fury.io/py/exorad2.svg)](https://badge.fury.io/py/exorad2)
+[![PyPI version](https://badge.fury.io/py/exorad.svg)](https://badge.fury.io/py/exorad)
 [![Documentation Status](https://readthedocs.org/projects/exorad2-public/badge/?version=latest)](https://exorad2-public.readthedocs.io/en/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/ExObsSim/ExoRad2-public)
 
