@@ -33,11 +33,11 @@ if base_dir is not None and os.path.exists(os.path.join(base_dir, ".git")):
         ref = fp.read().strip()
     ref_dir = ref[5:]
     __branch__ = ref[16:]
-    with open(os.path.join(git_folder, ref_dir)) as fp:
-        try:
+    try:
+        with open(os.path.join(git_folder, ref_dir)) as fp:
             __commit__ = fp.read().strip()
-        except FileNotFoundError:
-            __commit__ = None
+    except FileNotFoundError:
+        __commit__ = None
 else:
     __commit__ = None
 
