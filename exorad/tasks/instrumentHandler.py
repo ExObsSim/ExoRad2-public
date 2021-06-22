@@ -99,20 +99,27 @@ class BuildChannels(Task):
     def execute(self):
         self.info('building channel')
         channels = {}
-        self.debug('detectors found : {}'.format(self.get_task_param('payload')['channel'].keys()))
+        self.debug('detectors found : {}'.format(
+            self.get_task_param('payload')['channel'].keys()))
 
         ch = None
         if self.get_task_param('write'):
             inst = self.get_task_param('output').create_group('payload')
-            inst.store_dictionary(self.get_task_param('payload'), group_name='payload description')
+            inst.store_dictionary(self.get_task_param('payload'),
+                                  group_name='payload description')
             ch = inst.create_group('channels')
 
         buildInstrument = BuildInstrument()
         for det in self.get_task_param('payload')['channel'].keys():
-            channel_type = self.get_task_param('payload')['channel'][det]['channelClass']['value'].lower()
+            channel_type = \
+            self.get_task_param('payload')['channel'][det]['channelClass'][
+                'value'].lower()
             channels[det] = buildInstrument(type=channel_type, name=det,
-                                            description=self.get_task_param('payload')['channel'][det],
-                                            payload=self.get_task_param('payload'),
+                                            description=
+                                            self.get_task_param('payload')[
+                                                'channel'][det],
+                                            payload=self.get_task_param(
+                                                'payload'),
                                             write=False,
                                             output=None)
             if self.get_task_param('write'):
@@ -155,7 +162,8 @@ class LoadPayload(Task):
         for ch in channels_dir.keys():
             ch_dir = channels_dir[ch]
             description = load(ch_dir['description'])
-            instrument = instruments[description['channelClass']['value'].lower()]
+            instrument = instruments[
+                description['channelClass']['value'].lower().decode("utf-8")]
             channels[ch] = instrument(name=ch,
                                       description=description,
                                       payload=payload,
@@ -216,25 +224,28 @@ class PreparePayload(Task):
         if isinstance(payload_file, str):
             ext = os.path.splitext(payload_file)[1]
         else:
-            ext=None
+            ext = None
 
         if (ext == '.xml') or isinstance(payload_file, dict):
             if (ext == '.xml'):
                 payload = loadOptions(filename=payload_file)
             if isinstance(payload_file, dict):
-                payload=payload_file
+                payload = payload_file
             if output is not None:
                 with HDF5Output(output) as out:
-                    channels = buildChannels(payload=payload, write=True, output=out)
+                    channels = buildChannels(payload=payload, write=True,
+                                             output=out)
             else:
-                channels = buildChannels(payload=payload, write=False, output=None)
+                channels = buildChannels(payload=payload, write=False,
+                                         output=None)
 
         elif ext == 'h5':
             payload, channels = loadPayload(input=payload_file)
         else:
             self.error('Unsupported payload format')
             raise IOError('Unsupported payload format')
-        wl_min, wl_max = payload['common']['wl_min']['value'], payload['common']['wl_max']['value']
+        wl_min, wl_max = payload['common']['wl_min']['value'], \
+                         payload['common']['wl_max']['value']
         self.set_output([payload, channels, (wl_min, wl_max)])
 
 
@@ -298,13 +309,16 @@ class GetChannelList(Task):
         self._opt = self.get_task_param('options')
         self._channel_type = self.get_task_param('channel_type')
         self.channel_lst = self.__get_channel_list__()
-        self.info('{} type channel found: {}'.format(self._channel_type, self.channel_lst))
+        self.info('{} type channel found: {}'.format(self._channel_type,
+                                                     self.channel_lst))
         self.set_output(self.channel_lst)
 
     def __get_channel_list__(self):
         channel_lst = []
         for channel in self._opt['channel'].keys():
-            if self._opt['channel'][channel]['channelClass']['value'].lower() == self._channel_type.lower():
+            if self._opt['channel'][channel]['channelClass'][
+                'value'].lower() == self._channel_type.lower():
                 channel_lst.append(channel)
-                self.debug('{} added as {}'.format(channel, self._channel_type))
+                self.debug(
+                    '{} added as {}'.format(channel, self._channel_type))
         return channel_lst

@@ -29,17 +29,19 @@ class TargetTest(unittest.TestCase):
 
     def test_load_QTable_target_list(self):
         loadTargetList = LoadTargetList()
-        names = Column(['test1','test2'], name='star name')
-        masses = Column([1,2]*u.M_sun, name='star M')
-        temperatures = Column([5000,6000]*u.K, name='star Teff')
+        names = Column(['test1', 'test2'], name='star name')
+        masses = Column([1, 2] * u.M_sun, name='star M')
+        temperatures = Column([5000, 6000] * u.K, name='star Teff')
         radii = Column([1, 2] * u.R_sun, name='star R')
         distances = Column([10, 12] * u.pc, name='star D')
-        raw_targetlist = QTable([names, masses,temperatures, radii, distances])
+        raw_targetlist = QTable(
+            [names, masses, temperatures, radii, distances])
 
         targets = loadTargetList(target_list=raw_targetlist)
 
         distances = Column([10, 12], name='star D')
-        raw_targetlist = QTable([names, masses, temperatures, radii, distances])
+        raw_targetlist = QTable(
+            [names, masses, temperatures, radii, distances])
         with self.assertRaises(TypeError):
             targets = loadTargetList(target_list=raw_targetlist)
 
@@ -63,22 +65,28 @@ class SourceTest(unittest.TestCase):
 
     def test_planck(self):
         source = {'value': 'Planck'}
-        target, sed = self.loadSource(target=self.target, source=source, wl_range=(0.45, 2.2) * u.um)
-        target, sed = self.loadSource(target=self.target, source=source, wl_range=(0.45, 2.2))
+        target, sed = self.loadSource(target=self.target, source=source,
+                                      wl_range=(0.45, 2.2) * u.um)
+        target, sed = self.loadSource(target=self.target, source=source,
+                                      wl_range=(0.45, 2.2))
 
     def test_phoenix(self):
 
         try:
             source = {'value': 'phoenix',
-                      'StellarModels': {'value': '/usr/local/project_data/sed/'}}
-            target, sed = self.loadSource(target=self.target, source=source, wl_range=(0.45, 2.2) * u.um)
+                      'StellarModels': {
+                          'value': '/usr/local/project_data/sed/'}}
+            target, sed = self.loadSource(target=self.target, source=source,
+                                          wl_range=(0.45, 2.2) * u.um)
         except:
             print('indicate the stellar model directory to test this option')
 
     def test_custom(self):
         source = {'value': 'custom',
-                  'CustomSed': {'value': os.path.join(data_dir, 'customsed.csv')}}
-        target, sed = self.loadSource(target=self.target, source=source, wl_range=(0.45, 2.2) * u.um)
+                  'CustomSed': {
+                      'value': os.path.join(data_dir, 'customsed.csv')}}
+        target, sed = self.loadSource(target=self.target, source=source,
+                                      wl_range=(0.45, 2.2) * u.um)
 
 
 class PrepareTargeTest(unittest.TestCase):
@@ -90,11 +98,13 @@ class PrepareTargeTest(unittest.TestCase):
     targets = loadTargetList(target_list=target_list)
     target = targets.target[0]
     loadSource = LoadSource()
-    target, sed = loadSource(target=target, source='planck', wl_range=(0.45, 2.2))
+    target, sed = loadSource(target=target, source='planck',
+                             wl_range=(0.45, 2.2))
 
     preparePayload = PreparePayload()
-    payload, channels, (wl_min, wl_max) = preparePayload(payload_file=payload_file(),
-                                                         output=None)
+    payload, channels, (wl_min, wl_max) = preparePayload(
+        payload_file=payload_file(),
+        output=None)
 
     setLogLevel(logging.DEBUG)
 

@@ -5,6 +5,7 @@ import unittest
 
 import matplotlib.pyplot as plt
 
+from conf import skip_plot
 from exorad import tasks
 from exorad.log import setLogLevel, disableLogging, enableLogging
 from exorad.utils.plotter import Plotter
@@ -26,15 +27,19 @@ class PlotterTest(unittest.TestCase):
 
     disableLogging()
     payload = loadOptions(filename=payload_file())
-    wl_min, wl_max = payload['common']['wl_min']['value'], payload['common']['wl_max']['value']
+    wl_min, wl_max = payload['common']['wl_min']['value'], \
+                     payload['common']['wl_max']['value']
     channels = buildChannels(payload=payload, write=False, output=None)
     table = mergeChannelsOutput(channels=channels)
 
-    targets = loadTargetList(target_list=os.path.join(data_dir, 'test_target.csv'))
-    targets = observeTargetList(targets=targets.target, payload=payload, channels=channels, wl_range=(wl_min, wl_max),
+    targets = loadTargetList(
+        target_list=os.path.join(data_dir, 'test_target.csv'))
+    targets = observeTargetList(targets=targets.target, payload=payload,
+                                channels=channels, wl_range=(wl_min, wl_max),
                                 plot=False, out_dir=None)
     enableLogging()
 
+    @unittest.skipIf(skip_plot, "This test only produces plots")
     def test_efficiency(self):
         setLogLevel(logging.DEBUG)
 
@@ -42,6 +47,7 @@ class PlotterTest(unittest.TestCase):
         plotter.plot_efficiency()
         plt.show()
 
+    @unittest.skipIf(skip_plot, "This test only produces plots")
     def test_efficiency_catcher(self):
         setLogLevel(logging.DEBUG)
 
@@ -49,6 +55,7 @@ class PlotterTest(unittest.TestCase):
         plotter.plot_efficiency()
         plotter.save_fig('test.png', efficiency=True)
 
+    @unittest.skipIf(skip_plot, "This test only produces plots")
     def test_table(self):
         setLogLevel(logging.DEBUG)
         for target in self.targets:

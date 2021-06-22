@@ -1,9 +1,6 @@
-import logging
 import unittest
-import os
-from exorad.log import setLogLevel, disableLogging, enableLogging, addLogFile
+
 from exorad.log import Logger
-from test_options import test_dir
 
 
 class LoggerTest(Logger):
@@ -20,7 +17,6 @@ class LoadOptionsTest(unittest.TestCase):
     LoggerTest()
 
     def test_logs_messages(self):
-
         with self.assertLogs('exorad', level='DEBUG') as cm:
             LoggerTest()
             self.assertIn(

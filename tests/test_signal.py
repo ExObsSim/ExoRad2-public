@@ -19,9 +19,11 @@ class SignalTest(unittest.TestCase):
             data = np.random.random_sample((10, 10))
             time_grid = np.linspace(1, 5, 10) * u.hr
             Signal(wl_grid=wl, data=data, time_grid=time_grid)
-            CountsPerSeconds(wl_grid=wl, data=data * u.Unit('ct/s'), time_grid=time_grid)
+            CountsPerSeconds(wl_grid=wl, data=data * u.Unit('ct/s'),
+                             time_grid=time_grid)
             Noise(wl_grid=wl, data=data * u.hr ** 0.5, time_grid=time_grid)
-            Sed(wl_grid=wl, data=data * u.W / u.m ** 2 / u.um, time_grid=time_grid)
+            Sed(wl_grid=wl, data=data * u.W / u.m ** 2 / u.um,
+                time_grid=time_grid)
 
             wl = np.linspace(0.1, 1, 10) * u.m
             time_grid = np.linspace(1, 5, 10) * u.s

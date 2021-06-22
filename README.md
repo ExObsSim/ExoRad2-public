@@ -1,4 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/exorad.svg)](https://badge.fury.io/py/exorad)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/ExObsSim/Exorad2-public?color=gree&label=GitHub%20release)
+[![Downloads](https://pepy.tech/badge/exorad)](https://pepy.tech/project/exorad)
 [![Documentation Status](https://readthedocs.org/projects/exorad2-public/badge/?version=latest)](https://exorad2-public.readthedocs.io/en/latest/?badge=latest)
 ![GitHub](https://img.shields.io/github/license/ExObsSim/ExoRad2-public)
 
@@ -9,8 +11,8 @@ ExoRad, the generic point source radiometric model, interfaces with any instrume
 
 As an example, for each target and for each photometric and spectroscopic channel, ExoRad provides estimates of:
 
-1) Signals in pixels
-2) Saturation times
+1) signals in pixels
+2) saturation times
 3) read noise 
 4) photon noise
 5) dark current noise

@@ -10,7 +10,7 @@ console_scripts = [
     'exorad=exorad.exorad:main',
     'exorad-plot=exorad.utils.plotter:main [Plot]']
 
-install_requires = ['astropy==4.0',
+install_requires = ['astropy==4.2',
                     'matplotlib==3.3.3',
                     'seaborn',
                     'mpmath',

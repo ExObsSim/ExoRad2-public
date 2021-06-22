@@ -19,6 +19,8 @@ class LoadOptions(Task):
     ----------
     filename: string
         input xml file location
+    config_path: string (optional)
+        on-run setting for ConfigPat. Default is None.
 
     Returns
     -------
@@ -38,14 +40,18 @@ class LoadOptions(Task):
 
     def __init__(self):
         self.addTaskParam('filename', 'input option file name')
+        self.addTaskParam('config_path', 'on-run setting for ConfigPath', None)
 
     def execute(self):
         self._filename = self.get_task_param('filename')
+        self._config_path = self.get_task_param('config_path')
         self.__check_format__()
         root = self.__get_root__()
         self._dict = self.__parser__(root)
         # self.debug('loaded options: {}'.format(self._dict))
         self.set_output(self._dict)
+
+    configPath = None
 
     def __check_format__(self):
         if not self._filename.endswith('.xml'):
@@ -94,6 +100,9 @@ class LoadOptions(Task):
                 if ch.tag == "ConfigPath":
                     self.configPath = value
 
+                if self._config_path:
+                    self.configPath = self._config_path
+
                 # if isinstance(value, str):
                 #     retval = value
                 # else:
@@ -139,6 +148,19 @@ class LoadOptions(Task):
             except IOError:
                 self.error("Cannot read input file")
                 raise IOError
+        if 'config_dict' in root_dict:
+            attrValue = root_dict['config_dict']
+            datafile = attrValue
+            datafile = datafile['value'].replace('__ConfigPath__', self.configPath)
+            try:
+                data = self.__read_datadict__(datafile)
+                root_dict = data
+                root_dict['config_dict'] = datafile
+                self.debug('Configuration dictionary found in {}'.format(datafile))
+            except IOError:
+                self.error("Cannot read input file")
+                raise IOError
+
         return root_dict
 
     def getopt(self):
@@ -165,7 +187,11 @@ class LoadOptions(Task):
             data = load(datadict)
             return data
         elif ext == '.pickle':
-            raise NotImplementedError
+            import pickle
+            f = open(datadict, 'rb')
+            data = pickle.load(f)
+            f.close()
+            return data
         else:
             self.error('inconsistent table')
             raise IOError

@@ -4,7 +4,8 @@ import pathlib
 import unittest
 
 from exorad.log import setLogLevel
-from exorad.tasks import PreparePayload, PrepareTarget, PropagateTargetLight, LoadTargetList, LoadSource, \
+from exorad.tasks import PreparePayload, PrepareTarget, PropagateTargetLight, \
+    LoadTargetList, LoadSource, \
     PropagateForegroundLight, EstimateZodi
 from test_options import payload_file
 
@@ -22,7 +23,8 @@ target_list = os.path.join(data_dir, 'test_target.csv')
 
 
 class TargetPropagationTest(unittest.TestCase):
-    payload, channels, (wl_min, wl_max) = preparePayload(payload_file=options_filename, output=None)
+    payload, channels, (wl_min, wl_max) = preparePayload(
+        payload_file=options_filename, output=None)
     targets = loadTargetList(target_list=target_list)
     target = targets.target[0]
     target, sed = loadSource(target=target,
@@ -34,20 +36,23 @@ class TargetPropagationTest(unittest.TestCase):
 
     def test_target(self):
         propagateTargetLight = PropagateTargetLight()
-        target = propagateTargetLight(channels=self.channels, target=self.target)
+        target = propagateTargetLight(channels=self.channels,
+                                      target=self.target)
 
         print(target.table)
 
 
 class BackgroundPropagationTest(unittest.TestCase):
     setLogLevel(logging.INFO)
-    payload, channels, (wl_min, wl_max) = preparePayload(payload_file=options_filename, output=None)
+    payload, channels, (wl_min, wl_max) = preparePayload(
+        payload_file=options_filename, output=None)
     targets = loadTargetList(target_list=target_list)
     target = targets.target[0]
 
-    target = estimateBackground(zodi=payload['common']['foreground']['zodiacal'],
-                                target=target,
-                                wl_range=(wl_min, wl_max))
+    target = estimateBackground(
+        zodi=payload['common']['foreground']['zodiacal'],
+        target=target,
+        wl_range=(wl_min, wl_max))
     target = prepareTarget(target=target, channels=channels)
 
     setLogLevel(logging.DEBUG)
@@ -55,6 +60,7 @@ class BackgroundPropagationTest(unittest.TestCase):
     def test_target(self):
         setLogLevel(logging.DEBUG)
         propagateBackgroundLight = PropagateForegroundLight()
-        target = propagateBackgroundLight(channels=self.channels, target=self.target)
+        target = propagateBackgroundLight(channels=self.channels,
+                                          target=self.target)
 
         print(target.table)

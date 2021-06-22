@@ -15,9 +15,11 @@ from test_options import payload_file
 
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')
+test_dir = os.path.join(path, 'test_data')
 
 loadOptions = LoadOptions()
 options = loadOptions(filename=payload_file())
+
 
 class PhotometerTest(unittest.TestCase):
     setLogLevel(logging.DEBUG)
@@ -38,7 +40,39 @@ class SpectrometerTest(unittest.TestCase):
     def test_spectrometer_table(self):
         self.assertEqual(self.spectrometer.table['Wavelength'].size, 12)
         # self.assertListEqual(list(self.spectrometer.table['TR'].value), [0.5] * 12)
-        self.assertListEqual(list(self.spectrometer.table['QE'].value), [0.7] * 12)
+        self.assertListEqual(list(self.spectrometer.table['QE'].value),
+                             [0.7] * 12)
+
+    def test_spectrometer_native_R(self):
+        from copy import deepcopy
+        opt = deepcopy(options)
+        opt['channel']['Spec']['targetR']['value'] = 'native'
+        spectrometer = Spectrometer('Spec', opt['channel']['Spec'], opt)
+        spectrometer.build()
+
+    def test_spectrometer_no_R(self):
+        from copy import deepcopy
+        opt = deepcopy(options)
+        opt['channel']['Spec'].pop('targetR')
+        spectrometer = Spectrometer('Spec', opt['channel']['Spec'], opt)
+        spectrometer.build()
+        self.assertEqual(opt['channel']['Spec']['targetR']['value'], 'native')
+
+
+class Spectrometer_from_pickle_Test(unittest.TestCase):
+    setLogLevel(logging.DEBUG)
+    loadOptions = LoadOptions()
+    options2 = loadOptions(filename=
+    payload_file(
+        name='payload_test_pickle_spec.xml'))
+    spectrometer = Spectrometer('Spec', options2['channel']['Spec'], options2)
+    spectrometer.build()
+
+    def test_spectrometer_table(self):
+        self.assertEqual(self.spectrometer.table['Wavelength'].size, 12)
+        # self.assertListEqual(list(self.spectrometer.table['TR'].value), [0.5] * 12)
+        self.assertListEqual(list(self.spectrometer.table['QE'].value),
+                             [0.7] * 12)
 
 
 class InstrumentBuilderTest(unittest.TestCase):
@@ -63,7 +97,8 @@ class IOTest(unittest.TestCase):
     payload_loaded, channels_loaded = loadPayload(input=file)
 
     def test_instrument_list(self):
-        self.assertListEqual(list(self.channels_built.keys()), list(self.channels_loaded.keys()))
+        self.assertListEqual(list(self.channels_built.keys()),
+                             list(self.channels_loaded.keys()))
 
     def test_instrument_build_from_file(self):
         with self.assertRaises(ValueError):

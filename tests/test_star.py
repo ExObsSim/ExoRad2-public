@@ -1,5 +1,6 @@
 import logging
 import unittest
+import os
 
 import astropy.units as u
 import numpy as np
@@ -12,9 +13,12 @@ setLogLevel(logging.DEBUG)
 
 class StarTest(unittest.TestCase):
 
+    phoenix_stellar_model = '/usr/local/project_data/sed/'
+
+    @unittest.skipIf(not os.path.isdir(phoenix_stellar_model),
+                     'phoenix dir not found')
     def test_phoenix_star(self):
         from exorad.models.source import Star
-        phoenix_stellar_model = '/usr/local/project_data/sed/'
 
         target = {'D': 12.975 * u.pc,
                   'T': 3016 * u.K,
@@ -23,7 +27,7 @@ class StarTest(unittest.TestCase):
         g = (cc.G * target['M'].si / (target['R'].si) ** 2).to(u.cm / u.s ** 2)
         logG = np.log10(g.value)
 
-        Star(phoenix_stellar_model,
+        Star(self.phoenix_stellar_model,
              target['D'],
              target['T'],
              logG,
@@ -51,10 +55,12 @@ class StarTest(unittest.TestCase):
         import os
         from inspect import getsourcefile
         from exorad.models.source import CustomSed
-        current_folder = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
+        current_folder = os.path.dirname(
+            os.path.abspath(getsourcefile(lambda: 0)))
         target = {'D': 12.975 * u.pc,
                   'R': 0.218 * u.Rsun}
-        CustomSed(os.path.join(os.path.dirname(current_folder), 'examples/customsed.csv'),
+        CustomSed(os.path.join(os.path.dirname(current_folder),
+                               'examples/customsed.csv'),
                   target['R'],
                   target['D'],
                   )

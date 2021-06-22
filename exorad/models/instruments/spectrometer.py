@@ -15,15 +15,38 @@ class Spectrometer(Instrument):
     """
 
     def _wavelength_table(self):
-        number_of_spectral_bins = np.ceil(
-            np.log(self.description['wl_max']['value']
-                   / self.description['wl_min']['value'])
-            / np.log(1.0 + 1.0 / self.description['targetR']['value'])) + 1
-        wl_bin = self.description['wl_min']['value'] \
-                 * (1.0 + 1.0 / self.description['targetR']['value']) ** np.arange(number_of_spectral_bins)
-        wl_bin_c = 0.5 * (wl_bin[0:-1] + wl_bin[1:])
-        wl_bin_width = wl_bin[1:] - wl_bin[0:-1]
+        # check if R is defined
+        if 'targetR' not in self.description:
+            self.warning('Channel targetR missing: native R is assumed')
+            self.description['targetR'] = {'value':'native'}
 
+        # define the wavelength grid
+        if 'value' in self.description['targetR'].keys():
+            self.debug('spectral resolution set to {}'.format(self.description['targetR']['value']))
+            # native R
+            if self.description['targetR']['value'] == 'native':
+                wl_bin_c = self.built_instr['wl_pix_center']
+                wl_bin_width = self.built_instr['pixel_bandwidth']
+                wl_bin = wl_bin_c - 0.5 * wl_bin_width
+                wl_bin = np.append(wl_bin, wl_bin_c[-1] + 0.5 * wl_bin_width[-1])
+            # fixed R
+            else:
+                number_of_spectral_bins = np.ceil(
+                    np.log(self.description['wl_max']['value']
+                           / self.description['wl_min']['value'])
+                    / np.log(1.0 + 1.0 / self.description['targetR']['value'])) + 1
+                wl_bin = self.description['wl_min']['value'] \
+                         * (1.0 + 1.0 / self.description['targetR']['value']) ** np.arange(number_of_spectral_bins)
+                wl_bin_c = 0.5 * (wl_bin[0:-1] + wl_bin[1:])
+                wl_bin_width = wl_bin[1:] - wl_bin[0:-1]
+        # wavelength dependent R
+        elif 'data' in self.description['targetR'].keys():
+            raise NotImplementedError
+        else:
+            self.error('Channel targetR format unsupported.')
+            raise KeyError('Channel targetR format unsupported.')
+
+        # preparing the table
         self.table['chName'] = [self.name] * wl_bin_c.size
         self.table['Wavelength'] = wl_bin_c
         self.table['Bandwidth'] = wl_bin_width
@@ -34,11 +57,6 @@ class Spectrometer(Instrument):
 
     def builder(self):
         self.info('building {}'.format(self.name))
-        wl_bin = self._wavelength_table()
-        self._add_data_to_built('wl_bin', wl_bin)
-
-        self.table['QE'], qe_data = self._get_qe()
-        self._add_data_to_built('qe_data', qe_data.to_dict())
 
         # building pixel grid
         try:
@@ -57,8 +75,8 @@ class Spectrometer(Instrument):
         wl_sol_func_reverse = interp1d(wl_solution_data.wl_grid, wl_solution_data.data,
                                        assume_sorted=False, fill_value='extrapolate', bounds_error=False)
 
-        first_pixel = wl_sol_func_reverse(wl_bin.min()) * wl_solution_data.data.unit
-        last_pixel = wl_sol_func_reverse(wl_bin.max()) * wl_solution_data.data.unit
+        first_pixel = wl_sol_func_reverse(self.description['wl_min']['value']) * wl_solution_data.data.unit
+        last_pixel = wl_sol_func_reverse(self.description['wl_max']['value']) * wl_solution_data.data.unit
         self.debug('first pixel: {}, last pixel: {}'.format(first_pixel, last_pixel))
         if last_pixel < first_pixel: last_pixel, first_pixel = first_pixel, last_pixel
 
@@ -66,6 +84,7 @@ class Spectrometer(Instrument):
 
         # coordinates of detector  pixel centres
         coord_pix_center = np.arange(first_pixel.value, last_pixel.value, delta.value) * delta.unit
+        coord_pix_center = np.flip(coord_pix_center)
         self.debug('pix_center: {}'.format(coord_pix_center))
         self._add_data_to_built('pix_center', coord_pix_center)
         # wavelength sampled by the pixels
@@ -75,6 +94,12 @@ class Spectrometer(Instrument):
         pixel_bandwidth = np.abs(wl_sol_func(coord_pix_center - 0.5 * delta) -
                                  wl_sol_func(coord_pix_center + 0.5 * delta)) * delta.unit
         self._add_data_to_built('pixel_bandwidth', pixel_bandwidth)
+
+        # initializing channel table
+        wl_bin = self._wavelength_table()
+        self._add_data_to_built('wl_bin', wl_bin)
+        self.table['QE'], qe_data = self._get_qe()
+        self._add_data_to_built('qe_data', qe_data.to_dict())
 
         # window sizes
         pixel_window_edge = wl_sol_func_reverse(wl_bin) * wl_solution_data.data.unit
@@ -90,8 +115,8 @@ class Spectrometer(Instrument):
             radius = 1.22
         self.debug('radius : {}'.format(radius))
 
-        window_spatial_width = (2.0 * radius * self.description['Fnum_y']['value'] * self.table['Wavelength'] / \
-                                delta).to('')
+        window_spatial_width = (2.0 * radius * self.description['Fnum_y']['value'] *
+                                self.table['Wavelength'] / delta).to('')
         if 'window_spatial_scale' in list(self.description.keys()):
             window_spatial_width *= self.description['window_spatial_scale']['value']
             self.debug('window spatial width scaled by {}'.format(self.description['window_spatial_scale']['value']))
@@ -159,8 +184,7 @@ class Spectrometer(Instrument):
         self.debug('star flux density: {}'.format(flux_density))
 
         star_flux = np.trapz(flux_density * window_function,
-                             x=target.star.sed.wl_grid.to(u.um)
-                             ).to(u.W / u.m ** 2)
+                             x=target.star.sed.wl_grid.to(u.um)).to(u.W / u.m ** 2)
         self.debug('star flux : {}'.format(star_flux))
         out['starFlux'] = star_flux
 
@@ -176,8 +200,7 @@ class Spectrometer(Instrument):
         star_signal_inPixel = CountsPerSeconds(star_signal_inPixel_density.wl_grid,
                                                (star_signal_inPixel_density.data * self.built_instr['pixel_bandwidth']
                                                 * gain_prf(star_signal_inPixel_density.wl_grid)).to(u.count / u.s))
-        starSignal_inPixel_max = np.empty(self.table['Wavelength'].size, dtype=float) * \
-                                 star_signal_inPixel.data.unit
+        starSignal_inPixel_max = np.empty(self.table['Wavelength'].size, dtype=float) * star_signal_inPixel.data.unit
         for k, (wld, wlu) in enumerate(zip(self.table['LeftBinEdge'], self.table['RightBinEdge'])):
             idx = np.where(np.logical_and(star_signal_inPixel.wl_grid > wld,
                                           star_signal_inPixel.wl_grid < wlu))[0]

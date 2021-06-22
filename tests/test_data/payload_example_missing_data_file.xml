@@ -18,7 +18,9 @@
         <wl_min unit="micron">0.45</wl_min>
         <wl_max unit="micron">2.2</wl_max>
         <zodiacFactor>2.5
-            <comment>multiplicative factor to use if no coord are used for the target</comment>
+            <comment>multiplicative factor to use if no coord are used for the
+                target
+            </comment>
         </zodiacFactor>
         <!-- zodicalBkgMap>
             <datafile> your map here </datafile>
@@ -28,8 +30,10 @@
         <customNoise>custom
             <datafile>__ConfigPath__/examples/custom_noise.csv</datafile>
             <comment>list here the custom noise to at the end of analysis.
-                They must be .csv or .dat data file with a "Wavelengths" column and a column named as the noise.
-                They must be in h^(1/2) units, meaning the relative noise integrated in one hour,
+                They must be .csv or .dat data file with a "Wavelengths" column
+                and a column named as the noise.
+                They must be in h^(1/2) units, meaning the relative noise
+                integrated in one hour,
                 as they will be added to the total noise.
             </comment>
         </customNoise>
@@ -44,8 +48,10 @@
         </Transmission-->
         <ForceChannelWlEdge>
             <comment>When this option is present,
-                trasmission data is forced to zero outside the interval [wl_min, wl_max] of each channel.
-                Use this option when you think the out-of-band transmission is unrealistically large.
+                trasmission data is forced to zero outside the interval
+                [wl_min, wl_max] of each channel.
+                Use this option when you think the out-of-band transmission is
+                unrealistically large.
                 Otherwise, comment it out.
             </comment>
         </ForceChannelWlEdge>
@@ -53,7 +59,8 @@
             <comment>Telescope area</comment>
         </Atel>
         <nComp>8
-            <comment>number of optical elements in common for every channel</comment>
+            <comment>number of optical elements in common for every channel
+            </comment>
         </nComp>
         <OperativeTemperature unit="K">60
             <comment>payload operative temperature</comment>
@@ -90,7 +97,8 @@
         </PSF-->
         <optics>
             <nComp>4
-                <comment>number of optical elements after the common ones</comment>
+                <comment>number of optical elements after the common ones
+                </comment>
             </nComp>
             <OperativeTemperature unit="K">60</OperativeTemperature>
             <emissivity>0.03</emissivity>
@@ -108,11 +116,14 @@
             </f_well_depth>
             <qe unit="">0.55
                 <!--datafile>__ConfigPath__/data/QE.csv </datafile-->
-                <comment>QE can either be a single value or a table expressing QE vs Wavelength</comment>
+                <comment>QE can either be a single value or a table expressing
+                    QE vs Wavelength
+                </comment>
             </qe>
             <freqNDR unit="Hz">0.
                 <comment>This is the rate at which NDRs are read during
-                    one exposure. If 0 is chosen, than CDS reading mode is enabled.
+                    one exposure. If 0 is chosen, than CDS reading mode is
+                    enabled.
                 </comment>
             </freqNDR>
         </detector>
@@ -137,7 +148,8 @@
         <targetR unit="">20.0</targetR>
         <optics>
             <nComp>3
-                <comment>number of optical elements after the common ones</comment>
+                <comment>number of optical elements after the common ones
+                </comment>
             </nComp>
             <OperativeTemperature unit="K">60</OperativeTemperature>
             <emissivity>0.03</emissivity>
@@ -153,10 +165,12 @@
                     detector effects
                 </comment>
             </f_well_depth>
-            <!--qe unit="">
-                <datafile>__ConfigPath__/examples/QE.csv </datafile>
-                <comment> QE can either be a single value or a table expressing QE vs Wavelength </comment>
-            </qe -->
+            <qe unit="">
+                <datafile>__ConfigPath__/examples/QE.csv</datafile>
+                <comment>QE can either be a single value or a table expressing
+                    QE vs Wavelength
+                </comment>
+            </qe>
             <freqNDR unit="Hz">0.
                 <comment>This is the rate at which NDRs are read during
                     one exposure.
@@ -164,7 +178,8 @@
             </freqNDR>
             <cut_off unit="micron">2.2</cut_off>
             <box_temperature unit="K">42
-                <comment>used to estimate the inner sanctum contribution</comment>
+                <comment>used to estimate the inner sanctum contribution
+                </comment>
             </box_temperature>
         </detector>
     </channel>

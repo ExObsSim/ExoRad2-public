@@ -3,7 +3,7 @@ from astropy import units as u
 
 from exorad.models.source import Star, CustomSed
 from exorad.tasks.task import Task
-
+import os
 
 class LoadSource(Task):
     """
@@ -50,46 +50,64 @@ class LoadSource(Task):
             source = {'value': source}
             self.warning('source should be dict, not string.')
 
-        # check if star information are complete
-        for attr in ['D', 'Teff', 'M', 'R']:
-            if not hasattr(target.star.__getattribute__(attr), 'value'):
-                self.error('target information incomplete')
-                raise AttributeError('target information incomplete')
-
-        self.debug('source spectrum : {}'.format(source['value'].lower()))
-        if source['value'].lower() == 'planck':
-            self.debug('Plack sed selected')
-            star = Star('.',
-                        target.star.D,
-                        target.star.Teff,
-                        target.star.calc_logg(target.star.M, target.star.R),
-                        0.0,
-                        target.star.R,
-                        use_planck_spectrum=True)
-
-        elif source['value'].lower() == 'phoenix':
-            star = Star(source['StellarModels']['value'],
-                        target.star.D,
-                        target.star.Teff,
-                        target.star.calc_logg(target.star.M, target.star.R),
-                        0.0,
-                        target.star.R,
-                        use_planck_spectrum=False)
-            self.debug('stellar sed used {}'.format(star.filename))
-        elif source['value'].lower() == 'custom':
+        if source['value'].lower() == 'custom':
+            # if custom source, only R and D are needed for the solid angle
+            for attr in ['D', 'R']:
+                if not hasattr(target.star.__getattribute__(attr), 'value'):
+                    self.error('target information incomplete')
+                    raise AttributeError('target information incomplete')
             star = CustomSed(source['CustomSed']['value'],
                              target.star.R,
                              target.star.D)
             self.debug('custom sed used {}'.format(source['CustomSed']['value']))
+
         else:
-            star = Star('.',
-                        target.star.D,
-                        target.star.Teff,
-                        target.star.calc_logg(target.star.M, target.star.R),
-                        0.0,
-                        target.star.R,
-                        use_planck_spectrum=True)
-            self.info('invalid source spectrum description. Planck spectrum is used')
+            # check if star information are complete
+            for attr in ['D', 'Teff', 'M', 'R']:
+                if not hasattr(target.star.__getattribute__(attr), 'value'):
+                    self.error('target information incomplete')
+                    raise AttributeError('target information incomplete')
+
+            self.debug('source spectrum : {}'.format(source['value'].lower()))
+            if source['value'].lower() == 'planck':
+                self.debug('Plack sed selected')
+                star = Star('.',
+                            target.star.D,
+                            target.star.Teff,
+                            target.star.calc_logg(target.star.M, target.star.R),
+                            0.0,
+                            target.star.R,
+                            use_planck_spectrum=True)
+
+            elif source['value'].lower() == 'phoenix':
+                try:
+                    star_sed_path = source['StellarModels']['value']
+                except KeyError:
+                    if os.environ.get('PHOENIX_PATH', None) is not None:
+                        star_sed_path = os.environ.get('PHOENIX_PATH', None)
+                    else:
+                        raise IOError('No phoenix path specificed')
+
+                if not os.path.exists(star_sed_path):
+                    raise IOError('Phoenix path does not exist: {}'.format(star_sed_path))
+                    
+                star = Star(star_sed_path,
+                            target.star.D,
+                            target.star.Teff,
+                            target.star.calc_logg(target.star.M, target.star.R),
+                            0.0,
+                            target.star.R,
+                            use_planck_spectrum=False)
+                self.debug('stellar sed used {}'.format(star.filename))
+            else:
+                star = Star('.',
+                            target.star.D,
+                            target.star.Teff,
+                            target.star.calc_logg(target.star.M, target.star.R),
+                            0.0,
+                            target.star.R,
+                            use_planck_spectrum=True)
+                self.info('invalid source spectrum description. Planck spectrum is used')
 
         wl_min, wl_max = self.get_task_param('wl_range')
         if wl_min > wl_max: wl_min, wl_max = wl_max, wl_min

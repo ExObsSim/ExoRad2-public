@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [2.1.78] - 2021-06-22
+### Added
+- channel native spectral resolution if `targetR` is set to `native` (remember to remove the units)
+- channel description from pickle dict
+- config_path keyword to LoadOptions for on-run and automatic setting of ConfigPath
+- environment variable for Phoenix star sed as PHOENIX_PATH loaded if not phoenix path given in the payload file
+### Changed 
+- spectrometer `_wavelength_table` method adapted to accept different R formats
+- Task class updated to load default values
+### Fixed
+- source custom SED now working even without source mass and temperature. 
+- flipped pixel order in native resolution 
+
 ## [2.1.70] - 2021-03-04
 ### Added
 - The zodiacal factor can now be scaled according to the planet position in the sky. 
@@ -149,6 +162,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.78]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.70...v2.1.78
 [2.1.70]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.68...v2.1.70
 [2.1.68]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.67...v2.1.68
 [2.1.67]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.61...v2.1.67

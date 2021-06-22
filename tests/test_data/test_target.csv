@@ -1,2 +1,2 @@
-star name,star M [M_sun],star Teff [K],star R [R_sun],star D [pc],star magk 
-myTest,1,5000,1,10,0
+star name,star M [M_sun],star Teff [K],star R [R_sun],star D [pc],star magk
+myTest   ,1             ,5000         ,1             ,10         ,0
