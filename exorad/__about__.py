@@ -26,7 +26,7 @@ except NameError:
     base_dir = None
 
 __base_dir__ = base_dir
-
+__branch__ = None
 if base_dir is not None and os.path.exists(os.path.join(base_dir, ".git")):
     git_folder = os.path.join(base_dir, ".git")
     with open(os.path.join(git_folder, "HEAD")) as fp:

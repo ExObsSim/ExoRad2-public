@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.1.79] - 2021-06-23
+### Fixed
+- missing branch in about
+
 ## [2.1.78] - 2021-06-22
 ### Added
 - channel native spectral resolution if `targetR` is set to `native` (remember to remove the units)
@@ -162,6 +167,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.79]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.78...v2.1.79
 [2.1.78]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.70...v2.1.78
 [2.1.70]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.68...v2.1.70
 [2.1.68]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.67...v2.1.68
