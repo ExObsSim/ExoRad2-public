@@ -1,7 +1,6 @@
 import os
 from copy import deepcopy
 from exorad.__version__ import __version__
-from exorad.cache import GlobalCache
 from exorad.log import disableLogging, enableLogging
 from ..models.targetlist import XLXSTargetList, CSVTargetList, QTableTargetList
 from .task import Task
@@ -251,6 +250,10 @@ class ObserveTargetlist(Task):
         allow to save plots
     out_dir: str
         indicate the directory where to save plots
+    n_thread: int
+        number of threads
+    debug: bool
+        debug mode
 
     Returns
     -------
@@ -265,6 +268,8 @@ class ObserveTargetlist(Task):
         self.addTaskParam('wl_range', 'wavelength range to investigate. (wl_min, wl_max)')
         self.addTaskParam('plot', 'allow to save plots')
         self.addTaskParam('out_dir', 'indicate the directory where to save plots')
+        self.addTaskParam('n_thread', 'number of threads', 1)
+        self.addTaskParam('debug', 'debug mode', False)
 
     def execute(self):
         from exorad.utils.util import chunks
@@ -275,10 +280,11 @@ class ObserveTargetlist(Task):
             pass
 
         targets = self.get_task_param('targets')
+        n_thread = self.get_task_param('n_thread')
 
         manager = mp.Manager()
         outputDict = manager.dict()
-        for tt in chunks(targets, GlobalCache()['n_thread']):
+        for tt in chunks(targets, n_thread):
             job = [mp.Process(target=self.pipeline_to_dict, args=(target, outputDict)) for target in tt]
             for j in job:
                 j.start()
@@ -298,10 +304,11 @@ class ObserveTargetlist(Task):
         wl_range = self.get_task_param('wl_range')
         plot = self.get_task_param('plot')
         out_dir = self.get_task_param('out_dir')
+        debug = self.get_task_param('debug')
         observeTarget = ObserveTarget()
 
         self.info('observing {}'.format(target.name))
-        if not GlobalCache()['debug']: disableLogging()
+        if not debug: disableLogging()
         try:
             target = observeTarget(target=target, payload=payload, channels=channels, wl_range=wl_range)
             enableLogging()

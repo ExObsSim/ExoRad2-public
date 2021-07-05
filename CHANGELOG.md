@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.82] - 2021-07-05
+### Fixed
+- versions unpinned in setup.py
+- license
+- cache removed
+
 ## [2.1.79] - 2021-06-23
 ### Fixed
 - missing branch in about
@@ -167,6 +173,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.82]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.79...v2.1.81
 [2.1.79]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.78...v2.1.79
 [2.1.78]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.70...v2.1.78
 [2.1.70]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.68...v2.1.70

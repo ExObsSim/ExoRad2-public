@@ -1,3 +1,52 @@
+"""
+These parts of the code derives from TauREx3:
+    @ARTICLE{2019arXiv191207759A,
+           author = {{Al-Refaie}, Ahmed F. and {Changeat}, Quentin and {Waldmann}, Ingo P. and {Tinetti}, Giovanna},
+            title = "{TauREx III: A fast, dynamic and extendable framework for retrievals}",
+          journal = {arXiv e-prints},
+         keywords = {Astrophysics - Instrumentation and Methods for Astrophysics, Astrophysics - Earth and Planetary Astrophysics},
+             year = 2019,
+            month = dec,
+              eid = {arXiv:1912.07759},
+            pages = {arXiv:1912.07759},
+    archivePrefix = {arXiv},
+           eprint = {1912.07759},
+     primaryClass = {astro-ph.IM},
+           adsurl = {https://ui.adsabs.harvard.edu/abs/2019arXiv191207759A},
+          adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+    }
+
+BSD 3-Clause License
+
+Copyright (c) 2019, Ahmed F. Al-Refaie, Quentin Changeat, Ingo Waldmann, Giovanna Tinetti
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the names of the copyright holders nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
 import datetime
 
 import h5py
@@ -22,7 +71,8 @@ class HDF5OutputGroup(OutputGroup):
             for idx, a in enumerate(array):
                 self.write_array('{}{}'.format(array_name, idx), a, metadata)
             return
-        ds = self._entry.create_dataset(str(array_name), data=array, shape=array.shape, dtype=array.dtype)
+        ds = self._entry.create_dataset(str(array_name), data=array,
+                                        shape=array.shape, dtype=array.dtype)
         if metadata:
             for k, v in metadata.items():
                 ds.attrs[k] = v
@@ -80,12 +130,13 @@ class HDF5OutputGroup(OutputGroup):
 
     def write_quantity(self, quantity_name, quantity):
         if quantity_name == 'value':
-            self._entry.create_dataset('value', data=quantity.value,)
+            self._entry.create_dataset('value', data=quantity.value, )
         else:
             qg_c = self._entry.create_group(str(quantity_name))
-            qg_c.create_dataset('value', data=quantity.value,)
+            qg_c.create_dataset('value', data=quantity.value, )
             qg_c.create_dataset('unit', data=str(quantity.unit))
             pass
+
 
 def _encode_mixins(tbl):
     from astropy.table import serialize
@@ -125,15 +176,32 @@ class HDF5Output(Output):
         if self._append:
             mode = 'a'
 
+        attrs = {'file_name': fname,
+                 'file_time': datetime.datetime.now().isoformat(),
+                 'creator': self.__class__.__name__,
+                 'HDF5_Version': h5py.version.hdf5_version,
+                 'h5py_version': h5py.version.version,
+                 'program_name': 'ExoRad',
+                 'program_version': __version__,
+                }
+
         fd = h5py.File(fname, mode=mode)
-        fd.attrs['file_name'] = fname
-        fd.attrs['file_time'] = datetime.datetime.now().isoformat()
-        fd.attrs['creator'] = self.__class__.__name__
-        fd.attrs['HDF5_Version'] = h5py.version.hdf5_version
-        fd.attrs['h5py_version'] = h5py.version.version
-        fd.attrs['program_name'] = 'ExoRad'
-        fd.attrs['program_version'] = __version__
+        for key in attrs:
+            fd.attrs[key] = attrs[key]
+
+        if mode == 'w' or 'info' not in fd.keys():
+            try:
+                gd_ = fd['info']
+            except KeyError:
+                gd_ = fd.create_group('info')
+            gd = HDF5OutputGroup(gd_)
+            gd.store_dictionary(attrs, 'ExoRad')
+
         return fd
+
+    def add_info(self, attrs, name=None):
+        gd = self.create_group('info')
+        gd.store_dictionary(attrs, name)
 
     def create_group(self, group_name):
         entry = None

@@ -2,7 +2,6 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/ExObsSim/Exorad2-public?color=gree&label=GitHub%20release)
 [![Downloads](https://pepy.tech/badge/exorad)](https://pepy.tech/project/exorad)
 [![Documentation Status](https://readthedocs.org/projects/exorad2-public/badge/?version=latest)](https://exorad2-public.readthedocs.io/en/latest/?badge=latest)
-![GitHub](https://img.shields.io/github/license/ExObsSim/ExoRad2-public)
 
 # ExoRad 2.0: The generic point source radiometric model
 

@@ -112,8 +112,8 @@ class BuildChannels(Task):
         buildInstrument = BuildInstrument()
         for det in self.get_task_param('payload')['channel'].keys():
             channel_type = \
-            self.get_task_param('payload')['channel'][det]['channelClass'][
-                'value'].lower()
+                self.get_task_param('payload')['channel'][det]['channelClass'][
+                    'value'].lower()
             channels[det] = buildInstrument(type=channel_type, name=det,
                                             description=
                                             self.get_task_param('payload')[
@@ -232,7 +232,12 @@ class PreparePayload(Task):
             if isinstance(payload_file, dict):
                 payload = payload_file
             if output is not None:
-                with HDF5Output(output) as out:
+
+                if os.path.isfile(output):
+                    append = True
+                else:
+                    append = False
+                with HDF5Output(output, append=append) as out:
                     channels = buildChannels(payload=payload, write=True,
                                              output=out)
             else:

@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 
 import exorad.__version__ as version
 import exorad.tasks as tasks
-from exorad.cache import GlobalCache
 from exorad.log import setLogLevel, addLogFile
 from exorad.output.hdf5 import HDF5Output
 from exorad.utils.plotter import Plotter
@@ -39,10 +38,6 @@ def standard_pipeline(options, target_list, output=None, plot=False, full_contri
     from exorad.utils.ascii_art import ascii_art
     logger.info(ascii_art)
     logger.info('code version {}'.format(version))
-
-    gc = GlobalCache()
-    gc['n_thread'] = n_thread
-    gc['debug'] = debug
 
     if debug: setLogLevel(logging.DEBUG)
     if isinstance(log, str): addLogFile(fname=log)
@@ -83,7 +78,7 @@ def standard_pipeline(options, target_list, output=None, plot=False, full_contri
 
     # step 3 observe targetlist
     targets = observeTargetList(targets=targets.target, payload=payload, channels=channels, wl_range=(wl_min, wl_max),
-                                plot=plot, out_dir=out_dir)
+                                plot=plot, out_dir=out_dir, n_thread=n_thread, debug=debug)
     # step 4 save to output
     if output is not None:
         for target in targets:
