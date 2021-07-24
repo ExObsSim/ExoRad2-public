@@ -170,10 +170,10 @@ class LoadOptions(Task):
         if datatype == 'ecsv':
             try:
                 data = ascii.read(os.path.expanduser(datafile),
-                                  format='ecsv')
+                                  format='ecsv', fill_values=[('#N/A', '0'), ('N/A', '0'), ('', '0')],)
             except InconsistentTableError:
                 data = ascii.read(os.path.expanduser(datafile),
-                                  format='csv')
+                                  format='csv', fill_values=[('#N/A', '0'), ('N/A', '0'), ('', '0')],)
             return data
 
         else:

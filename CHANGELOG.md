@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [2.1.83] - 2021-07-24
+### Fixed
+- data table reader updated 
+
 
 ## [2.1.82] - 2021-07-05
 ### Fixed
