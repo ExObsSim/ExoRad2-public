@@ -174,7 +174,7 @@ class InstrumentDiffuseLightTest(unittest.TestCase):
         from exorad.utils.exolib import OmegaPix
         omega_pix = OmegaPix(
             options['channel']['Spec']['Fnum_x']['value'].value,
-            options['channel']['Spec']['Fnum_x']['value'].value)
+            options['channel']['Spec']['Fnum_y']['value'].value)
         optics_radiance = planck(wl=wl_grid,
                                  T=optics['temperature']['value']).to(
             u.W / (u.m ** 2 * u.micron * u.sr))

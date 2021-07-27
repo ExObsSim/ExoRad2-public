@@ -15,8 +15,13 @@ def prepare(ch_table, ch_built_instr, description):
     logger.info('computing signal')
     wl_table = ch_table['Wavelength']
     logger.debug('wl table : {}'.format(wl_table))
-    omega_pix = OmegaPix(description['Fnum_x']['value'].value,
-                         description['Fnum_x']['value'].value)
+
+    fnum_x = description['Fnum_x']['value'].value
+    if 'Fnum_y' in description.keys():
+        fnum_y = description['Fnum_y']['value'].value
+    else:
+        fnum_y=None
+    omega_pix = OmegaPix(fnum_x,fnum_y)
     logger.debug('omega pix : {}'.format(omega_pix))
     A = (description['detector']['delta_pix']['value']
          * description['detector']['delta_pix']['value']).to(u.m ** 2)

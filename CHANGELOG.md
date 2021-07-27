@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.84] - 2021-07-27
+### Fixed
+- omega pixel for different f numbers
+
 ## [2.1.83] - 2021-07-24
 ### Fixed
 - data table reader updated 
@@ -177,6 +181,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.84]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.84...v2.1.84
 [2.1.83]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.82...v2.1.83
 [2.1.82]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.79...v2.1.82
 [2.1.79]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.78...v2.1.79
