@@ -3,7 +3,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 from scipy.interpolate import interp1d
-
+import pandas as pd
 from exorad.models.signal import CustomSignal, Signal, CountsPerSeconds
 from exorad.utils.exolib import binnedPSF
 from .instrument import Instrument
@@ -41,7 +41,21 @@ class Spectrometer(Instrument):
                 wl_bin_width = wl_bin[1:] - wl_bin[0:-1]
         # wavelength dependent R
         elif 'data' in self.description['targetR'].keys():
-            raise NotImplementedError
+            res_data = pd.read_csv(self.description['targetR']['data']['value'],sep='\t')
+            get_res = interp1d(res_data['W'],res_data['R'])
+            w1 = self.description['wl_min']['value'].value
+            w2 = w1
+            wl_bin = np.array([w1])
+            while w2 < self.description['wl_max']['value'].value:
+                w1 = w2
+                res = get_res(w1)
+                w2 = np.round((w1 + w1/res),4)
+                wl_bin = np.append(wl_bin,w2)
+            if self.description['wl_max']['value'].value - wl_bin[-2] < (wl_bin[-2] - wl_bin[-3])/2.: #remove small bin at end of channel
+                wl_bin[-2] = self.description['wl_max']['value'].value
+                wl_bin = wl_bin[:-1]
+            wl_bin_c = (np.array(wl_bin[:-1])+np.array(wl_bin[1:]))/2 * u.micron
+            wl_bin_width = (np.array(wl_bin[1:]) - np.array(wl_bin[:-1])) * u.micron
         else:
             self.error('Channel targetR format unsupported.')
             raise KeyError('Channel targetR format unsupported.')
@@ -120,7 +134,12 @@ class Spectrometer(Instrument):
         if 'window_spatial_scale' in list(self.description.keys()):
             window_spatial_width *= self.description['window_spatial_scale']['value']
             self.debug('window spatial width scaled by {}'.format(self.description['window_spatial_scale']['value']))
-
+        if 'window_spatial_pixel' in list(self.description.keys()):
+            window_spatial_width = np.full(len(self.table['Wavelength']),float(self.description['window_spatial_pixel']['value']))
+            self.debug('window spatial width set to {}'.format(self.description['window_spatial_pixel']['value']))
+        if 'window_spectral_pixel' in list(self.description.keys()):
+            window_spectral_width = np.full(len(self.table['Wavelength']),float(self.description['window_spectral_pixel']['value']))
+            self.debug('window spectral width set to {}'.format(self.description['window_spectral_pixel']['value']))
         window_size_px = window_spectral_width * window_spatial_width
         self._add_data_to_built('window_spectral_width', window_spectral_width)
         self._add_data_to_built('window_spatial_width', window_spatial_width)
@@ -133,10 +152,20 @@ class Spectrometer(Instrument):
         wl_prf = np.linspace(pixel_wavelength.min(), pixel_wavelength.max(),
                              _gain_prf.size)
         for k, wl in enumerate(wl_prf):
+            psf_file = None
+            psf_format = None
+            if 'PSF' in self.description.keys():
+                psf_file = self.description['PSF']['value']
+                if 'format' in self.description['PSF'].keys():
+                    psf_format = self.description['PSF']['format']['value']
+                    
             prf, pixel_prf, extent = binnedPSF(self.description['Fnum_x']['value'],
                                                self.description['Fnum_y']['value'],
                                                wl,
-                                               delta)
+                                               delta,
+                                               psf_file,
+                                               psf_format)
+                                               
             _gain_prf[k] = np.max(prf.sum(axis=0) / pixel_prf.sum(axis=0).max())
 
             if 'WFErms' in self.description.keys():

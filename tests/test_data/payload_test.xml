@@ -1,10 +1,10 @@
 <root>
-    <ConfigPath> /home/lorenzo/git/ExoRad2
+    <ConfigPath> /home/lorenzo/git/ExoRad2-public
         <comment>Main directory for the configuration files</comment>
     </ConfigPath>
     <fileName>payload_example</fileName>
     <common>
-        <sourceSpectrum>custom
+        <sourceSpectrum>planck
             <comment>Source spectrum can be 'planck', 'phoenix' or 'custom'.
                 If it's 'planck', no more information are needed here.
                 If it's 'phoenix' the phoenix spectra directory must be indicated in "StellarModels".

@@ -1,6 +1,6 @@
 import logging
 import os
-
+import glob
 import astropy.units as u
 import mpmath
 import numpy as np
@@ -137,22 +137,52 @@ def planck(wl, T):
         bb = np.zeros_like(wl)
     return bb
 
-
-def binnedPSF(F_x, F_y, wl, delta_pix, filename=None, PSFtype='AIRY'):
+def load_standard_psf(F_x, F_y, wl, delta_pix, hdr):
+    k_x = delta_pix / (F_x * wl * hdr['CDELT2'])
+    k_y = delta_pix / (F_y * wl * hdr['CDELT1'])
+    xmin = -(hdr['CRPIX2'] - 1) * F_x * wl * hdr['CDELT2']
+    xmax = (hdr['NAXIS2'] - (hdr['CRPIX2'] - 1)) * F_x * wl * hdr['CDELT2']
+    ymin = -(hdr['CRPIX1'] - 1) * F_y * wl * hdr['CDELT1']
+    ymax = (hdr['NAXIS1'] - (hdr['CRPIX1'] - 1)) * F_y * wl * hdr['CDELT1']
+    extent = (xmin, xmax, ymin, ymax)
+    return k_x, k_y, extent
+    
+def load_twinkle_psf(delta_pix, hdr):
+    k_x, k_y = 0.12487792968758*u.micron/u.micron, 0.1248779296875*u.micron/u.micron #hack to make it dimensionless in astropy units
+    xmin = -hdr['NAXIS2']/2.*delta_pix
+    xmax = hdr['NAXIS2']/2.*delta_pix
+    ymin = -hdr['NAXIS1']/2.*delta_pix
+    ymax = hdr['NAXIS1']/2.*delta_pix
+    extent = (xmin, xmax, ymin, ymax)
+    return k_x, k_y, extent
+    
+def binnedPSF(F_x, F_y, wl, delta_pix, filename=None, format=None, PSFtype='AIRY'):
     if filename:
-        with fits.open(os.path.expanduser(filename)) as hdu:
-            ima = hdu[0].data
-            hdr = hdu[0].header
-            # define a kernel representing the detector pixel response
-            # and use fractional pixel
-            k_x = delta_pix / (F_x * wl * hdr['CDELT2'])
-            k_y = delta_pix / (F_y * wl * hdr['CDELT1'])
-            xmin = -(hdr['CRPIX2'] - 1) * F_x * wl * hdr['CDELT2']
-            xmax = (hdr['NAXIS2'] - (hdr['CRPIX2'] - 1)) * F_x * wl * hdr['CDELT2']
-            ymin = -(hdr['CRPIX1'] - 1) * F_y * wl * hdr['CDELT1']
-            ymax = (hdr['NAXIS1'] - (hdr['CRPIX1'] - 1)) * F_y * wl * hdr['CDELT1']
-            extent = (xmin, xmax, ymin, ymax)
-    elif PSFtype == 'AIRY':
+        if filename[-5:] == '.fits':
+            with fits.open(os.path.expanduser(filename)) as hdu:
+                ima = hdu[0].data
+                hdr = hdu[0].header
+                # define a kernel representing the detector pixel response
+                # and use fractional pixel
+                if format == 'Twinkle':
+                    k_x, k_y, extent=load_twinkle_psf(delta_pix, hdr)
+                else:
+                    k_x, k_y, extent=load_standard_psf(F_x, F_y, wl, delta_pix, hdr)
+        elif os.path.isdir(filename):
+            filenames = np.sort(glob.glob(filename + '*.fits'))
+            psf_wl = []
+            for file in filenames:
+                with fits.open(os.path.expanduser(file)) as hdu:
+                    psf_wl.append(hdu[0].header['wavelength'])
+            idx = (np.abs(np.asarray(psf_wl) - wl.value)).argmin()
+            with fits.open(os.path.expanduser(filenames[idx])) as hdu:
+                ima = hdu[0].data
+                hdr = hdu[0].header
+                if format == 'Twinkle':
+                    k_x, k_y, extent=load_twinkle_psf(delta_pix, hdr)
+                else:
+                    k_x, k_y, extent=load_standard_psf(F_x, F_y, wl, delta_pix, hdr)
+    else:
         x = np.linspace(-3.0, 3.0, 256)
         xx, yy = np.meshgrid(x, x)
         r = np.pi * np.sqrt(xx ** 2 + yy ** 2) + 1.0e-10
