@@ -35,17 +35,22 @@ class Photometer(Instrument):
         self.table['QE'], qe_data = self._get_qe()
         self._add_data_to_built('qe_data', qe_data.to_dict())
 
+        psfFilename = None
+        psf_format = None
+
         if 'PSF' in self.description.keys():
             self.debug('PSF found')
             psfFilename = self.description['PSF']['value']
-        else:
-            psfFilename = None
+            if 'format' in self.description['PSF'].keys():
+                psf_format = self.description['PSF']['format']['value']
 
         prf, pixel_rf, extent = binnedPSF(self.description['Fnum_x']['value'],
                                           self.description['Fnum_y']['value'],
                                           self.table['Wavelength'],
-                                          self.description['detector']['delta_pix']['value'],
-                                          filename=psfFilename)
+                                          self.description['detector'][
+                                              'delta_pix']['value'],
+                                          filename=psfFilename,
+                                          format=psf_format)
         self._add_data_to_built('PRF', prf)
         self._add_data_to_built('pixelRF', pixel_rf)
         self._add_data_to_built('extent', extent)

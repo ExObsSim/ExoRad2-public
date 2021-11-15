@@ -155,7 +155,7 @@ def load_twinkle_psf(delta_pix, hdr):
     ymax = hdr['NAXIS1']/2.*delta_pix
     extent = (xmin, xmax, ymin, ymax)
     return k_x, k_y, extent
-    
+
 def binnedPSF(F_x, F_y, wl, delta_pix, filename=None, format=None, PSFtype='AIRY'):
     if filename:
         if filename[-5:] == '.fits':
@@ -183,7 +183,7 @@ def binnedPSF(F_x, F_y, wl, delta_pix, filename=None, format=None, PSFtype='AIRY
                 else:
                     k_x, k_y, extent=load_standard_psf(F_x, F_y, wl, delta_pix, hdr)
     else:
-        x = np.linspace(-3.0, 3.0, 256)
+        x = np.linspace(-4.0, 4.0, 256)
         xx, yy = np.meshgrid(x, x)
         r = np.pi * np.sqrt(xx ** 2 + yy ** 2) + 1.0e-10
 
@@ -197,6 +197,8 @@ def binnedPSF(F_x, F_y, wl, delta_pix, filename=None, format=None, PSFtype='AIRY
                   (ima.shape[1] // 2) * F_x * wl * (x[1] - x[0]),
                   -(ima.shape[0] // 2) * F_y * wl * (x[1] - x[0]),
                   (ima.shape[0] // 2) * F_y * wl * (x[1] - x[0]))
+        # normalise
+        ima /= ima.sum()
 
     fk_x, ik_x = np.modf(k_x)
     fk_y, ik_y = np.modf(k_y)

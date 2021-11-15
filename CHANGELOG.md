@@ -7,6 +7,19 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.94] - 2021-11-15
+### Added 
+- if the user selects Phoenix mode and a target has a temperature that is out of the sed boundaries, Planck is automatically used instead.
+- version control
+- replace output if exists
+- PSF format added to photometer
+### Changed
+- removed multiprocessing for single thread
+- replaced multiprocessing with joblib
+### Fixed
+- parsing datafile with custom path
+- BuildChannels now works also for a single channel
+
 ## [2.1.86] - 2021-08-01
 ### Added
 - variable resolving power (by @Billy Edwards)
@@ -186,6 +199,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.94]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.86...v2.1.94
 [2.1.86]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.84...v2.1.86
 [2.1.84]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.83...v2.1.84
 [2.1.83]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.82...v2.1.83

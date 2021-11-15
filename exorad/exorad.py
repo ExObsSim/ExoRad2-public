@@ -34,7 +34,7 @@ def efficiency_plot(channels, output_dir=None):
 
 
 def standard_pipeline(options, target_list, output=None, plot=False, full_contrib=False,
-                      n_thread=1, debug=False, log=False):
+                      n_thread=1, debug=False, log=False, replace=True):
     from exorad.utils.ascii_art import ascii_art
     logger.info(ascii_art)
     logger.info('code version {}'.format(version))
@@ -44,6 +44,10 @@ def standard_pipeline(options, target_list, output=None, plot=False, full_contri
     elif log: addLogFile()
 
     if output is not None:
+        if replace:
+            if os.path.exists(output):
+                os.remove(output)
+
         out_dir = pathlib.Path(output).parent.absolute()
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)

@@ -35,3 +35,7 @@ __license__ = "BSD-3-Clause"
 __copyright__ = '2020-{:d}, {}'.format(date.today().year, __author__)
 
 from exorad.exorad import standard_pipeline
+
+
+from exorad.utils.version_control import VersionControl
+VersionControl()

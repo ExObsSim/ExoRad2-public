@@ -55,6 +55,7 @@ class Star(Logger, object):
 
         """
         self.set_log_name()
+        self.model = None
 
         if use_planck_spectrum == True:
             self.debug('Planck spectrum used')
@@ -65,6 +66,7 @@ class Star(Logger, object):
                 starTemperature.to(u.K),
                 starRadius.to(u.m))
             ph_file = None
+            self.model = 'Planck'
         else:
             if phoenix_model_filename:
                 ph_file = os.path.join(star_sed_path, phoenix_model_filename)
@@ -81,27 +83,50 @@ class Star(Logger, object):
                 ph_file,
                 starDistance.to(u.m),
                 starRadius.to(u.m))
+            self.model = os.path.basename(ph_file)
 
         self.luminosity = ph_L
         self.sed = Sed(wl_grid=ph_wl, data=ph_sed)
         self.filename = ph_file
-        self.model = 'Planck' if use_planck_spectrum else os.path.basename(ph_file)
 
-    def __get_phonix_model_filename(self, path, star_temperature,
-                                    star_logg, star_f_h):
-        sed_name = glob.glob(os.path.join(path, "*.BT-Settl.spec.fits.gz"))
+    def __get_sed_list(self, path):
+
+        sed_name = []
+        # todo include more phoenix formats
+        format_list = ["*.BT-Settl.spec.fits.gz"]#, "*.7.bz2", "*.7.gz", "*HiRes.fits"]
+        for format in format_list:
+            sed_name = glob.glob(os.path.join(path, format))
+            if len(sed_name) != 0:
+                return sed_name
 
         if len(sed_name) == 0:
             self.error("No stellar SED files found")
             raise OSError("No stellar SED files found")
 
-        sed_T_list = np.array([np.float(os.path.basename(k)[3:8]) for k in sed_name])
-        sed_Logg_list = np.array([np.float(os.path.basename(k)[9:12]) for k in sed_name])
-        sed_Z_list = np.array([np.float(os.path.basename(k)[13:16]) for k in sed_name])
+    def __get_phonix_model_filename(self, path, star_temperature,
+                                    star_logg, star_f_h):
+        sed_name = self.__get_sed_list(path)
+        sed_name_cleaned = [os.path.basename(k) for k in sed_name]
 
-        idx = np.argmin(np.abs(sed_T_list - np.round(star_temperature.value / 100.0)) +
-                        np.abs(sed_Logg_list - star_logg) +
-                        np.abs(sed_Z_list - star_f_h))
+        sed_T_list = np.array([np.float(name.split('-')[0][3:])
+                               for name in sed_name_cleaned])
+        sed_Logg_list = np.array(
+            [np.float(name.split('-')[1]) for name in sed_name_cleaned])
+        sed_Z_list = np.array(
+            [np.float(name.split('-')[2][:3]) for name in sed_name_cleaned])
+
+        temp_to_find = star_temperature.value/100
+        # if 'HiRes' not in sed_name_cleaned[0]:
+        #     temp_to_find /= 100.0
+
+        if np.round(temp_to_find) < min(sed_T_list) or \
+                np.round(temp_to_find) > max(sed_T_list):
+            raise ValueError
+
+        idx = np.argmin(
+            np.abs(sed_T_list - np.round(temp_to_find)) +
+            np.abs(sed_Logg_list - star_logg) +
+            np.abs(sed_Z_list - star_f_h))
 
         ph_file = sed_name[idx]
 
@@ -128,22 +153,64 @@ class Star(Logger, object):
 
         ####################### USING PHOENIX BIN_SPECTRA BINARY FILES (h5)
 
-        with fits.open(ph_file) as hdu:
-            strUnit = hdu[1].header['TUNIT1']
-            wl = hdu[1].data.field('Wavelength') * u.Unit(strUnit)
+        if 'spec.fits.gz' in ph_file:
+            with fits.open(ph_file) as hdu:
+                strUnit = hdu[1].header['TUNIT1']
+                wl = hdu[1].data.field('Wavelength') * u.Unit(strUnit)
 
-            strUnit = hdu[1].header['TUNIT2']
-            sed = hdu[1].data.field('Flux') * u.Unit(strUnit)
+                strUnit = hdu[1].header['TUNIT2']
+                sed = hdu[1].data.field('Flux') * u.Unit(strUnit)
 
-            # remove duplicates
-            idx = np.nonzero(np.diff(wl))
-            wl = wl[idx]
-            sed = sed[idx]
+                bolometric_luminosity = (hdu[1].header['PHXLUM'] * u.W).to(
+                    u.Lsun)
 
-            bolometric_luminosity = (hdu[1].header['PHXLUM'] * u.W).to(u.Lsun)
+        # todo include more phoenix formats
+        # elif 'HiRes.fits' in ph_file:
+        #     import pathlib
+        #     with fits.open(ph_file) as hdu:
+        #         sed = hdu[0].data * u.erg/ u.s/ u.cm**2/ u.cm
+        #         wl_ref = hdu[0].header['WAVE']
+        #     path = pathlib.Path(ph_file).parent.absolute()
+        #     wl_ref = wl_ref.replace('../../', '')
+        #     wl_file = os.path.join(path, wl_ref)
+        #     with fits.open(wl_file) as hdu:
+        #         wl = hdu[0].data * u.cm
+        #
+        # elif '7.gz' in ph_file:
+        #     import gzip
+        #     with gzip.open(ph_file, 'rb') as f:
+        #         lines = f.readlines()
+        #         wl = [x.decode("utf-8") .split(' ')[2] for x in lines]
+        #         sed = [x.decode("utf-8") .split(' ')[4] for x in lines]
+        #
+        # elif '7.bz2' in ph_file:
+        #     import bz2
+        #     with bz2.BZ2File(ph_file) as f:
+        #         lines = f.readlines()
+        #         wl, sed = [], []
+        #         for line in lines:
+        #             x = line.decode("utf-8").replace('D','E').split(' ')
+        #             for i in range(len(x)):
+        #                 if x[i] != '':
+        #                     wl.append(float(x[i]))
+        #                     break
+        #             for j in range(len(x)):
+        #                 if x[i+j] != '':
+        #                     sed.append(float(x[i+j]))
+        #                     break
+        #     wl = np.array(wl) * u.angstrom
+        #     sed = np.log10(np.array(sed)) * u.erg/ u.s/ u.cm**2/ u.angstrom
+        #     idx = np.argsort(wl)
+        #     wl = wl[idx]
+        #     sed = sed[idx]
 
-            hdu.close()
+        else:
+            raise IOError('unsupported PHOENIX format')
 
+        # remove duplicates
+        idx = np.nonzero(np.diff(wl))
+        wl = wl[idx]
+        sed = sed[idx]
         # Normalise SED to observed SED
         bolometric_flux = np.trapz(sed, x=wl)  # [W m**-2]
         bolometric_luminosity = 4 * np.pi * star_radius ** 2 * bolometric_flux  # [W]
@@ -156,7 +223,8 @@ class Star(Logger, object):
 
         return wl, sed, bolometric_luminosity.to(u.Lsun)
 
-    def __get_star_spectrum(self, wl, star_distance, star_temperature, star_radius):
+    def __get_star_spectrum(self, wl, star_distance, star_temperature,
+                            star_radius):
         omega_star = np.pi * (star_radius / star_distance) ** 2 * u.sr
         sed = omega_star * exolib.planck(wl, star_temperature)
         bolometric_flux = np.trapz(sed, x=wl)
@@ -173,8 +241,10 @@ class CustomSed(Logger, object):
         ph_sed = ph['Sed'].data * ph['Sed'].unit
 
         bolometric_flux = np.trapz(ph_sed, x=ph_wl)  # [W m**-2]
-        bolometric_luminosity = 4 * np.pi * (star_radius.to(u.m)) ** 2 * bolometric_flux  # [W]
-        ph_sed *= (star_radius.to(u.m) / star_distance.to(u.m)) ** 2  # [W/m^2/mu]
+        bolometric_luminosity = 4 * np.pi * (
+            star_radius.to(u.m)) ** 2 * bolometric_flux  # [W]
+        ph_sed *= (star_radius.to(u.m) / star_distance.to(
+            u.m)) ** 2  # [W/m^2/mu]
         self.debug('custom sed used : {}'.format(fname))
 
         self.sed = Sed(ph_wl, ph_sed)

@@ -1,9 +1,10 @@
 import os
 from copy import deepcopy
+
 from exorad.__version__ import __version__
 from exorad.log import disableLogging, enableLogging
-from ..models.targetlist import XLXSTargetList, CSVTargetList, QTableTargetList
 from .task import Task
+from ..models.targetlist import XLXSTargetList, CSVTargetList, QTableTargetList
 
 
 class LoadTargetList(Task):
@@ -272,24 +273,23 @@ class ObserveTargetlist(Task):
         self.addTaskParam('debug', 'debug mode', False)
 
     def execute(self):
-        from exorad.utils.util import chunks
-        import multiprocessing as mp
-        try:
-            mp.set_start_method('fork')
-        except RuntimeError:
-            pass
-
         targets = self.get_task_param('targets')
         n_thread = self.get_task_param('n_thread')
 
-        manager = mp.Manager()
-        outputDict = manager.dict()
-        for tt in chunks(targets, n_thread):
-            job = [mp.Process(target=self.pipeline_to_dict, args=(target, outputDict)) for target in tt]
-            for j in job:
-                j.start()
-            for j in job:
-                j.join()
+        if n_thread > 1:
+
+            from joblib import Parallel, delayed
+
+            outputDict = {}
+            Parallel(n_jobs=n_thread, require='sharedmem')(
+                delayed(self.pipeline_to_dict)(target, outputDict) for target
+                in targets)
+
+        else:
+            outputDict = {}
+            for target in targets:
+                self.pipeline_to_dict(target, outputDict)
+
         self.set_output(outputDict)
 
     def pipeline_to_dict(self,  target, outputDict):

@@ -1,6 +1,7 @@
 import logging
 import unittest
 import os
+import pathlib
 
 import astropy.units as u
 import numpy as np
@@ -27,13 +28,93 @@ class StarTest(unittest.TestCase):
         g = (cc.G * target['M'].si / (target['R'].si) ** 2).to(u.cm / u.s ** 2)
         logG = np.log10(g.value)
 
-        Star(self.phoenix_stellar_model,
+        star1 = Star(self.phoenix_stellar_model,
              target['D'],
              target['T'],
              logG,
              0.0,
              target['R'],
              use_planck_spectrum=False)
+
+    # todo test more phoenix formats
+    # def test_phoenix_star_fits(self):
+    #     from exorad.models.source import Star
+    #
+    #     from exorad.models.source import Star
+    #     path = pathlib.Path(__file__).parent.absolute()
+    #     test_dir = os.path.join(path, 'test_data/fits')
+    #
+    #     target = {'D': 12.975 * u.pc,
+    #               'T': 2300 * u.K,
+    #               'M': 0.15 * u.Msun,
+    #               'R': 0.218 * u.Rsun}
+    #     g = (cc.G * target['M'].si / (target['R'].si) ** 2).to(u.cm / u.s ** 2)
+    #     logG = np.log10(g.value)
+    #
+    #     star1 =Star(test_dir,
+    #          target['D'],
+    #          target['T'],
+    #          logG,
+    #          0.0,
+    #          target['R'],
+    #          use_planck_spectrum=False)
+    #
+    #
+    #     bb = Star('.',
+    #          target['D'],
+    #          target['T'],
+    #          0.0,
+    #          0.0,
+    #          target['R'],
+    #          wl_min=star1.sed.wl_grid.value.min() * u.um,
+    #          wl_max=star1.sed.wl_grid.value.max() * u.um,
+    #          use_planck_spectrum=True)
+    #
+    #     import matplotlib.pyplot as plt
+    #     plt.plot(star1.sed.wl_grid, star1.sed.data, label='phoenix')
+    #     plt.plot(bb.sed.wl_grid, bb.sed.data, label='planck')
+    #     plt.yscale('log')
+    #     plt.legend()
+    #     plt.show()
+    #
+    # def test_phoenix_star_7format(self):
+    #     from exorad.models.source import Star
+    #     path = pathlib.Path(__file__).parent.absolute()
+    #     test_dir = os.path.join(path, 'test_data')
+    #
+    #
+    #     target = {'D': 12.975 * u.pc,
+    #               'T': 800 * u.K,
+    #               'M': 0.15 * u.Msun,
+    #               'R': 0.218 * u.Rsun}
+    #     g = (cc.G * target['M'].si / (target['R'].si) ** 2).to(u.cm / u.s ** 2)
+    #     logG = np.log10(g.value)
+    #
+    #     star1 =Star(test_dir,
+    #          target['D'],
+    #          target['T'],
+    #          logG,
+    #          0.0,
+    #          target['R'],
+    #          use_planck_spectrum=False)
+    #
+    #     bb = Star('.',
+    #          target['D'],
+    #          target['T'],
+    #          0.0,
+    #          0.0,
+    #          target['R'],
+    #          wl_min=star1.sed.wl_grid.value.min() * u.um,
+    #          wl_max=star1.sed.wl_grid.value.max() * u.um,
+    #          use_planck_spectrum=True)
+    #
+    #     import matplotlib.pyplot as plt
+    #     plt.plot(star1.sed.wl_grid, star1.sed.data, label='phoenix')
+    #     plt.plot(bb.sed.wl_grid, bb.sed.data, label='planck')
+    #     # plt.xlim(bb.sed.wl_grid.value.min(), bb.sed.wl_grid.value.max())
+    #     plt.yscale('log')
+    #     plt.legend()
+    #     plt.show()
 
     def test_BB_star(self):
         from exorad.models.source import Star

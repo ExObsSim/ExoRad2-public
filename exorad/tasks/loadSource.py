@@ -1,9 +1,11 @@
+import os
+
 import numpy as np
 from astropy import units as u
 
 from exorad.models.source import Star, CustomSed
 from exorad.tasks.task import Task
-import os
+
 
 class LoadSource(Task):
     """
@@ -89,16 +91,30 @@ class LoadSource(Task):
                         raise IOError('No phoenix path specificed')
 
                 if not os.path.exists(star_sed_path):
-                    raise IOError('Phoenix path does not exist: {}'.format(star_sed_path))
-                    
-                star = Star(star_sed_path,
-                            target.star.D,
-                            target.star.Teff,
-                            target.star.calc_logg(target.star.M, target.star.R),
-                            0.0,
-                            target.star.R,
-                            use_planck_spectrum=False)
-                self.debug('stellar sed used {}'.format(star.filename))
+                    raise IOError('Phoenix path does not exist: {}'.format(
+                        star_sed_path))
+
+                try:
+                    star = Star(star_sed_path,
+                                target.star.D,
+                                target.star.Teff,
+                                target.star.calc_logg(target.star.M,
+                                                      target.star.R),
+                                0.0,
+                                target.star.R,
+                                use_planck_spectrum=False)
+                    self.debug('stellar sed used {}'.format(star.filename))
+                except ValueError:
+                    self.warning(
+                        'stellar temperature out sed boundaries: Planck star used instead')
+                    star = Star('.',
+                                target.star.D,
+                                target.star.Teff,
+                                target.star.calc_logg(target.star.M,
+                                                      target.star.R),
+                                0.0,
+                                target.star.R,
+                                use_planck_spectrum=True)
             else:
                 star = Star('.',
                             target.star.D,

@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from astropy.io.misc.hdf5 import read_table_hdf5
 
 from exorad.models.instruments import Photometer, Spectrometer
@@ -110,14 +112,31 @@ class BuildChannels(Task):
             ch = inst.create_group('channels')
 
         buildInstrument = BuildInstrument()
-        for det in self.get_task_param('payload')['channel'].keys():
+        if isinstance(self.get_task_param('payload')['channel'], OrderedDict):
+            for det in self.get_task_param('payload')['channel'].keys():
+                channel_type = \
+                    self.get_task_param('payload')['channel'][det][
+                        'channelClass'][
+                        'value'].lower()
+                channels[det] = buildInstrument(type=channel_type, name=det,
+                                                description=
+                                                self.get_task_param('payload')[
+                                                    'channel'][det],
+                                                payload=self.get_task_param(
+                                                    'payload'),
+                                                write=False,
+                                                output=None)
+                if self.get_task_param('write'):
+                    channels[det].write(ch)
+        else:
             channel_type = \
-                self.get_task_param('payload')['channel'][det]['channelClass'][
+                self.get_task_param('payload')['channel']['channelClass'][
                     'value'].lower()
+            det = self.get_task_param('payload')['channel']['value']
             channels[det] = buildInstrument(type=channel_type, name=det,
                                             description=
                                             self.get_task_param('payload')[
-                                                'channel'][det],
+                                                'channel'],
                                             payload=self.get_task_param(
                                                 'payload'),
                                             write=False,

@@ -130,7 +130,10 @@ class LoadOptions(Task):
 
             attrValue = root_dict['datafile']
             datafile = attrValue
-            datafile = datafile['value'].replace('__ConfigPath__', self.configPath)
+            if '__ConfigPath__' in datafile['value']:
+                datafile = datafile['value'].replace('__ConfigPath__', self.configPath)
+            else:
+                datafile = datafile['value']
             try:
                 data = self.__read_datatable__(datafile, datatype)
                 root_dict['data'] = data
