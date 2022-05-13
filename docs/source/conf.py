@@ -45,7 +45,6 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
               'sphinx.ext.viewcode',
               'sphinx.ext.githubpages',
-              'nbsphinx',
               ]
 autodoc_default_options = {
     'members': True,
