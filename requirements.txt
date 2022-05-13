@@ -11,3 +11,4 @@ xlrd==1.2.0
 xlwt
 requests
 photutils
+sphinx~=4.4
