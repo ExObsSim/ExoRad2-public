@@ -37,7 +37,7 @@ def standard_pipeline(options, target_list, output=None, plot=False, full_contri
                       n_thread=1, debug=False, log=False, replace=True):
     from exorad.utils.ascii_art import ascii_art
     logger.info(ascii_art)
-    logger.info('code version {}'.format(version))
+    logger.info('code version {}'.format(version.__version__))
 
     if debug: setLogLevel(logging.DEBUG)
     if isinstance(log, str): addLogFile(fname=log)

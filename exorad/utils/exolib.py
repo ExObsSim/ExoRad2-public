@@ -1,12 +1,15 @@
+import glob
 import logging
 import os
-import glob
+
 import astropy.units as u
 import mpmath
 import numpy as np
+import photutils
 from astropy.io import fits
 from scipy import signal
 from scipy.integrate import cumtrapz
+from scipy.interpolate import interp1d
 from scipy.special import j1
 from scipy.stats import binned_statistic
 
@@ -33,36 +36,73 @@ def rebin(x, xp, fp):
     '''
 
     if (x.unit != xp.unit):
-        logger.fatal('Units mismatch in rebin {:s}, {:s}'.format(x.unit, xp.unit))
+        logger.fatal(
+            'Units mismatch in rebin {:s}, {:s}'.format(x.unit, xp.unit))
         raise ValueError
 
     idx = np.where(np.logical_and(xp > 0.9 * x.min(), xp < 1.1 * x.max()))[0]
     xp = xp[idx]
     fp = fp[idx]
 
-    if np.diff(xp).min() < np.diff(x).min():
+    if not hasattr(fp, 'unit'):
+        logger.debug('No units found for fp. Forced to None')
+        fp *= u.Unit()
+    funits = fp.unit
+
+    # remove NaNs
+    id = np.where(np.isnan(xp))[0]
+    if id.size > 0:
+        logger.debug('Nans found in input x array: removing it')
+        xp = np.delete(xp, id)
+        fp = np.delete(fp, id)
+
+    id = np.where(np.isnan(x))[0]
+    if id.size > 0:
+        logger.debug('Nans found in new x array: removing it')
+        x = np.delete(x, id)
+
+    # remove duplicates
+    while np.diff(xp).min() == 0:
+        logger.debug('duplicate found in input x array: removing it')
+        id = np.argmin(np.diff(xp))
+        xp = np.delete(xp, id)
+        fp = np.delete(fp, id)
+
+    while np.diff(x).min() == 0:
+        logger.debug('duplicate found in new x array: removing it')
+        id = np.argmin(np.diff(x))
+        x = np.delete(x, id)
+
+    if np.diff(xp).max() < np.diff(x).min():
         # Binning!
+        logger.debug('binning')
         bin_x = 0.5 * (x[1:] + x[:-1])
         x0 = x[0] - (bin_x[0] - x[0]) / 2.0
         x1 = x[-1] + (x[-1] - bin_x[-1]) / 2.0
         bin_x = np.insert(bin_x, [0], x0)
         bin_x = np.append(bin_x, x1)
-        new_f = binned_statistic(xp, fp, bins=bin_x, statistic='mean')[0] * fp.unit
+        new_f = binned_statistic(xp, fp, bins=bin_x, statistic='mean')[
+                    0] * funits
 
-        idx = np.where(np.logical_and(xp >= x.min(), xp <= x.max()))[0]
-
+    #    idx = np.where(np.logical_and(xp >= x.min(), xp <= x.max()))[0]
     #    print np.trapz(fp[idx], x=xp[idx])
     #    print np.trapz(new_f, x=x)
     #    asd
     else:
+        logger.debug('interpolating')
+
         # Interpolate !
-        new_f = np.interp(x, xp, fp, left=0.0, right=0.0)
+        #new_f = np.interp(x, xp, fp, left=0.0, right=0.0)
         #         from scipy.interpolate import interp1d
         #         interpolator = interp1d(xp, fp, kind='cubic', fill_value=0.0, assume_sorted=False, bounds_error=False)
         #         new_f = interpolator(x)
+        func = interp1d(xp, fp, fill_value=0.0, assume_sorted=False,
+                        bounds_error=False, kind='linear')
+        new_f = func(x)
 
-        if not isinstance(new_f, u.Quantity):
-            new_f *= fp.unit
+        if not hasattr(new_f, 'unit'):
+            logger.debug('output units force to inputs fp')
+            new_f *= funits
 
     return x, new_f
 
@@ -87,14 +127,15 @@ def rebin_(x, xp, fp):
     '''
 
     if (x.unit != xp.unit):
-        logger.fatal('Units mismatch in rebin {:s}, {:s}'.format(x.unit, xp.unit))
+        logger.fatal(
+            'Units mismatch in rebin {:s}, {:s}'.format(x.unit, xp.unit))
         raise ValueError
 
     idx = np.where(np.logical_and(xp > 0.9 * x.min(), xp < 1.1 * x.max()))[0]
     xp = xp[idx]
     fp = fp[idx]
 
-    if np.diff(xp).min() < np.diff(x).min():
+    if np.diff(xp).max() < np.diff(x).min():
         # Binning!
         c = cumtrapz(fp.value, x=xp.value) * fp.unit * xp.unit
         xpc = xp[1:]
@@ -137,6 +178,7 @@ def planck(wl, T):
         bb = np.zeros_like(wl)
     return bb
 
+
 def load_standard_psf(F_x, F_y, wl, delta_pix, hdr):
     k_x = delta_pix / (F_x * wl * hdr['CDELT2'])
     k_y = delta_pix / (F_y * wl * hdr['CDELT1'])
@@ -146,17 +188,9 @@ def load_standard_psf(F_x, F_y, wl, delta_pix, hdr):
     ymax = (hdr['NAXIS1'] - (hdr['CRPIX1'] - 1)) * F_y * wl * hdr['CDELT1']
     extent = (xmin, xmax, ymin, ymax)
     return k_x, k_y, extent
-    
-def load_twinkle_psf(delta_pix, hdr):
-    k_x, k_y = 0.12487792968758*u.micron/u.micron, 0.1248779296875*u.micron/u.micron #hack to make it dimensionless in astropy units
-    xmin = -hdr['NAXIS2']/2.*delta_pix
-    xmax = hdr['NAXIS2']/2.*delta_pix
-    ymin = -hdr['NAXIS1']/2.*delta_pix
-    ymax = hdr['NAXIS1']/2.*delta_pix
-    extent = (xmin, xmax, ymin, ymax)
-    return k_x, k_y, extent
 
-def binnedPSF(F_x, F_y, wl, delta_pix, filename=None, format=None, PSFtype='AIRY'):
+
+def binnedPSF(F_x, F_y, wl, delta_pix, filename=None):
     if filename:
         if filename[-5:] == '.fits':
             with fits.open(os.path.expanduser(filename)) as hdu:
@@ -164,24 +198,20 @@ def binnedPSF(F_x, F_y, wl, delta_pix, filename=None, format=None, PSFtype='AIRY
                 hdr = hdu[0].header
                 # define a kernel representing the detector pixel response
                 # and use fractional pixel
-                if format == 'Twinkle':
-                    k_x, k_y, extent=load_twinkle_psf(delta_pix, hdr)
-                else:
-                    k_x, k_y, extent=load_standard_psf(F_x, F_y, wl, delta_pix, hdr)
+                k_x, k_y, extent = load_standard_psf(F_x, F_y, wl,
+                                                     delta_pix, hdr)
         elif os.path.isdir(filename):
             filenames = np.sort(glob.glob(filename + '*.fits'))
             psf_wl = []
             for file in filenames:
                 with fits.open(os.path.expanduser(file)) as hdu:
-                    psf_wl.append(hdu[0].header['wavelength'])
+                    psf_wl.append(hdu[0].header['WAVELEN'])
             idx = (np.abs(np.asarray(psf_wl) - wl.value)).argmin()
             with fits.open(os.path.expanduser(filenames[idx])) as hdu:
                 ima = hdu[0].data
                 hdr = hdu[0].header
-                if format == 'Twinkle':
-                    k_x, k_y, extent=load_twinkle_psf(delta_pix, hdr)
-                else:
-                    k_x, k_y, extent=load_standard_psf(F_x, F_y, wl, delta_pix, hdr)
+                k_x, k_y, extent = load_standard_psf(F_x, F_y, wl, delta_pix,
+                                                     hdr)
     else:
         x = np.linspace(-4.0, 4.0, 256)
         xx, yy = np.meshgrid(x, x)
@@ -212,6 +242,98 @@ def binnedPSF(F_x, F_y, wl, delta_pix, filename=None, format=None, PSFtype='AIRY
     imac = signal.convolve2d(ima, kernel, mode='same')
 
     return imac, kernel, extent
+
+
+def load_pixel_psf_size(delta_pix, hdr):
+    xmin = [-hdr['NAXIS2'] / 2. * delta_pix.value] * u.micron
+    xmax = [hdr['NAXIS2'] / 2. * delta_pix.value] * u.micron
+    ymin = [-hdr['NAXIS1'] / 2. * delta_pix.value] * u.micron
+    ymax = [hdr['NAXIS1'] / 2. * delta_pix.value] * u.micron
+    extent = (xmin, xmax, ymin, ymax)
+    return extent
+
+
+def pixel_based_psf(wl, delta_pix, filename):
+    if filename[-5:] == '.fits':
+        with fits.open(os.path.expanduser(filename)) as hdu:
+            ima = hdu[0].data
+            hdr = hdu[0].header
+            extent = load_pixel_psf_size(delta_pix, hdr)
+
+    elif os.path.isdir(filename):
+        filenames = np.sort(glob.glob(filename + '*.fits'))
+        psf_wl = []
+        for file in filenames:
+            with fits.open(os.path.expanduser(file)) as hdu:
+                psf_wl.append(hdu[0].header['WAVELEN'])
+        idx = (np.abs(np.asarray(psf_wl) - wl.value)).argmin()
+        with fits.open(os.path.expanduser(filenames[idx])) as hdu:
+            ima = hdu[0].data
+            hdr = hdu[0].header
+            extent = load_pixel_psf_size(delta_pix, hdr)
+
+    return ima, np.array([1.]), extent
+
+
+def wl_encircled_energy(filename, eec, format, Fnum_x, Fnum_y, delta_pix):
+    filenames = np.sort(glob.glob(filename + '*.fits'))
+    psf_wl, enc = [], []
+    for file in filenames:
+        with fits.open(os.path.expanduser(file)) as hdu:
+            psf_wl.append(hdu[0].header['WAVELEN'])
+        if format=='pixel_based':
+            ima, _, _ = pixel_based_psf(hdu[0].header['WAVELEN'], delta_pix,file)
+            enc += [find_aperture_radius(ima, eec, 1, 1, 1)]
+        else:
+            ima, _, _ = binnedPSF(Fnum_x, Fnum_y, hdu[0].header['WAVELEN'], delta_pix)
+            enc += [find_aperture_radius(ima, eec, Fnum_x, Fnum_y, hdu[0].header['WAVELEN'])]
+    return psf_wl, enc
+
+
+def find_aperture_radius(ima, eec, Fnum_x, Fnum_y, wavelength):
+    """
+    It finds the aperture radius for a given PSF such that the desired Encircled Energy is contained.
+
+    Parameters
+    ----------
+    ima:
+        psf image in micron scale
+    eec:
+        desired encircled energy
+    Fnum_x:
+        f number in the spectral direction
+    Fnum_y:
+        f number in the spatial direction
+    wavelength:
+        wavelength of the sampled psf
+
+    Returns
+    ---------
+    float
+    """
+    last_enc, i = 0, 0
+    rs, enc = [], []
+    while last_enc < (eec + 0.02):
+        i += 1
+        rs += [i]
+        enc += [encircled_energy(i, ima, Fnum_x, Fnum_y, wavelength)]
+        last_enc = enc[-1]
+    inter = interp1d(enc, rs)
+    r = inter(eec)
+    return r
+
+
+def encircled_energy(r, ima, Fnum_x, Fnum_y, wavelength):
+    r_pix_x = r * Fnum_x * wavelength
+    r_pix_y = r * Fnum_y * wavelength
+    aper = photutils.aperture.EllipticalAperture((ima.shape[1] // 2,
+                                                  ima.shape[0] // 2),
+                                                 b=float(r_pix_y.value),
+                                                 a=float(r_pix_x.value))
+    phot_ = photutils.aperture.aperture_photometry(ima, aper)
+    phot = (phot_['aperture_sum'].data[0])
+
+    return phot / ima.sum()
 
 
 def OmegaPix(Fnum_x, Fnum_y=None):

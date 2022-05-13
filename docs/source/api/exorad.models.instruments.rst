@@ -1,27 +1,20 @@
-==============================
-Models instruments
-==============================
+exorad.models.instruments package
+=================================
 
-Instrument
------------
+Submodules
+----------
 
-.. autoclass:: exorad.models.instruments.Instrument
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+   :maxdepth: 4
 
-Photometer
------------
+   exorad.models.instruments.instrument
+   exorad.models.instruments.photometer
+   exorad.models.instruments.spectrometer
 
-.. autoclass:: exorad.models.instruments.Photometer
-    :members:
-    :undoc-members:
-    :show-inheritance:
+Module contents
+---------------
 
-Spectrometer
-------------
-
-.. autoclass:: exorad.models.instruments.Spectrometer
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. automodule:: exorad.models.instruments
+   :members:
+   :undoc-members:
+   :show-inheritance:

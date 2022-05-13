@@ -12,6 +12,7 @@ from exorad.models.optics.opticalPath import OpticalPath
 from exorad.models.signal import Signal
 from exorad.utils.diffuse_light_propagation import prepare, convolve_with_slit, integrate_light
 from exorad.models.utils import get_wl_col_name
+from exorad.utils.passVal import PassVal
 
 
 class Instrument(Logger):
@@ -40,21 +41,6 @@ class Instrument(Logger):
     built_instr: dict
         contains the instrument parameters needed to propagate the signal
 
-    Methods
-    --------
-    built()
-        it prepare the instrument to propagate the signal
-    build_optical_path()
-        it builds the instrument optical path
-    propagate_target()
-        propagates the target light trough the instrument
-    propagate_diffuse_foreground()
-        propagates the foreground light trough the instrument, starting for zodiacal light
-    load(dir)
-        it loads the instrument parameters already processed from a file
-    write(dir)
-        it writes the instrument parameters already processed from a file
-
     Raises
     -------
     ValueError:
@@ -73,12 +59,18 @@ class Instrument(Logger):
         self.opticalPath = None
 
     def load(self, table, built_instr):
+        """
+        it loads the instrument parameters already processed from a file
+        """
         self.table = table
         self.built_instr = built_instr
         self.loaded = True
         self.info('loaded')
 
     def write(self, output):
+        """
+        it writes the instrument parameters already processed from a file
+        """
         inst_out = output.create_group(self.name)
         inst_out.write_table(self.name, self.table, )
         inst_out.store_dictionary(self.description, group_name='description')
@@ -102,11 +94,14 @@ class Instrument(Logger):
             self.build_optical_path()
 
     def build_optical_path(self):
+        """
+        it builds the instrument optical path
+        """
 
         self.info('building optical path')
         # what wl do I wanna use here?
         wl_grid = np.logspace(np.log10(self.description['detector']['wl_min']['value'].value),
-                              np.log10(self.description['detector']['cut_off']['value'].value), 6000) * u.um
+                              np.log10(self.description['detector']['cut_off']['value'].value), PassVal.working_R) * u.um
 
         common_optical_path = OpticalPath(wl=wl_grid, description=self.payload)
         channel_optical_path = OpticalPath(wl=wl_grid, description=self.description)
@@ -139,7 +134,7 @@ class Instrument(Logger):
     @abstractmethod
     def propagate_target(self, target):
         """
-        propagate point source
+        propagates the target light through the instrument
         """
         pass
 
@@ -236,7 +231,7 @@ class Instrument(Logger):
         else:
             wl_grid = np.logspace(np.log10(self.description['detector']['wl_min']['value'].to(u.um).value),
                                   np.log10(self.description['detector']['cut_off']['value'].to(u.um).value),
-                                  6000) * u.um
+                                  PassVal.working_R) * u.um
             qe_data = Signal(wl_grid,
                              self.description['detector']['qe']['value'] * np.ones(wl_grid.size))
 

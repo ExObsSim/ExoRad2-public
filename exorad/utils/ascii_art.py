@@ -11,7 +11,7 @@ ascii_art_part1 = "   .-.      _______                             .  '  *   .  
               (  /  |        / | \                    "
 ascii_art_part2 = "  * .  ' .    \n\
                \(_)_]]      /  |  \                            *   *  .   .\n "
-ascii_art = '{}{}{}'.format(ascii_art_part1, version, ascii_art_part2)
+ascii_art = '{}{}{}'.format(ascii_art_part1, version.__version__, ascii_art_part2)
 
 ascii_plot_part1 = "  .    _     *       \|/   .       .      -*-              +\n\
     .'\ \`.     +    -*-     *   .         '       .   *\n\

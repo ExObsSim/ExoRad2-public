@@ -4,7 +4,8 @@ from copy import deepcopy
 from exorad.__version__ import __version__
 from exorad.log import disableLogging, enableLogging
 from .task import Task
-from ..models.targetlist import XLXSTargetList, CSVTargetList, QTableTargetList
+from ..models.targetlist import XLXSTargetList, CSVTargetList, \
+    CSVTargetListMRS, QTableTargetList
 
 
 class LoadTargetList(Task):
@@ -33,7 +34,6 @@ class LoadTargetList(Task):
 
     def execute(self):
         target_list_file = self.get_task_param('target_list')
-        self.info('target list file : {}'.format(target_list_file))
 
         target_list_format = {".xlsx": XLXSTargetList,
                               ".csv": CSVTargetList,
@@ -41,16 +41,21 @@ class LoadTargetList(Task):
 
         try:
             ext = os.path.splitext(target_list_file)[1]
+            self.info('target list file : {}'.format(target_list_file))
             self.debug('target list format : {}'.format(ext))
             target_klass = target_list_format[ext]
+            tt = target_klass(target_list_file)
+            if not tt.target:
+                if ext == ".csv":
+                    tt = CSVTargetListMRS(target_list_file)
+
         except KeyError:
             self.error('unsupported target list format: {}'.format(ext))
             raise IOError('unsupported target list format: {}'.format(ext))
         except TypeError:
             self.debug('target list is not a file. It is assumed to be QTable')
-            target_klass = QTableTargetList
+            tt = QTableTargetList(target_list_file)
 
-        tt = target_klass(target_list_file)
         self.set_output(tt)
 
 

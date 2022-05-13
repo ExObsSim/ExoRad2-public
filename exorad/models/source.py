@@ -42,8 +42,8 @@ class Star(Logger, object):
                  starMetallicity,
                  starRadius,
                  use_planck_spectrum=False,
-                 wl_min=0.4 * u.um,
-                 wl_max=10.0 * u.um,
+                 wl_min=0.2 * u.um,
+                 wl_max=50.0 * u.um,
                  phoenix_model_filename=None):
         """
         Parameters

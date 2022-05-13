@@ -1,21 +1,7 @@
-==============================
-Tasks propagate Light
-==============================
+exorad.tasks.propagateLight module
+==================================
 
-PropagateTargetLight
----------------------
-
-.. autoclass:: exorad.tasks.propagateLight.PropagateTargetLight
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-PropagateForegroundLight
---------------------------
-
-.. autoclass:: exorad.tasks.propagateLight.PropagateForegroundLight
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
+.. automodule:: exorad.tasks.propagateLight
+   :members:
+   :undoc-members:
+   :show-inheritance:

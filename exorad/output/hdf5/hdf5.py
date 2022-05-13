@@ -53,7 +53,8 @@ import h5py
 import hdfdict
 from astropy.table import meta
 
-from exorad.__version__ import __version__
+from exorad import __version__, __author__, __license__, __url__, \
+    __copyright__, __title__, __pkg_name__, __citation__
 from exorad.output.hdf5.util import recursively_read_dict_contents
 from exorad.output.output import Output, OutputGroup
 
@@ -181,9 +182,15 @@ class HDF5Output(Output):
                  'creator': self.__class__.__name__,
                  'HDF5_Version': h5py.version.hdf5_version,
                  'h5py_version': h5py.version.version,
-                 'program_name': 'ExoRad',
-                 'program_version': __version__,
-                }
+                 'program_name': str(__title__),
+                 'package name': str(__pkg_name__),
+                 'program_version': str(__version__),
+                 'author': str(__author__),
+                 'copyright': str(__copyright__),
+                 'license': str(__license__),
+                 'url': str(__url__),
+                 'citation': str(__citation__),
+                 }
 
         fd = h5py.File(fname, mode=mode)
         for key in attrs:

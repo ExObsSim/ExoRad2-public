@@ -31,7 +31,7 @@ Mugnai et al., 2020, "ArielRad: the ARIEL radiometric model", Exp. Astron, 50, 3
 
 Acknowledgements
 -----------------
-We thank Ahmed Al-Refaie for his support during the development and the inspiration provided by his code: TauREx3 (cite_)
+We thank Ahmed Al-Refaie for his support during the development and the inspiration provided by his code: TauREx3 (cite_).
 We thank Andreas Papageorgiou for the :class:`~exorad.tasks.task.Task` class.
 We thank Billy Edwards for the thorough tests and for his help in improving the code.
 
@@ -43,7 +43,7 @@ We thank Billy Edwards for the thorough tests and for his help in improving the 
 
     Home <self>
     User Guide <user/index>
-    API Guide <api/index>
+    API Guide <api/modules>
     Project Page <https://github.com/ExObsSim/ExoRad2-public>
 
 .. _link: https://doi.org/10.1007/s10686-020-09676-7

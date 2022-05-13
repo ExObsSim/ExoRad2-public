@@ -1,20 +1,7 @@
-==============================
-Tasks Noise
-==============================
+exorad.tasks.noiseHandler module
+================================
 
-EstimateNoiseInChannel
--------------------------
-
-.. autoclass:: exorad.tasks.noiseHandler.EstimateNoiseInChannel
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-EstimateNoise
-----------------
-
-.. autoclass:: exorad.tasks.noiseHandler.EstimateNoise
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+.. automodule:: exorad.tasks.noiseHandler
+   :members:
+   :undoc-members:
+   :show-inheritance:

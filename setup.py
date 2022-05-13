@@ -20,7 +20,8 @@ install_requires = ['astropy',
                     'h5py',
                     'hdfdict',
                     'xlrd==1.2.0',
-                    'xlwt'
+                    'xlwt',
+                    'joblib'
                     ]
 entry_points = {'console_scripts': console_scripts, }
 
@@ -72,6 +73,7 @@ setup(name='exorad',
       classifiers=classifiers,
       install_requires=install_requires,
       include_package_data=True,
+      package_data={"exorad/data": ["data/*"]},
       entry_points=entry_points,
       python_requires='>=3.8',
       zip_safe=False)

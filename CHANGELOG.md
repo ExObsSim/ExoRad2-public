@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [2.1.108] - 2022-05-13
+### Added
+- support for Ariel MRS csv targetlist format
+- enabled zodiacal fit with direction
+- pixel based PSF support
+- find automatically the aperture size for photometers using an elliptical aperture
+- requests & photutils added to requirements.txt
+- support for custom working R added in common config, using `working_R` key
+### Changed
+- default spectral range for Star changed to  0.3-50.0 um
+- using scipy's interp1d instead of numpy's interp
+- package info updated (and stored into the output)
+- documentation API section
+### Fixed
+- hard coded spectral range for sources
+- version control with no internet
+- zodiacal foreground map file
+- duplicates and NaN removed from rebin inputs
 
 ## [2.1.94] - 2021-11-15
 ### Added 
@@ -199,6 +217,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.108]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.94...v2.1.108
 [2.1.94]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.86...v2.1.94
 [2.1.86]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.84...v2.1.86
 [2.1.84]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.83...v2.1.84

@@ -16,9 +16,9 @@
 
 
 # -- Project information -----------------------------------------------------
-
+from datetime import date
 project = 'ExoRad2'
-copyright = '2020 - Lorenzo V. Mugnai, Enzo Pascale'
+copyright = '2020-{:d}, Lorenzo V. Mugnai, Enzo Pascale'.format(date.today().year)
 author = 'Lorenzo V. Mugnai, Enzo Pascale'
 
 import os
@@ -41,15 +41,17 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'sphinx.ext.coverage',
               'sphinx.ext.mathjax',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.autosummary',
               'sphinx.ext.viewcode',
               'sphinx.ext.githubpages',
               'nbsphinx',
               ]
 autodoc_default_options = {
     'members': True,
-    'member-order': 'bysource',
-    'undoc-members': True,
-    'exclude-members': '__weakref__'
+    # 'member-order': 'bysource',
+    'undoc-members': False,
+#    'exclude-members': '__weakref__'
 }
 napoleon_use_ivar = True
 autodoc_typehints = 'description'  # show type hints in doc body instead of signature
@@ -66,6 +68,19 @@ language = None
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
+
+# -----------------------------------------------------------------------------
+# Intersphinx configuration
+# -----------------------------------------------------------------------------
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/dev', None),
+    'numpy': ('https://numpy.org/devdocs', None),
+    'matplotlib': ('https://matplotlib.org', None),
+    'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+    'astropy': ('http://docs.astropy.org/en/latest/', None),
+    'h5py': ('https://docs.h5py.org/en/latest/', None),
+    'photutils': ('https://photutils.readthedocs.io/en/stable/', None)
+}
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -97,6 +112,10 @@ htmlhelp_basename = 'exoraddoc'
 add_module_names = False
 
 nbsphinx_execute = 'never'
+
+# mathjax_path = "scipy-mathjax/MathJax.js?config=scipy-mathjax"
+mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,

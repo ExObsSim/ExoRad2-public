@@ -1,12 +1,7 @@
-==============================
-Task
-==============================
+exorad.tasks.task module
+========================
 
-Task
----------------------
-
-.. autoclass:: exorad.tasks.task.Task
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+.. automodule:: exorad.tasks.task
+   :members:
+   :undoc-members:
+   :show-inheritance:

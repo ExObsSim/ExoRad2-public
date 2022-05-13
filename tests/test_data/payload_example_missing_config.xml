@@ -1,0 +1,185 @@
+<root>
+    <fileName>payload_example</fileName>
+    <common>
+        <!--StellarModels> stellar_model_dir
+            <comment> These should be BT-Settl Phoenix files of the type
+                BT-Settl.spec.fits.gz
+                These can be downloaded from
+                https://phoenix.ens-lyon.fr/Grids/BT-Settl/CIFIST2011_2015/FITS/.
+
+                Instead of StellarModels directory you can point to a specific observed SED model.
+                Use the keyword CustomSed. An example is provided in examples/customsed.csv
+                If neither StellarModels or CustomSed are present, a black body SED will be used.
+            </comment-->
+        <!-- CustomSed> /./examples/customsed.csv </CustomSed-->
+        <wl_min unit="micron">0.45</wl_min>
+        <wl_max unit="micron">2.2</wl_max>
+        <zodiacFactor>2.5
+            <comment>multiplicative factor to use if no coord are used for the
+                target
+            </comment>
+        </zodiacFactor>
+        <!-- zodicalBkgMap>
+            <datafile> your map here </datafile>
+            <comment> Sky map for zodiacal emission computed with Kelsall 1998 idl routine</comment>
+        </zodicalBkgMap -->
+
+
+    </common>
+
+    <optics>
+        <!--Transmission>
+            <datafile> __ConfigPath__/examples/opt_transmission.csv </datafile>
+            <comment> transmission file shall be a .csv or .dat file with a 'Wavelength' column
+                and other columns named after the detectors.
+            </comment>
+        </Transmission-->
+        <ForceChannelWlEdge>
+            <comment>When this option is present,
+                trasmission data is forced to zero outside the interval
+                [wl_min, wl_max] of each channel.
+                Use this option when you think the out-of-band transmission is
+                unrealistically large.
+                Otherwise, comment it out.
+            </comment>
+        </ForceChannelWlEdge>
+        <Atel unit="m**2">0.5
+            <comment>Telescope area</comment>
+        </Atel>
+        <nComp>8
+            <comment>number of optical elements in common for every channel
+            </comment>
+        </nComp>
+        <OperativeTemperature unit="K">60
+            <comment>payload operative temperature</comment>
+        </OperativeTemperature>
+        <emissivity>0.03</emissivity>
+
+        <!--EncESolution>
+            <datafile>  __ConfigPath__/data/PSF/Ariel_PSF_wfe_200nm.dat </datafile>
+            <comment> csv file describing the encircle energy solution vs wavelength.
+                This is used to determine the photometric apertures. If not present and Airy PSF is considered.
+                The EE radius should be expressed in units of F-lambda in a column named EE </comment>
+        </EncESolution-->
+    </optics>
+
+    <!-- ####################### Example Photometer ##################################    -->
+    <channel>Phot
+        <channelClass>photometer</channelClass>
+        <wl_min unit="micron">0.5</wl_min>
+        <wl_max unit="micron">0.6</wl_max>
+        <Fnum_x unit="">30</Fnum_x>
+        <Fnum_y unit="">50</Fnum_y>
+        <NoiseX unit="">0.40
+            <comment>margin to apply on shot noise</comment>
+        </NoiseX>
+        <aperture>
+            <radius unit="">9.24
+                <comment>in units of F-lambda</comment>
+            </radius>
+            <apertureCorrection unit="">0.91</apertureCorrection>
+        </aperture>
+        <!--PSF>
+            your_file.fits
+            <comment> FITS file describing the PSF </comment>
+        </PSF-->
+        <optics>
+            <nComp>4
+                <comment>number of optical elements after the common ones
+                </comment>
+            </nComp>
+            <OperativeTemperature unit="K">60</OperativeTemperature>
+            <emissivity>0.03</emissivity>
+        </optics>
+        <detector>
+            <delta_pix unit="micron">18.0</delta_pix>
+            <read_noise unit="count">15</read_noise>
+            <dark_current unit="count/s">1</dark_current>
+            <well_depth unit="count">100000</well_depth>
+            <f_well_depth unit="">1.0
+                <comment>This is the fraction of the well depth to be used.
+                    A common choice for WFC3 is 0.8, to minimize non linear
+                    detector effects
+                </comment>
+            </f_well_depth>
+            <qe unit="">0.55
+                <!--datafile>__ConfigPath__/data/QE.csv </datafile-->
+                <comment>QE can either be a single value or a table expressing
+                    QE vs Wavelength
+                </comment>
+            </qe>
+            <freqNDR unit="Hz">0.
+                <comment>This is the rate at which NDRs are read during
+                    one exposure. If 0 is chosen, than CDS reading mode is
+                    enabled.
+                </comment>
+            </freqNDR>
+        </detector>
+    </channel>
+
+    <!-- ####################### Example Spectrometer #################################    -->
+    <channel>Spec
+        <channelClass>spectrometer</channelClass>
+        <wl_min unit="micron">1.1</wl_min>
+        <wl_max unit="micron">1.95</wl_max>
+        <Fnum_x unit="">20</Fnum_x>
+        <Fnum_y unit="">30</Fnum_y>
+        <NoiseX unit="">0.40</NoiseX>
+        <!--wlSolution>
+           <datafile>  __ConfigPath__/examples/Spec-wl_sol.csv </datafile>
+            <comment> wavelength solution for spectrometers </comment>
+       </wlSolution-->
+        <!--WFErms unit = "micron"> 0.28
+            <comment> Wave front error rms value. Is used to estimate the maximum signal per pixel.
+            If not present the diffraction limit is considered. </comment>
+        </WFErms-->
+        <targetR unit="">20.0</targetR>
+        <optics>
+            <nComp>3
+                <comment>number of optical elements after the common ones
+                </comment>
+            </nComp>
+            <OperativeTemperature unit="K">60</OperativeTemperature>
+            <emissivity>0.03</emissivity>
+        </optics>
+        <detector>
+            <delta_pix unit="micron">18.0</delta_pix>
+            <read_noise unit="count">15</read_noise>
+            <dark_current unit="count/s">1</dark_current>
+            <well_depth unit="count">100000</well_depth>
+            <f_well_depth unit="">1.0
+                <comment>This is the fraction of the well depth to be used.
+                    A common choice for WFC3 is 0.8, to minimize non linear
+                    detector effects
+                </comment>
+            </f_well_depth>
+            <qe unit="">
+                <datafile>__ConfigPath__/examples/QE.csv</datafile>
+                <comment>QE can either be a single value or a table expressing
+                    QE vs Wavelength
+                </comment>
+            </qe>
+            <freqNDR unit="Hz">0.
+                <comment>This is the rate at which NDRs are read during
+                    one exposure.
+                </comment>
+            </freqNDR>
+            <cut_off unit="micron">2.2</cut_off>
+            <box_temperature unit="K">42
+                <comment>used to estimate the inner sanctum contribution
+                </comment>
+            </box_temperature>
+        </detector>
+    </channel>
+</root>
+
+
+
+
+
+
+
+
+
+
+

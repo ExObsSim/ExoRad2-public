@@ -1,12 +1,7 @@
-==============================
-Plotter
-==============================
+exorad.utils.plotter module
+===========================
 
-Plotter
----------------------
-
-.. autoclass:: exorad.utils.plotter.Plotter
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+.. automodule:: exorad.utils.plotter
+   :members:
+   :undoc-members:
+   :show-inheritance:

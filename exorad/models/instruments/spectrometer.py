@@ -1,11 +1,15 @@
+import os
+
 import astropy.constants as const
 import astropy.units as u
 import numpy as np
+import pandas as pd
 from astropy.table import QTable
 from scipy.interpolate import interp1d
-import pandas as pd
+
 from exorad.models.signal import CustomSignal, Signal, CountsPerSeconds
-from exorad.utils.exolib import binnedPSF
+from exorad.utils.exolib import binnedPSF, pixel_based_psf, \
+    find_aperture_radius
 from .instrument import Instrument
 
 
@@ -27,6 +31,9 @@ class Spectrometer(Instrument):
             if self.description['targetR']['value'] == 'native':
                 wl_bin_c = self.built_instr['wl_pix_center']
                 wl_bin_width = self.built_instr['pixel_bandwidth']
+                idx = np.argsort(wl_bin_c)
+                wl_bin_c = wl_bin_c[idx]
+                wl_bin_width = wl_bin_width[idx]
                 wl_bin = wl_bin_c - 0.5 * wl_bin_width
                 wl_bin = np.append(wl_bin, wl_bin_c[-1] + 0.5 * wl_bin_width[-1])
             # fixed R
@@ -92,6 +99,7 @@ class Spectrometer(Instrument):
         first_pixel = wl_sol_func_reverse(self.description['wl_min']['value']) * wl_solution_data.data.unit
         last_pixel = wl_sol_func_reverse(self.description['wl_max']['value']) * wl_solution_data.data.unit
         self.debug('first pixel: {}, last pixel: {}'.format(first_pixel, last_pixel))
+
         if last_pixel < first_pixel: last_pixel, first_pixel = first_pixel, last_pixel
 
         delta = self.description['detector']['delta_pix']['value'].to(first_pixel.unit)
@@ -106,7 +114,8 @@ class Spectrometer(Instrument):
         self.debug('wl_pix_center: {}'.format(pixel_wavelength))
         self._add_data_to_built('wl_pix_center', pixel_wavelength)
         pixel_bandwidth = np.abs(wl_sol_func(coord_pix_center - 0.5 * delta) -
-                                 wl_sol_func(coord_pix_center + 0.5 * delta)) * delta.unit
+                                 wl_sol_func(
+                                     coord_pix_center + 0.5 * delta)) * delta.unit
         self._add_data_to_built('pixel_bandwidth', pixel_bandwidth)
 
         # initializing channel table
@@ -115,16 +124,82 @@ class Spectrometer(Instrument):
         self.table['QE'], qe_data = self._get_qe()
         self._add_data_to_built('qe_data', qe_data.to_dict())
 
+        # PSF gain
+        _gain_prf = np.empty(10, dtype=float)
+        wl_prf = np.linspace(pixel_wavelength.min(), pixel_wavelength.max(),
+                             _gain_prf.size)
+        prfs = []
+        for k, wl in enumerate(wl_prf):
+            psf_file = None
+            psf_format = None
+            if 'PSF' in self.description.keys():
+                psf_file = self.description['PSF']['value']
+                if 'format' in self.description['PSF'].keys():
+                    psf_format = self.description['PSF']['format']['value']
+
+            if psf_format == 'pixel_based':
+                # If psf is pixel based it simply loads the image
+                prf, pixel_prf, extent = pixel_based_psf(
+                    wl,
+                    delta,
+                    psf_file)
+            else:
+                prf, pixel_prf, extent = binnedPSF(
+                    self.description['Fnum_x']['value'],
+                    self.description['Fnum_y']['value'],
+                    wl,
+                    delta,
+                    psf_file)
+
+            _gain_prf[k] = np.max(
+                prf.sum(axis=0) / pixel_prf.sum(axis=0).max())
+            prfs += [prf]
+
+            if 'WFErms' in self.description.keys():
+                self.debug('WFE found')
+                Strehl = np.exp(- (2 * np.pi * self.description['WFErms'][
+                    'value'] / wl) ** 2)
+            else:
+                Strehl = 1.0
+            _gain_prf[k] *= Strehl
+        self.debug(_gain_prf)
+        gain_prf_data = Signal(wl_prf, _gain_prf)
+        self._add_data_to_built('gain_prf_data', gain_prf_data.to_dict())
+
         # window sizes
-        pixel_window_edge = wl_sol_func_reverse(wl_bin) * wl_solution_data.data.unit
-        window_spectral_width = (np.abs(pixel_window_edge[1:] - pixel_window_edge[0:-1]) / delta).to('')
+        pixel_window_edge = wl_sol_func_reverse(
+            wl_bin) * wl_solution_data.data.unit
+        window_spectral_width = (np.abs(
+            pixel_window_edge[1:] - pixel_window_edge[0:-1]) / delta).to('')
 
         if 'EncESolution' in self.description.keys():
+            # if encircled energy radii are provided, load from file
+            # todo define spatial apertures
             self.debug('Encircle energy solution found')
-            EncE_sol = interp1d(self.description['EncESolution']['data']['Wavelength'],
-                                self.description['EncESolution']['data']['EE'],
-                                assume_sorted=False)
+            EncE_sol = interp1d(
+                self.description['EncESolution']['data']['Wavelength'],
+                self.description['EncESolution']['data']['EE'],
+                assume_sorted=False)
             radius = EncE_sol(self.table['Wavelength'])
+        # elif os.path.isdir(self.description['PSF']['value']) and (
+        #         'EnE' in self.description.keys()):
+        #     # if a list of psf and the desired encircled are provided, estimate the radii
+        #     enc = []
+        #     for k, wl in enumerate(wl_prf):
+        #         if psf_format == 'pixel_based':
+        #             enc += [find_aperture_radius(prfs[k],
+        #                                          self.description['EnE'],
+        #                                          1, 1, 1)]
+        #         else:
+        #             enc += [find_aperture_radius(prfs[k],
+        #                                          self.description['EnE'],
+        #                                          self.description['Fnum_x'][
+        #                                              'value'],
+        #                                          self.description['Fnum_y'][
+        #                                              'value'],
+        #                                          delta)]
+        #     EncE_sol = interp1d(wl_prf, enc, assume_sorted=False)
+        #     radius = EncE_sol(self.table['Wavelength'])
         else:
             radius = 1.22
         self.debug('radius : {}'.format(radius))
@@ -146,37 +221,6 @@ class Spectrometer(Instrument):
         self._add_data_to_built('window_size_px', window_size_px)
         self.table['WindowSize'] = window_size_px
         self.debug('window size : {}'.format(window_size_px))
-
-        # PSF gain
-        _gain_prf = np.empty(10, dtype=float)
-        wl_prf = np.linspace(pixel_wavelength.min(), pixel_wavelength.max(),
-                             _gain_prf.size)
-        for k, wl in enumerate(wl_prf):
-            psf_file = None
-            psf_format = None
-            if 'PSF' in self.description.keys():
-                psf_file = self.description['PSF']['value']
-                if 'format' in self.description['PSF'].keys():
-                    psf_format = self.description['PSF']['format']['value']
-                    
-            prf, pixel_prf, extent = binnedPSF(self.description['Fnum_x']['value'],
-                                               self.description['Fnum_y']['value'],
-                                               wl,
-                                               delta,
-                                               psf_file,
-                                               psf_format)
-                                               
-            _gain_prf[k] = np.max(prf.sum(axis=0) / pixel_prf.sum(axis=0).max())
-
-            if 'WFErms' in self.description.keys():
-                self.debug('WFE found')
-                Strehl = np.exp(- (2 * np.pi * self.description['WFErms']['value'] / wl) ** 2)
-            else:
-                Strehl = 1.0
-            _gain_prf[k] *= Strehl
-        self.debug(_gain_prf)
-        gain_prf_data = Signal(wl_prf, _gain_prf)
-        self._add_data_to_built('gain_prf_data', gain_prf_data.to_dict())
 
     def propagate_target(self, target):
         out = QTable()

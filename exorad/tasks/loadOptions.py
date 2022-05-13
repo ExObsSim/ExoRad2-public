@@ -5,7 +5,7 @@ from collections import OrderedDict
 from astropy import units as u
 from astropy.io.ascii.core import InconsistentTableError
 from astropy.io import ascii
-
+from exorad.utils.passVal import PassVal
 from .task import Task
 
 compactString = lambda string: string.replace('\n', '').strip()
@@ -99,10 +99,11 @@ class LoadOptions(Task):
                         value = value.replace('__ConfigPath__', self.configPath)
                 if ch.tag == "ConfigPath":
                     self.configPath = value
-
                 if self._config_path:
                     self.configPath = self._config_path
-
+                if ch.tag =='working_R':
+                    PassVal.working_R = value
+                    print(PassVal.working_R)
                 # if isinstance(value, str):
                 #     retval = value
                 # else:
@@ -176,7 +177,7 @@ class LoadOptions(Task):
                                   format='ecsv', fill_values=[('#N/A', '0'), ('N/A', '0'), ('', '0')],)
             except InconsistentTableError:
                 data = ascii.read(os.path.expanduser(datafile),
-                                  format='csv', fill_values=[('#N/A', '0'), ('N/A', '0'), ('', '0')],)
+                                  format='csv', fill_values=[('#N/A', '0'), ('N/A', '0'), ('', '0')], delimiter=',')
             return data
 
         else:

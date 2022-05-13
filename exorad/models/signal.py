@@ -31,22 +31,6 @@ class Signal(Logger):
     time_dependent: bool
         it tells if the signal is time dependent (True) or not (False)
 
-    Methods
-    -------
-    check_quantities(quantity, units)
-        converts the quantity to the correct units
-    check_sizes()
-        checks that wl_grid, data and time_grid have the correct dimensions
-    spectral_rebin(new_wl_grid)
-        rebins the signal to the new wavelength grid
-    temporal_rebin(new_time_grid)
-        rebins the signal to the new time grid
-    to_dict()
-        converts the signal into a dictionary
-
-    plot(fig=None, ax=None, legend=None, yscale=None, xscale=None)
-        plots the signal and return figure and axis or add the plot to an existing figure and axis
-
     Examples
     ---------
     >>> import numpy as np
@@ -161,12 +145,18 @@ class Signal(Logger):
                 raise ValueError
 
     def spectral_rebin(self, new_wl_grid):
+        """
+        rebins the signal to the new wavelength grid
+        """
         self.data = rebin(new_wl_grid, self.wl_grid, self.data)[1]
         idx = np.where(np.isnan(self.data))
         self.data[idx] = 0.0
         self.wl_grid = new_wl_grid
 
     def temporal_rebin(self, new_time_grid):
+        """
+        rebins the signal to the new time grid
+        """
         raise NotImplementedError
 
     def to_dict(self):
@@ -178,6 +168,9 @@ class Signal(Logger):
         return signal_dict
 
     def plot(self, fig=None, ax=None, yscale=None, xscale=None, label=None):
+        """
+        plots the signal and return figure and axis or add the plot to an existing figure and axis
+        """
         if (fig == None) and (ax == None):
             fig, ax = plt.subplots(1, 1)
             ax.set_xlabel(r'Wavelength [${}$]'.format(self.wl_grid.unit))

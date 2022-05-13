@@ -3,7 +3,8 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
-from exorad.utils.exolib import binnedPSF
+from exorad.utils.exolib import binnedPSF, find_aperture_radius, \
+    pixel_based_psf
 from .instrument import Instrument
 
 
@@ -44,26 +45,73 @@ class Photometer(Instrument):
             if 'format' in self.description['PSF'].keys():
                 psf_format = self.description['PSF']['format']['value']
 
-        prf, pixel_rf, extent = binnedPSF(self.description['Fnum_x']['value'],
-                                          self.description['Fnum_y']['value'],
-                                          self.table['Wavelength'],
-                                          self.description['detector'][
-                                              'delta_pix']['value'],
-                                          filename=psfFilename,
-                                          format=psf_format)
+        if psf_format == 'pixel_based':
+            # If psf is pixel based it simply loads the image
+            prf, pixel_rf, extent = pixel_based_psf(self.table['Wavelength'],
+                                                    self.description[
+                                                        'detector'][
+                                                        'delta_pix']['value'],
+                                                    filename=psfFilename)
+        else:
+            prf, pixel_rf, extent = binnedPSF(
+                self.description['Fnum_x']['value'],
+                self.description['Fnum_y']['value'],
+                self.table['Wavelength'],
+                self.description['detector'][
+                    'delta_pix']['value'],
+                filename=psfFilename)
         self._add_data_to_built('PRF', prf)
         self._add_data_to_built('pixelRF', pixel_rf)
         self._add_data_to_built('extent', extent)
 
-        window_size_px = self.description['aperture']['radius']['value'] ** 2 * \
-                         self.description['Fnum_x']['value'] * self.table['Wavelength'] * \
-                         self.description['Fnum_y']['value'] * self.table['Wavelength'] / \
-                         self.description['detector']['delta_pix']['value'] ** 2
+        window_size_px = self._windows_size(prf, psf_format)
         self.debug('window size : {}'.format(window_size_px))
         self._add_data_to_built('window_size_px', window_size_px)
         self.table['WindowSize'] = window_size_px
 
         self._add_data_to_built('table', self.table)
+
+    def _windows_size(self, prf, psf_format):
+        """estimates the windows size starting from the PSF"""
+        if 'radius' in self.description['aperture'].keys():
+            aper_radius = self.description['aperture']['radius']['value']
+            if psf_format == 'pixel_based':
+                window_size_px = [aper_radius ** 2]
+            else:
+                window_size_px = aper_radius ** 2 * \
+                                 self.description['Fnum_x']['value'] * \
+                                 self.table[
+                                     'Wavelength'] * \
+                                 self.description['Fnum_y']['value'] * \
+                                 self.table[
+                                     'Wavelength'] / \
+                                 self.description['detector']['delta_pix'][
+                                     'value'] ** 2
+        elif 'EnE' in self.description['aperture'].keys():
+            if psf_format == 'pixel_based':
+                aper_radius = find_aperture_radius(prf, self.description['aperture']['EnE']['value'],
+                                                   1, 1, 1*u.micron)
+                window_size_px = [np.pi * aper_radius ** 2 *u.Unit('')]
+            else:
+                aper_radius = find_aperture_radius(prf,
+                                                   self.description[
+                                                       'aperture'][
+                                                       'EnE']['value'],
+                                                   self.description['Fnum_x'][
+                                                       'value'],
+                                                   self.description['Fnum_y'][
+                                                       'value'],
+                                                   self.table['Wavelength'])
+                window_size_px = np.pi * aper_radius ** 2 * \
+                                 self.description['Fnum_x']['value'] * \
+                                 self.table[
+                                     'Wavelength'] * \
+                                 self.description['Fnum_y']['value'] * \
+                                 self.table[
+                                     'Wavelength'] / \
+                                 self.description['detector']['delta_pix'][
+                                     'value'] ** 2
+        return window_size_px
 
     def propagate_target(self, target):
         out = QTable()
@@ -74,8 +122,10 @@ class Photometer(Instrument):
 
         if self.payload['optics']['ForceChannelWlEdge']['value']:
             self.debug('force channel wl edge enabled')
-            idx = np.logical_or(wl < self.description['wl_min']['value'].to(self.table['Wavelength'].unit),
-                                wl > self.description['wl_max']['value'].to(self.table['Wavelength'].unit))
+            idx = np.logical_or(wl < self.description['wl_min']['value'].to(
+                self.table['Wavelength'].unit),
+                                wl > self.description['wl_max']['value'].to(
+                                    self.table['Wavelength'].unit))
             transmission[idx] = wave_window[idx] = 0.0
 
         star_flux = np.trapz(wave_window *
@@ -94,9 +144,11 @@ class Photometer(Instrument):
         out['starSignal'] = [star_signal.value] * star_signal.unit
         self.debug('star signal : {}'.format(out['starSignal']))
 
-        try:
+        if 'apertureCorrection' in self.description['aperture'].keys():
             star_signal_aperture = star_signal * self.description['aperture']['apertureCorrection']['value']
-        except KeyError:
+        elif 'EnE' in self.description['aperture'].keys():
+            star_signal_aperture = star_signal * self.description['aperture']['EnE']['value']
+        else:
             self.debug('aperture correction not found')
             star_signal_aperture = star_signal
 

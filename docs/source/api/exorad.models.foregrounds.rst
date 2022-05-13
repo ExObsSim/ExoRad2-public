@@ -1,28 +1,19 @@
-==============================
-Models Foregrounds
-==============================
+exorad.models.foregrounds package
+=================================
 
-Zodiacal foreground
---------------------
+Submodules
+----------
 
-.. autoclass:: exorad.models.foregrounds.zodiacalForeground.ZodiacalFrg
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+   :maxdepth: 4
 
-Sky foreground
---------------------
+   exorad.models.foregrounds.skyForegrounds
+   exorad.models.foregrounds.zodiacalForeground
 
-.. autoclass:: exorad.models.foregrounds.skyForegrounds.SkyForeground
-    :members:
-    :undoc-members:
-    :show-inheritance:
+Module contents
+---------------
 
-Sky filter
---------------------
-
-.. autoclass:: exorad.models.foregrounds.skyForegrounds.SkyFilter
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+.. automodule:: exorad.models.foregrounds
+   :members:
+   :undoc-members:
+   :show-inheritance:

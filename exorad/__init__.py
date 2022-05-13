@@ -33,8 +33,9 @@ __email__ = "lorenzo.mugnai@uniroma1.it"
 
 __license__ = "BSD-3-Clause"
 __copyright__ = '2020-{:d}, {}'.format(date.today().year, __author__)
+__citation__ = "Mugnai et al., 2020, 'ArielRad: the ARIEL radiometric model', Exp. Astron, 50, 303-328"
 
-from exorad.exorad import standard_pipeline
+from .exorad import standard_pipeline
 
 
 from exorad.utils.version_control import VersionControl

@@ -1,11 +1,11 @@
 import base64
 
 import requests
+import socket
 
 from exorad import __url__
 from exorad.__version__ import __version__ as current_ver
 from exorad.log import Logger
-
 
 class VersionError(Exception):
     pass
@@ -17,19 +17,20 @@ class VersionControl(Logger):
         super().__init__()
 
         self.current_version = current_version
-        self.content = self.get_content(package_url)
-        if self.content:
-            message, new_ver = self.get_message()
+        if self._check_internet():
+            self.content = self.get_content(package_url)
+            if self.content:
+                message, new_ver = self.get_message()
 
-            if message != '':
-                self.warning('### NEW CODE VERSION ONLINE ###')
-                self.warning('your version: {}  - online version:{}'.format(
-                    self.current_version, new_ver))
-                self.warning('changelog: \n {}'.format(message))
-                if force:
-                    raise VersionError(
-                        "please update your code version. Your version: {} - online version:{}".format(
-                            self.current_version, new_ver))
+                if message != '':
+                    self.warning('### NEW CODE VERSION ONLINE ###')
+                    self.warning('your version: {}  - online version:{}'.format(
+                        self.current_version, new_ver))
+                    self.warning('changelog: \n {}'.format(message))
+                    if force:
+                        raise VersionError(
+                            "please update your code version. Your version: {} - online version:{}".format(
+                                self.current_version, new_ver))
 
     def get_content(self, package_url):
         splitted_url = package_url.split('/')
@@ -71,3 +72,20 @@ class VersionControl(Logger):
                     break
         return message, new_ver
 
+
+    def _check_internet(self, host="8.8.8.8", port=53, timeout=3):
+        """
+        Host: 8.8.8.8 (google-public-dns-a.google.com)
+        OpenPort: 53/tcp
+        Service: domain (DNS/TCP)
+
+        solution from https://stackoverflow.com/a/33117579
+        """
+        try:
+            socket.setdefaulttimeout(timeout)
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(
+                (host, port))
+            return True
+        except socket.error as ex:
+            print(ex)
+            return False

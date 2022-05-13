@@ -1,12 +1,7 @@
-==============================
-Tasks Load Options
-==============================
+exorad.tasks.loadOptions module
+===============================
 
-LoadOptions
-----------------
-
-.. autoclass:: exorad.tasks.loadOptions.LoadOptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+.. automodule:: exorad.tasks.loadOptions
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -38,14 +38,14 @@ class ZodiacalTest(unittest.TestCase):
     def test_fit_coordinate(self):
         setLogLevel(logging.DEBUG)
 
-        payload = {'zodiacal': {'zodiacalMap': True}}
+        payload = {'zodiacal': {'zodiacalMap': {'value':True}}}
 
         zodi = ZodiacalFrg(wl=self.wl, description=payload['zodiacal'],
                            coordinates=(90.03841366076144 * u.deg,
                                         -66.55432012293919 * u.deg))
 
         payload = {'zodiacal': {'zodiacFactor': {'value': 1.4536394185097168},
-                                'zodiacalMap': False}}
+                                'zodiacalMap': {'value': False}}}
 
         zodi_validation = ZodiacalFrg(wl=self.wl,
                                       description=payload['zodiacal'])

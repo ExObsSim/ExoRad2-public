@@ -6,6 +6,7 @@ import numpy as np
 from exorad.models.foregrounds.skyForegrounds import SkyForeground
 from exorad.models.foregrounds.zodiacalForeground import ZodiacalFrg
 from .task import Task
+from exorad.utils.passVal import PassVal
 
 
 class EstimateZodi(Task):
@@ -39,8 +40,14 @@ class EstimateZodi(Task):
         wl_min, wl_max = self.get_task_param('wl_range')
 
         wl = np.logspace(np.log10((wl_min.to(u.um)).value),
-                         np.log10((wl_max.to(u.um)).value), 6000) * u.um
-        zodi = ZodiacalFrg(wl=wl, description=zodi_dict)
+                         np.log10((wl_max.to(u.um)).value), PassVal.working_R) * u.um
+
+        if 'ra' in target.star.__dict__.keys():
+            zodi = ZodiacalFrg(wl=wl, description=zodi_dict,
+                               coordinates=(target.star.__dict__['ra'],
+                                            target.star.__dict__['dec']))
+        else:
+            zodi = ZodiacalFrg(wl=wl, description=zodi_dict)
 
         if not hasattr(target, 'foreground'):
             setattr(target, 'foreground', OrderedDict())
@@ -79,7 +86,7 @@ class EstimateForeground(Task):
         wl_min, wl_max = self.get_task_param('wl_range')
 
         wl = np.logspace(np.log10((wl_min.to(u.um)).value),
-                         np.log10((wl_max.to(u.um)).value), 6000) * u.um
+                         np.log10((wl_max.to(u.um)).value), PassVal.working_R) * u.um
         foreground_name = foreground_dict['value']
         foreground = SkyForeground(wl, foreground_dict)
         if not hasattr(target, 'foreground'):

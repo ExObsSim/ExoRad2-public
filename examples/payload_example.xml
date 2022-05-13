@@ -4,7 +4,8 @@
     </ConfigPath>
     <fileName>payload_example</fileName>
     <common>
-        <sourceSpectrum>planck
+        <working_R> 6000 </working_R>
+        <sourceSpectrum>custom
             <comment>Source spectrum can be 'planck', 'phoenix' or 'custom'.
                 If it's 'planck', no more information are needed here.
                 If it's 'phoenix' the phoenix spectra directory must be indicated in "StellarModels".
@@ -32,6 +33,10 @@
                 <zodiacalMap> False
                     <comment> Sky map for zodiacal emission computed with Kelsall 1998 idl routine</comment>
                 </zodiacalMap>
+<!--                <custom_map_file> file_name-->
+<!--                    <comment> use to manually point to a file. The file should be of the same format of exorad/data/Zodi_map.hdf5</comment>-->
+<!--                </custom_map_file> -->
+
         </foreground>
         <foreground> skyFilter
                     <datafile>__ConfigPath__/examples/modtran_38km_sun_180az_55zd_los_45zd.csv</datafile>

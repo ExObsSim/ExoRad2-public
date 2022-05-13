@@ -11,6 +11,7 @@ from exorad.models.optics.opticalElement import OpticalElement
 from exorad.models.signal import Radiance
 from exorad.utils.diffuse_light_propagation import integrate_light, prepare, convolve_with_slit
 from exorad.utils.exolib import planck
+from exorad.utils.passVal import PassVal
 
 
 def surface_radiance(wl, T, emissivity):
@@ -136,7 +137,7 @@ class OpticalPath(Logger):
         if len(wl) == 1:
             wl_min = self.description['detector']['wl_min']['value'].to(u.um)
             cut_off = self.description['detector']['cut_off']['value'].to(u.um)
-            out_wl = np.logspace(np.log10(wl_min.value), np.log10(cut_off.value), 6000) * u.um
+            out_wl = np.logspace(np.log10(wl_min.value), np.log10(cut_off.value), PassVal.working_R) * u.um
             self.debug('wl grid of a single value found. Instead we use : {}'.format(out_wl))
         else:
             out_wl = wl
@@ -198,9 +199,9 @@ class OpticalPath(Logger):
         total_max_signal, total_signal, wl_table, A, qe, omega_pix, _ = prepare(ch_table, ch_built_instr,
                                                                                 self.description)
         for item in self.radiance_dict:
+            self.debug('computing signal for {}'.format(item))
             rad = copy.deepcopy(self.radiance_dict[item])
             qe.spectral_rebin(rad.wl_grid)
-            self.debug('computing signal for {}'.format(item))
             if rad.slit and 'slit_width' in ch_built_instr:
                 max_signal_per_pix, signal = convolve_with_slit(self.description, ch_built_instr,
                                                                 A, ch_table, omega_pix, qe, rad,

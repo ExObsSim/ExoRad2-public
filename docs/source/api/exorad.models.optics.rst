@@ -1,33 +1,19 @@
-==============================
-Models Optics
-==============================
+exorad.models.optics package
+============================
 
-Optical Element
--------------------
+Submodules
+----------
 
-.. autoclass:: exorad.models.optics.opticalElement.OpticalElement
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+   :maxdepth: 4
 
-Optical path
------------------
+   exorad.models.optics.opticalElement
+   exorad.models.optics.opticalPath
 
-.. autoclass:: exorad.models.optics.opticalPath.OpticalPath
-    :members:
-    :undoc-members:
-    :show-inheritance:
+Module contents
+---------------
 
-Instrument radiance
---------------------
-
-.. autoclass:: exorad.models.optics.opticalPath.InstRadiance
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Surface radiance
------------------
-
-.. automodule:: exorad.models.optics.opticalPath.surface_radiance
+.. automodule:: exorad.models.optics
+   :members:
+   :undoc-members:
+   :show-inheritance:

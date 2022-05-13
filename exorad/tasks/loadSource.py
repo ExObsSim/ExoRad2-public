@@ -5,6 +5,7 @@ from astropy import units as u
 
 from exorad.models.source import Star, CustomSed
 from exorad.tasks.task import Task
+from exorad.utils.passVal import PassVal
 
 
 class LoadSource(Task):
@@ -52,6 +53,17 @@ class LoadSource(Task):
             source = {'value': source}
             self.warning('source should be dict, not string.')
 
+        wl_min, wl_max = self.get_task_param('wl_range')
+        if wl_min > wl_max: wl_min, wl_max = wl_max, wl_min
+        if not hasattr(wl_min, 'unit'):
+            self.debug('wavelength unit not found: micron assumed')
+            wl_min *= u.um
+            wl_max *= u.um
+
+        wl_grid = np.logspace(np.log10(wl_min.value),
+                              np.log10(wl_max.value), PassVal.working_R) * \
+                  wl_max.unit
+
         if source['value'].lower() == 'custom':
             # if custom source, only R and D are needed for the solid angle
             for attr in ['D', 'R']:
@@ -73,13 +85,16 @@ class LoadSource(Task):
             self.debug('source spectrum : {}'.format(source['value'].lower()))
             if source['value'].lower() == 'planck':
                 self.debug('Plack sed selected')
-                star = Star('.',
-                            target.star.D,
-                            target.star.Teff,
-                            target.star.calc_logg(target.star.M, target.star.R),
-                            0.0,
-                            target.star.R,
-                            use_planck_spectrum=True)
+                star = Star(star_sed_path='.',
+                            starDistance=target.star.D,
+                            starTemperature=target.star.Teff,
+                            starLogg=target.star.calc_logg(target.star.M,
+                                                           target.star.R),
+                            starMetallicity=0.0,
+                            starRadius=target.star.R,
+                            use_planck_spectrum=True,
+                            wl_min=wl_min,
+                            wl_max=wl_max, )
 
             elif source['value'].lower() == 'phoenix':
                 try:
@@ -95,46 +110,45 @@ class LoadSource(Task):
                         star_sed_path))
 
                 try:
-                    star = Star(star_sed_path,
-                                target.star.D,
-                                target.star.Teff,
-                                target.star.calc_logg(target.star.M,
-                                                      target.star.R),
-                                0.0,
-                                target.star.R,
-                                use_planck_spectrum=False)
+                    star = Star(star_sed_path=star_sed_path,
+                                starDistance=target.star.D,
+                                starTemperature=target.star.Teff,
+                                starLogg=target.star.calc_logg(target.star.M,
+                                                               target.star.R),
+                                starMetallicity=0.0,
+                                starRadius=target.star.R,
+                                use_planck_spectrum=False,
+                                wl_min=wl_min,
+                                wl_max=wl_max, )
                     self.debug('stellar sed used {}'.format(star.filename))
                 except ValueError:
                     self.warning(
                         'stellar temperature out sed boundaries: Planck star used instead')
-                    star = Star('.',
-                                target.star.D,
-                                target.star.Teff,
-                                target.star.calc_logg(target.star.M,
-                                                      target.star.R),
-                                0.0,
-                                target.star.R,
-                                use_planck_spectrum=True)
+                    star = Star(star_sed_path='.',
+                                starDistance=target.star.D,
+                                starTemperature=target.star.Teff,
+                                starLogg=target.star.calc_logg(target.star.M,
+                                                               target.star.R),
+                                starMetallicity=0.0,
+                                starRadius=target.star.R,
+                                use_planck_spectrum=True,
+                                wl_min=wl_min,
+                                wl_max=wl_max, )
             else:
-                star = Star('.',
-                            target.star.D,
-                            target.star.Teff,
-                            target.star.calc_logg(target.star.M, target.star.R),
-                            0.0,
-                            target.star.R,
-                            use_planck_spectrum=True)
-                self.info('invalid source spectrum description. Planck spectrum is used')
+                star = Star(star_sed_path='.',
+                            starDistance=target.star.D,
+                            starTemperature=target.star.Teff,
+                            starLogg=target.star.calc_logg(target.star.M,
+                                                           target.star.R),
+                            starMetallicity=0.0,
+                            starRadius=target.star.R,
+                            use_planck_spectrum=True,
+                            wl_min=wl_min,
+                            wl_max=wl_max, )
+                self.info(
+                    'invalid source spectrum description. Planck spectrum is used')
 
-        wl_min, wl_max = self.get_task_param('wl_range')
-        if wl_min > wl_max: wl_min, wl_max = wl_max, wl_min
-        if not hasattr(wl_min, 'unit'):
-            self.debug('wavelength unit not found: micron assumed')
-            wl_min *= u.um
-            wl_max *= u.um
 
-        wl_grid = np.logspace(np.log10(wl_min.value),
-                              np.log10(wl_max.value), 6000) * \
-                  wl_max.unit
         star.sed.spectral_rebin(wl_grid)
 
         target.update_target(star)
