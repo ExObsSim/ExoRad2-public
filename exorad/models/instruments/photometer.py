@@ -4,7 +4,7 @@ import numpy as np
 from astropy.table import QTable
 
 from exorad.utils.exolib import binnedPSF, find_aperture_radius, \
-    pixel_based_psf
+    pixel_based_psf, paosPSF
 from .instrument import Instrument
 
 
@@ -52,6 +52,14 @@ class Photometer(Instrument):
                                                         'detector'][
                                                         'delta_pix']['value'],
                                                     filename=psfFilename)
+        elif psf_format == 'paos':
+
+            prf, pixel_rf, extent = paosPSF(wl=self.table['Wavelength'],
+                                            delta_pix=self.description[
+                                                'detector'][
+                                                'delta_pix']['value'],
+                                            filename=psfFilename)
+
         else:
             prf, pixel_rf, extent = binnedPSF(
                 self.description['Fnum_x']['value'],
@@ -60,6 +68,7 @@ class Photometer(Instrument):
                 self.description['detector'][
                     'delta_pix']['value'],
                 filename=psfFilename)
+
         self._add_data_to_built('PRF', prf)
         self._add_data_to_built('pixelRF', pixel_rf)
         self._add_data_to_built('extent', extent)

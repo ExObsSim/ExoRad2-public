@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 
 from exorad.models.signal import CustomSignal, Signal, CountsPerSeconds
 from exorad.utils.exolib import binnedPSF, pixel_based_psf, \
-    find_aperture_radius
+    find_aperture_radius, paosPSF
 from .instrument import Instrument
 
 
@@ -22,7 +22,7 @@ class Spectrometer(Instrument):
         # check if R is defined
         if 'targetR' not in self.description:
             self.warning('Channel targetR missing: native R is assumed')
-            self.description['targetR'] = {'value':'native'}
+            self.description['targetR'] = {'value': 'native'}
 
         # define the wavelength grid
         if 'value' in self.description['targetR'].keys():
@@ -48,20 +48,21 @@ class Spectrometer(Instrument):
                 wl_bin_width = wl_bin[1:] - wl_bin[0:-1]
         # wavelength dependent R
         elif 'data' in self.description['targetR'].keys():
-            res_data = pd.read_csv(self.description['targetR']['data']['value'],sep='\t')
-            get_res = interp1d(res_data['W'],res_data['R'])
+            res_data = pd.read_csv(self.description['targetR']['data']['value'], sep='\t')
+            get_res = interp1d(res_data['W'], res_data['R'])
             w1 = self.description['wl_min']['value'].value
             w2 = w1
             wl_bin = np.array([w1])
             while w2 < self.description['wl_max']['value'].value:
                 w1 = w2
                 res = get_res(w1)
-                w2 = np.round((w1 + w1/res),4)
-                wl_bin = np.append(wl_bin,w2)
-            if self.description['wl_max']['value'].value - wl_bin[-2] < (wl_bin[-2] - wl_bin[-3])/2.: #remove small bin at end of channel
+                w2 = np.round((w1 + w1 / res), 4)
+                wl_bin = np.append(wl_bin, w2)
+            if self.description['wl_max']['value'].value - wl_bin[-2] < (
+                    wl_bin[-2] - wl_bin[-3]) / 2.:  # remove small bin at end of channel
                 wl_bin[-2] = self.description['wl_max']['value'].value
                 wl_bin = wl_bin[:-1]
-            wl_bin_c = (np.array(wl_bin[:-1])+np.array(wl_bin[1:]))/2 * u.micron
+            wl_bin_c = (np.array(wl_bin[:-1]) + np.array(wl_bin[1:])) / 2 * u.micron
             wl_bin_width = (np.array(wl_bin[1:]) - np.array(wl_bin[:-1])) * u.micron
         else:
             self.error('Channel targetR format unsupported.')
@@ -143,11 +144,17 @@ class Spectrometer(Instrument):
                     wl,
                     delta,
                     psf_file)
+
+            elif psf_format == 'paos':
+
+                prf, pixel_prf, extent = paosPSF(wl=[wl] * u.micron,
+                                                 delta_pix=delta,
+                                                 filename=psf_file)
             else:
                 prf, pixel_prf, extent = binnedPSF(
                     self.description['Fnum_x']['value'],
                     self.description['Fnum_y']['value'],
-                    wl,
+                    [wl] * u.micron,
                     delta,
                     psf_file)
 
@@ -210,10 +217,12 @@ class Spectrometer(Instrument):
             window_spatial_width *= self.description['window_spatial_scale']['value']
             self.debug('window spatial width scaled by {}'.format(self.description['window_spatial_scale']['value']))
         if 'window_spatial_pixel' in list(self.description.keys()):
-            window_spatial_width = np.full(len(self.table['Wavelength']),float(self.description['window_spatial_pixel']['value']))
+            window_spatial_width = np.full(len(self.table['Wavelength']),
+                                           float(self.description['window_spatial_pixel']['value']))
             self.debug('window spatial width set to {}'.format(self.description['window_spatial_pixel']['value']))
         if 'window_spectral_pixel' in list(self.description.keys()):
-            window_spectral_width = np.full(len(self.table['Wavelength']),float(self.description['window_spectral_pixel']['value']))
+            window_spectral_width = np.full(len(self.table['Wavelength']),
+                                            float(self.description['window_spectral_pixel']['value']))
             self.debug('window spectral width set to {}'.format(self.description['window_spectral_pixel']['value']))
         window_size_px = window_spectral_width * window_spatial_width
         self._add_data_to_built('window_spectral_width', window_spectral_width)

@@ -6,15 +6,13 @@ import h5py
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 from astropy.io.misc.hdf5 import read_table_hdf5
 
 from exorad.log import Logger, setLogLevel
 
-sns.set()
-
 mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.WARNING)
+cmap = matplotlib.cm.get_cmap('Set1')
 
 
 class Plotter(Logger):
@@ -55,7 +53,7 @@ class Plotter(Logger):
         The Class input_table input parameter is required for this method to work.
         """
         channels = set(self.inputTable['chName'])
-        palette = sns.color_palette('colorblind')
+        norm = matplotlib.colors.Normalize(vmin=0.0, vmax=len(channels))
         tick_list = []
 
         for k, channelName in enumerate(channels):
@@ -65,7 +63,7 @@ class Plotter(Logger):
             wl_max = max(self.inputTable['RightBinEdge'][np.where(self.inputTable['chName'] == channelName)])
             if hasattr(wl_max,'unit'):
                 wl_max = wl_max.value
-            ax.axvspan(wl_min, wl_max, alpha=0.1, zorder=0, color=palette[k])
+            ax.axvspan(wl_min, wl_max, alpha=0.1, zorder=0, color=cmap(norm(k), ))
             tick_list.append(wl_min)
         tick_list.append(wl_max)
         ax.set_xscale(scale)
@@ -93,7 +91,7 @@ class Plotter(Logger):
             from matplotlib.lines import Line2D
             from exorad.models.signal import Signal
 
-            palette = sns.color_palette('bright')
+            norm = matplotlib.colors.Normalize(vmin=0.0, vmax=len(self.channels))
 
             fig, ax = plt.subplots(1, 1, figsize=(10, 8))
             fig.suptitle('Payload photon conversion efficiency')
@@ -106,19 +104,19 @@ class Plotter(Logger):
                         data = self.channels[ch].built_instr['{}_data'.format(key)]
                         sig = Signal(wl_grid=data['wl_grid']['value'] * u.Unit(data['wl_grid']['unit']),
                                      data=data['data']['value'])
-                        ax.plot(sig.wl_grid, sig.data, color=palette[i], zorder=10)
+                        ax.plot(sig.wl_grid, sig.data, color=cmap(norm(i), ), zorder=10)
                         if not pce:
                             pce = sig
                         else:
                             sig.spectral_rebin(pce.wl_grid)
                             pce.data *= sig.data
-                    ax.plot(pce.wl_grid, pce.data, color=palette[i + 1], zorder=10)
+                    ax.plot(pce.wl_grid, pce.data, color=cmap(norm(i+1), ), zorder=10)
 
                 lines, labels = [], []
                 for i, key in enumerate(keys):
-                    lines.append(Line2D([0], [0], color=palette[i], lw=4))
+                    lines.append(Line2D([0], [0], color=cmap(norm(i), ), lw=4))
                     labels.append(key)
-                lines.append(Line2D([0], [0], color=palette[i + 1], lw=4))
+                lines.append(Line2D([0], [0],color=cmap(norm(i+1), ), lw=4))
                 labels.append('pce')
             else:
                 pce = self.inputTable['TR'] * self.inputTable['QE']
@@ -161,8 +159,6 @@ class Plotter(Logger):
         ----
         The Class input_table input parameter is required for this method to work.
         """
-        palette = sns.color_palette('bright')
-
         noise_keys = [x for x in self.inputTable.keys() if 'noise' in x or 'custom' in x]
         self.debug('noise keys : {}'.format(noise_keys))
         for k, n in enumerate(noise_keys):
@@ -221,7 +217,6 @@ class Plotter(Logger):
         ----
         The Class input_table input parameter is required for this method to work.
         """
-        palette = sns.color_palette('bright')
 
         keys = [x for x in self.inputTable.keys() if 'signal' in x and 'noise' not in x]
         self.debug('signal keys : {}'.format(keys))

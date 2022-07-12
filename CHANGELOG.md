@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.1.111] - 2022-07-12
+### Added
+- support for PAOS psf by @abocchieri
+### Fixed
+- added pandas to the list of requirements
+- concurrent and path fix by @ahmed-f-alrefaie
+
 ## [2.1.108] - 2022-05-13
 ### Added
 - support for Ariel MRS csv targetlist format
@@ -217,6 +225,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.111]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.108...v2.1.111
 [2.1.108]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.94...v2.1.108
 [2.1.94]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.86...v2.1.94
 [2.1.86]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.84...v2.1.86

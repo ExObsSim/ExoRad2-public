@@ -92,7 +92,7 @@ def rebin(x, xp, fp):
         logger.debug('interpolating')
 
         # Interpolate !
-        #new_f = np.interp(x, xp, fp, left=0.0, right=0.0)
+        # new_f = np.interp(x, xp, fp, left=0.0, right=0.0)
         #         from scipy.interpolate import interp1d
         #         interpolator = interp1d(xp, fp, kind='cubic', fill_value=0.0, assume_sorted=False, bounds_error=False)
         #         new_f = interpolator(x)
@@ -166,7 +166,7 @@ def planck(wl, T):
       Returns
       -------
         spectrum:			array
-                  The Planck spectrum  [W m^-2 sr^-2 micron^-1]
+                  The Planck spectrum  [W m^-2 sr^-1 micron^-1]
     """
 
     a = np.float64(1.191042768e8) * u.um ** 5 * u.W / u.m ** 2 / u.sr / u.um
@@ -189,9 +189,8 @@ def load_standard_psf(F_x, F_y, wl, delta_pix, hdr):
     extent = (xmin, xmax, ymin, ymax)
     return k_x, k_y, extent
 
-
-def binnedPSF(F_x, F_y, wl, delta_pix, filename=None):
-    if filename:
+def binnedPSF(F_x, F_y, wl, delta_pix, filename=None, format=None, PSFtype='AIRY', plot=False):
+    if filename and os.path.exists(filename):
         if filename[-5:] == '.fits':
             with fits.open(os.path.expanduser(filename)) as hdu:
                 ima = hdu[0].data
@@ -241,6 +240,9 @@ def binnedPSF(F_x, F_y, wl, delta_pix, filename=None):
 
     imac = signal.convolve2d(ima, kernel, mode='same')
 
+    if plot:
+        plot_imac(imac, extent)
+
     return imac, kernel, extent
 
 
@@ -275,18 +277,155 @@ def pixel_based_psf(wl, delta_pix, filename):
     return ima, np.array([1.]), extent
 
 
+def load_paos_psf(wl_group):
+    from exorad.output.hdf5 import load
+
+    scale = 1.0e6
+    group = load(input_group=wl_group)
+
+    img_key = list(group.keys())[-1]
+    group = group[img_key]
+
+    ima = group['amplitude'] ** 2
+    dx = group['dx'] * u.micron * scale
+    dy = group['dy'] * u.micron * scale
+    extent = group['extent'] * u.micron * scale
+    fratio = group['fratio']
+
+    return ima, dx, dy, extent, fratio
+
+
+def interpolate_paos_psf(fd, wl):
+    wavelengths = np.asarray(
+        [key for key in list(fd.keys()) if key != 'info']).astype(np.float64)
+    wavelengths.sort()
+
+    if len(wavelengths) == 1:
+        logger.error("Can't interpolate, PAOS file has only one wavelength")
+        raise ValueError(
+            "Can't interpolate, PAOS file has only one wavelength")
+
+    idx0 = np.argmin(np.abs(wavelengths - wl))
+
+    if np.min(wavelengths) <= wl <= np.max(wavelengths):
+        idx1 = idx0 - 1 if wavelengths[idx0] - wl > 0 else idx0 + 1
+    else:
+        logger.warning(
+            'Wavelength is outside interpolation region, extrapolating...')
+        idx1 = idx0 + 1 if wavelengths[idx0] - wl > 0 else idx0 - 1
+
+    wl0, wl1 = wavelengths[idx0], wavelengths[idx1]
+
+    ima0, dx0, dy0, extent0, fratio0 = \
+        load_paos_psf(wl_group=fd[f'{wl0}'])
+
+    ima1, dx1, dy1, extent1, fratio1 = \
+        load_paos_psf(wl_group=fd[f'{wl1}'])
+
+    dx0, dy0, extent0 = dx0.value, dy0.value, extent0.value
+    dx1, dy1, extent1 = dx1.value, dy1.value, extent1.value
+
+    ima = interp1d(x=[wl0, wl1], y=[ima0, ima1], kind='linear',
+                   fill_value='extrapolate', axis=0)(wl)
+    dx = interp1d(x=[wl0, wl1], y=[dx0, dx1], kind='linear',
+                  fill_value='extrapolate')(wl)
+    dy = interp1d(x=[wl0, wl1], y=[dy0, dy1], kind='linear',
+                  fill_value='extrapolate')(wl)
+    extent = interp1d(x=[wl0, wl1], y=[extent0, extent1], kind='linear',
+                      fill_value='extrapolate', axis=0)(wl)
+    fratio = interp1d(x=[wl0, wl1], y=[fratio0, fratio1], kind='linear',
+                      fill_value='extrapolate')(wl)
+
+    return ima, dx * u.micron, dy * u.micron, extent * u.micron, fratio
+
+
+def paosPSF(wl, delta_pix, filename='', plot=False):
+    import h5py
+    from scipy import signal
+
+    logger.debug('loading PAOS psf')
+
+    assert wl.unit == u.micron, print('Wavelength unit should be micron. ')
+
+    try:
+
+        with h5py.File(os.path.expanduser(filename), mode='r') as fd:
+
+            wavelength = wl.value[0]
+            if str(wavelength) in list(fd.keys()):
+                ima, dx, dy, extent, fratio = \
+                    load_paos_psf(wl_group=fd[f'{wavelength}'])
+            else:
+                ima, dx, dy, extent, fratio = \
+                    interpolate_paos_psf(fd, wavelength)
+
+    except OSError as e:
+
+        logger.error('Error loading PAOS psf file. ')
+        raise FileNotFoundError(e.errno)
+
+    k_x = delta_pix / dx
+    k_y = delta_pix / dy
+
+    fk_x, ik_x = np.modf(k_x)
+    fk_y, ik_y = np.modf(k_y)
+
+    kernel = np.ones((int(ik_y) + 2, int(ik_x) + 2)) * fk_x.unit
+
+    kernel[:, 0] *= 0.5 * fk_x
+    kernel[:, -1] *= 0.5 * fk_x
+    kernel[0, :] *= 0.5 * fk_y
+    kernel[-1, :] *= 0.5 * fk_y
+
+    imac = signal.convolve2d(ima, kernel, mode='same')
+
+    if plot:
+        plot_imac(imac, extent)
+
+    return imac, kernel, extent
+
+
+def plot_imac(imac, extent, xlim=None, ylim=None):
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+    extent = np.asarray([ext.value for ext in extent]).ravel()
+
+    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+    im = ax.imshow(imac, cmap=plt.get_cmap('viridis'), origin='lower')
+    extent = np.asarray(extent).astype(np.float64)
+    im.set_extent(extent=extent)
+
+    if (xlim, ylim) != (None, None):
+        plt.xlim(*xlim)
+        plt.ylim(*ylim)
+
+    plt.grid(True)
+
+    cax = make_axes_locatable(ax).append_axes('right', size='5%', pad=0.05)
+    plt.colorbar(im, cax=cax, orientation='vertical')
+
+    plt.show()
+
+    return 0
+
+
 def wl_encircled_energy(filename, eec, format, Fnum_x, Fnum_y, delta_pix):
     filenames = np.sort(glob.glob(filename + '*.fits'))
     psf_wl, enc = [], []
     for file in filenames:
         with fits.open(os.path.expanduser(file)) as hdu:
             psf_wl.append(hdu[0].header['WAVELEN'])
-        if format=='pixel_based':
-            ima, _, _ = pixel_based_psf(hdu[0].header['WAVELEN'], delta_pix,file)
+        if format == 'pixel_based':
+            ima, _, _ = pixel_based_psf(hdu[0].header['WAVELEN'], delta_pix,
+                                        file)
             enc += [find_aperture_radius(ima, eec, 1, 1, 1)]
         else:
-            ima, _, _ = binnedPSF(Fnum_x, Fnum_y, hdu[0].header['WAVELEN'], delta_pix)
-            enc += [find_aperture_radius(ima, eec, Fnum_x, Fnum_y, hdu[0].header['WAVELEN'])]
+            ima, _, _ = binnedPSF(Fnum_x, Fnum_y, hdu[0].header['WAVELEN'],
+                                  delta_pix)
+            enc += [find_aperture_radius(ima, eec, Fnum_x, Fnum_y,
+                                         hdu[0].header['WAVELEN'])]
     return psf_wl, enc
 
 
@@ -337,26 +476,26 @@ def encircled_energy(r, ima, Fnum_x, Fnum_y, wavelength):
 
 
 def OmegaPix(Fnum_x, Fnum_y=None):
-    ''' 
+    '''
     Calculate the solid angle subtended by an elliptical aperture on-axis.
-    Algorithm from "John T. Conway. Nuclear Instruments and Methods in 
+    Algorithm from "John T. Conway. Nuclear Instruments and Methods in
     Physics Research Section A: Accelerators, Spectrometers, Detectors and
-    Associated Equipment, 614(1):17 ? 27, 2010. 
+    Associated Equipment, 614(1):17 ? 27, 2010.
     https://doi.org/10.1016/j.nima.2009.11.075
     Equation n. 56
-    
+
     Parameters
     ----------
     Fnum_x : scalar
              Input F-number along dispersion direction
     Fnum_y : scalar
              Optional, input F-number along cross-dispersion direction
-             
+
     Returns
     -------
      Omega : scalar
              The solid angle subtanded by an elliptical aperture in units u.sr
-             
+
     '''
 
     if not Fnum_y: Fnum_y = Fnum_x

@@ -10,19 +10,10 @@ console_scripts = [
     'exorad=exorad.exorad:main',
     'exorad-plot=exorad.utils.plotter:main [Plot]']
 
-install_requires = ['astropy',
-                    'matplotlib',
-                    'seaborn',
-                    'mpmath',
-                    'numpy',
-                    'pyyaml',
-                    'scipy',
-                    'h5py',
-                    'hdfdict',
-                    'xlrd==1.2.0',
-                    'xlwt',
-                    'joblib'
-                    ]
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+install_requires = required
+
 entry_points = {'console_scripts': console_scripts, }
 
 classifiers = [

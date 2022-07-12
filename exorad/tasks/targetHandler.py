@@ -34,6 +34,7 @@ class LoadTargetList(Task):
 
     def execute(self):
         target_list_file = self.get_task_param('target_list')
+        self.info('target list file : {}'.format(target_list_file))
 
         target_list_format = {".xlsx": XLXSTargetList,
                               ".csv": CSVTargetList,
@@ -237,6 +238,42 @@ class ObserveTarget(Task):
 
         self.set_output(target)
 
+def pipeline_to_dict(target,
+                     payload,
+                     channels,
+                     wl_range,
+                     plot,
+                     out_dir,
+                     debug,
+                     ):
+    """ This will be executed using concurrent futures"""
+    from . import ObserveTarget
+    from exorad.log.logger import root_logger
+
+
+    observeTarget = ObserveTarget()
+
+    root_logger.info('observing {}'.format(target.name))
+    if not debug: disableLogging()
+    try:
+        target = observeTarget(target=target, payload=payload, channels=channels, wl_range=wl_range)
+        enableLogging()
+        outputDict = deepcopy(target)
+
+        if plot:
+            import matplotlib.pyplot as plt
+            import matplotlib
+            from exorad.utils.plotter import Plotter
+            matplotlib.use('Agg')
+            plotter = Plotter(input_table=target.table)
+            plotter.plot_table()
+            plotter.save_fig(os.path.join(out_dir, '{}.png'.format(target.name)))
+            plt.close()
+        return target.name, outputDict
+    except:
+        enableLogging()
+        root_logger.warning('target {} skipped. Please check for previous error messages'.format(target.name))
+        return None, None
 
 class ObserveTargetlist(Task):
     """
@@ -280,51 +317,72 @@ class ObserveTargetlist(Task):
     def execute(self):
         targets = self.get_task_param('targets')
         n_thread = self.get_task_param('n_thread')
-
-        if n_thread > 1:
-
-            from joblib import Parallel, delayed
-
-            outputDict = {}
-            Parallel(n_jobs=n_thread, require='sharedmem')(
-                delayed(self.pipeline_to_dict)(target, outputDict) for target
-                in targets)
-
-        else:
-            outputDict = {}
-            for target in targets:
-                self.pipeline_to_dict(target, outputDict)
-
-        self.set_output(outputDict)
-
-    def pipeline_to_dict(self,  target, outputDict):
-        from . import ObserveTarget
-        from exorad.utils.plotter import Plotter
-        import matplotlib.pyplot as plt
-        import matplotlib
-        matplotlib.use('Agg')
-
         payload = self.get_task_param('payload')
         channels = self.get_task_param('channels')
         wl_range = self.get_task_param('wl_range')
         plot = self.get_task_param('plot')
         out_dir = self.get_task_param('out_dir')
         debug = self.get_task_param('debug')
-        observeTarget = ObserveTarget()
+        outputDict = {}
 
-        self.info('observing {}'.format(target.name))
-        if not debug: disableLogging()
-        try:
-            target = observeTarget(target=target, payload=payload, channels=channels, wl_range=wl_range)
-            enableLogging()
-            outputDict[target.name] = deepcopy(target)
+        if n_thread>1:
+            from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+            from itertools import repeat
 
-            if plot:
-                plotter = Plotter(input_table=target.table)
-                plotter.plot_table()
-                plotter.save_fig(os.path.join(out_dir, '{}.png'.format(target.name)))
-                plt.close()
+            # Does the distribution and chunking for you
+            # Switch to ThreadPoolExecutor if you want to use python threading
+            with ProcessPoolExecutor(max_workers=n_thread) as executor:
+                for t_name, output in executor.map(pipeline_to_dict,
+                                                targets,
+                                                repeat(payload),
+                                                repeat(channels),
+                                                repeat(wl_range),
+                                                repeat(plot),
+                                                repeat(out_dir),
+                                                repeat(debug)):
+                    outputDict[t_name] = output
+        else:
+            outputDict = {}
+            for target in targets:
+                t_name, output = pipeline_to_dict(target,
+                                                           payload,
+                                                           channels,
+                                                           wl_range,
+                                                           plot,
+                                                           out_dir,
+                                                           debug)
+                outputDict[t_name] = output
 
-        except:
-            enableLogging()
-            self.warning('target {} skipped. Please check for previous error messages'.format(target.name))
+        self.set_output(outputDict)
+
+    # def pipeline_to_dict(self,  target, outputDict):
+    #     from . import ObserveTarget
+    #     from exorad.utils.plotter import Plotter
+    #     import matplotlib.pyplot as plt
+    #     import matplotlib
+    #     matplotlib.use('Agg')
+
+    #     payload = self.get_task_param('payload')
+    #     channels = self.get_task_param('channels')
+    #     wl_range = self.get_task_param('wl_range')
+    #     plot = self.get_task_param('plot')
+    #     out_dir = self.get_task_param('out_dir')
+    #     debug = self.get_task_param('debug')
+    #     observeTarget = ObserveTarget()
+
+    #     self.info('observing {}'.format(target.name))
+    #     if not debug: disableLogging()
+    #     try:
+    #         target = observeTarget(target=target, payload=payload, channels=channels, wl_range=wl_range)
+    #         enableLogging()
+    #         outputDict[target.name] = deepcopy(target)
+
+    #         if plot:
+    #             plotter = Plotter(input_table=target.table)
+    #             plotter.plot_table()
+    #             plotter.save_fig(os.path.join(out_dir, '{}.png'.format(target.name)))
+    #             plt.close()
+
+    #     except:
+    #         enableLogging()
+    #         self.warning('target {} skipped. Please check for previous error messages'.format(target.name))
