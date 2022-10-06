@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Mugnai
+    given-names: Lorenzo V.
+    orcid: https://orcid.org/0000-0002-9007-9802
+  - family-names: Pascale,
+    given-names: Enzo
+  - family-names: Edwards,
+    given-names: Billy
+    orcid: https://orcid.org/0000-0002-5494-3237
+  - family-names: Papageorgiou,
+    given-names: Andreas
+  - family-names: Sarkar,
+    given-names: Subhajit
+title: "ArielRad"
+doi: 10.48550/arXiv.2209.07535
+date-released: 2022-09-12
