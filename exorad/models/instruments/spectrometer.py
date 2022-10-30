@@ -186,7 +186,7 @@ class Spectrometer(Instrument):
             EncE_sol = interp1d(
                 self.description['EncESolution']['data']['Wavelength'],
                 self.description['EncESolution']['data']['EE'],
-                assume_sorted=False)
+                assume_sorted=False, fill_value="extrapolate")
             radius = EncE_sol(self.table['Wavelength'])
         # elif os.path.isdir(self.description['PSF']['value']) and (
         #         'EnE' in self.description.keys()):

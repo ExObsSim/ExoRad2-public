@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.113] - 2022-10-30
+### Fixed
+- xlrd Python 3.9 compatibility 
+- EnE_sol fixed: it now extrapolates the out of the grid data
+
 ## [2.1.111] - 2022-07-12
 ### Added
 - support for PAOS psf by @abocchieri
@@ -225,6 +230,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.113]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.111...v2.1.113
 [2.1.111]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.108...v2.1.111
 [2.1.108]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.94...v2.1.108
 [2.1.94]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.86...v2.1.94

@@ -2,6 +2,9 @@ import re
 
 import numpy as np
 import xlrd
+xlrd.xlsx.ensure_elementtree_imported(False, None)
+xlrd.xlsx.Element_has_iter = True
+
 from astropy import units as u
 from astropy.io import ascii
 
