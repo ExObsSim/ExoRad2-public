@@ -1,5 +1,5 @@
 <root>
-    <ConfigPath> /home/lorenzo/git/ExoRad2-public
+    <ConfigPath> /home/lorenzo/Dropbox/git/ExoRad2
         <comment>Main directory for the configuration files</comment>
     </ConfigPath>
     <fileName>payload_example</fileName>
@@ -50,11 +50,11 @@
                 as they will be added to the total noise.
             </comment>
         </customNoise-->
-        <customNoise>50
+        <customNoise>3
             <name>gain
             </name>
         </customNoise>
-        <customNoise>20
+        <customNoise>2
             <name>gain 2
             </name>
         </customNoise>
@@ -112,10 +112,16 @@
             </radius>
             <apertureCorrection unit="">0.91</apertureCorrection>
         </aperture>
-        <!--PSF>
-            your_file.fits
-            <comment> FITS file describing the PSF </comment>
-        </PSF-->
+<!--        <PSF>-->
+<!--            your_file.fits-->
+<!--            <comment> FITS file describing the PSF </comment>-->
+<!--            <comment> ... or ... </comment>-->
+<!--            your_paos_file.h5-->
+<!--            <comment> HDF5 file describing the PSF </comment>-->
+<!--            <format> paos-->
+<!--                <comment> PAOS psf format identifier </comment>-->
+<!--            </format>-->
+<!--        </PSF>-->
         <optics>
             <opticalElement>M3
                 <type>surface</type>
@@ -193,7 +199,7 @@
             If not present the diffraction limit is considered. </comment>
         </WFErms-->
         <targetR unit="">20.0</targetR>
-        <customNoise>20
+        <customNoise>3
             <name>gain 3
             </name>
         </customNoise>

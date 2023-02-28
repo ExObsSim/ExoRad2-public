@@ -184,9 +184,9 @@ class LoadPayload(Task):
             instrument = instruments[
                 description['channelClass']['value'].lower().decode("utf-8")]
             channels[ch] = instrument(name=ch,
-                                      description=description,
-                                      payload=payload,
-                                      )
+                                        description=description,
+                                        payload=payload,
+                                        )
             table = read_table_hdf5(ch_dir, path=ch)
             built_instr = load(ch_dir['built_instr'])
             channels[ch].load(table, built_instr)
@@ -258,13 +258,16 @@ class PreparePayload(Task):
                     append = False
                 with HDF5Output(output, append=append) as out:
                     channels = buildChannels(payload=payload, write=True,
-                                             output=out)
+                                            output=out)
             else:
                 channels = buildChannels(payload=payload, write=False,
-                                         output=None)
+                                            output=None)
 
-        elif ext == 'h5':
-            payload, channels = loadPayload(input=payload_file)
+        elif ext in ['.h5', '.hdf5']:
+            import h5py
+            with h5py.File(payload_file, 'r') as f:
+                payload, channels = loadPayload(input=f)
+#            payload, channels = loadPayload(input=payload_file)
         else:
             self.error('Unsupported payload format')
             raise IOError('Unsupported payload format')

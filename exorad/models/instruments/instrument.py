@@ -65,7 +65,7 @@ class Instrument(Logger):
         self.table = table
         self.built_instr = built_instr
         self.loaded = True
-        self.info('loaded')
+        self.info('{} loaded'.format(self.name))
 
     def write(self, output):
         """
