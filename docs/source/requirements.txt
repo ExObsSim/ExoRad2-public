@@ -11,3 +11,4 @@ xlwt
 requests
 photutils
 Sphinx~=4.4
+pandas

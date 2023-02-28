@@ -3,11 +3,19 @@ import os
 import pathlib
 import unittest
 
-from exorad.log import setLogLevel, disableLogging, enableLogging
-from exorad.tasks import PreparePayload, PrepareTarget, PropagateTargetLight, \
-    LoadTargetList, LoadSource, \
-    UpdateTargetTable, PropagateForegroundLight, EstimateZodi
 from test_options import payload_file
+
+from exorad.log import disableLogging
+from exorad.log import enableLogging
+from exorad.log import setLogLevel
+from exorad.tasks import EstimateZodi
+from exorad.tasks import LoadSource
+from exorad.tasks import LoadTargetList
+from exorad.tasks import PreparePayload
+from exorad.tasks import PrepareTarget
+from exorad.tasks import PropagateForegroundLight
+from exorad.tasks import PropagateTargetLight
+from exorad.tasks import UpdateTargetTable
 
 preparePayload = PreparePayload()
 propagateTargetLight = PropagateTargetLight()

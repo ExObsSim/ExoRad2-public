@@ -1,7 +1,7 @@
 import logging
-import unittest
 import os
 import pathlib
+import unittest
 
 import astropy.units as u
 import numpy as np

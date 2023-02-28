@@ -3,13 +3,14 @@ from astropy import constants as cc
 from astropy import units as u
 
 from exorad.log.logger import Logger
-from exorad.models.source import Star, CustomSed
+from exorad.models.source import CustomSed
+from exorad.models.source import Star
 
 
-class Target(Logger, object):
-    '''
+class Target(Logger):
+    """
     Target base class
-    '''
+    """
 
     def __init__(self):
         self.set_log_name()
@@ -25,8 +26,8 @@ class Target(Logger, object):
     def calc_logg(self, M, R):
         m = M.si
         r = R.si
-        g = cc.G * m / r ** 2
-        g = g.to(u.cm / u.s ** 2)
+        g = cc.G * m / r**2
+        g = g.to(u.cm / u.s**2)
 
         return np.log10(g.value)
 
@@ -35,19 +36,19 @@ class Target(Logger, object):
             self.star.luminosity = obj.luminosity
             self.star.sed = obj.sed
             self.star.model = obj.model
-            self.debug('target updated')
+            self.debug("target updated")
         else:
-            self.warning(
-                'Object type {:s} not implemented'.format(type(obj)))
+            self.warning("Object type {:s} not implemented".format(type(obj)))
 
     def write(self, output):
-        targets_out = output.create_group('targets')
+        targets_out = output.create_group("targets")
         group_name = str(self.name)
         target_dict = self.to_dict()
         targets_out.store_dictionary(target_dict, group_name=group_name)
-        self.info('target {} saved'.format(self.name))
+        self.info("target {} saved".format(self.name))
         return output
 
     def to_dict(self):
         from exorad.utils.util import to_dict
+
         return to_dict(self)

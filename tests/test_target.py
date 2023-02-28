@@ -4,13 +4,15 @@ import pathlib
 import unittest
 
 import astropy.units as u
-from astropy.table import QTable, Column
+from astropy.table import Column
+from astropy.table import QTable
+from test_options import payload_file
 
 from exorad.log import setLogLevel
 from exorad.output.hdf5 import HDF5Output
 from exorad.tasks import LoadSource
-from exorad.tasks.targetHandler import LoadTargetList, PrepareTarget
-from test_options import payload_file
+from exorad.tasks.targetHandler import LoadTargetList
+from exorad.tasks.targetHandler import PrepareTarget
 
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')

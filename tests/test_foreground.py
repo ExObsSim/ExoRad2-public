@@ -6,12 +6,14 @@ import unittest
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-
 from conf import skip_plot
+from test_options import payload_file
+
 from exorad.log import setLogLevel
 from exorad.models.foregrounds.zodiacalForeground import ZodiacalFrg
-from exorad.tasks import PreparePayload, PrepareTarget, LoadTargetList
-from test_options import payload_file
+from exorad.tasks import LoadTargetList
+from exorad.tasks import PreparePayload
+from exorad.tasks import PrepareTarget
 
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')

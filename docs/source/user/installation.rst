@@ -64,4 +64,3 @@ You can modify ExoRad main code, editing as you prefer, but in order to make the
 or simply::
 
     pip install .
-

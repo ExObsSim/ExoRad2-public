@@ -3,9 +3,11 @@ import unittest
 
 import numpy as np
 from astropy import units as u
-
-from exorad.utils.exolib import binnedPSF, paosPSF, plot_imac
 from inputs import test_dir
+
+from exorad.utils.exolib import binnedPSF
+from exorad.utils.exolib import paosPSF
+from exorad.utils.exolib import plot_imac
 
 
 class CreatePrfTest(unittest.TestCase):

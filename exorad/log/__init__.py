@@ -46,7 +46,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-
 import logging
 
 from .logger import Logger
@@ -57,6 +56,7 @@ last_log = logging.INFO
 def setLogLevel(level):
     global last_log
     from .logger import root_logger
+
     root_logger.handlers[0].setLevel(level)
     #    root_logger.setLevel(level)
     last_log = level
@@ -67,6 +67,7 @@ def disableLogging():
     # from .logger import root_logger
     # root_logger.setLevel(logging.ERROR)
     setLogLevel(logging.ERROR)
+
 
 def enableLogging():
     # global last_log
@@ -79,9 +80,12 @@ def enableLogging():
     setLogLevel(logging.INFO)
 
 
-def addLogFile(fname='exorad.log'):
+def addLogFile(fname="exorad.log"):
     from .logger import root_logger
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     file_handler = logging.FileHandler(fname)
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.DEBUG)

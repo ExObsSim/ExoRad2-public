@@ -2,12 +2,12 @@ from collections import OrderedDict
 
 from astropy.io.misc.hdf5 import read_table_hdf5
 
-from exorad.models.instruments import Photometer, Spectrometer
-from exorad.output.hdf5 import load
 from .task import Task
+from exorad.models.instruments import Photometer
+from exorad.models.instruments import Spectrometer
+from exorad.output.hdf5 import load
 
-instruments = {'photometer': Photometer,
-               'spectrometer': Spectrometer}
+instruments = {"photometer": Photometer, "spectrometer": Spectrometer}
 
 
 class BuildInstrument(Task):
@@ -48,25 +48,27 @@ class BuildInstrument(Task):
     """
 
     def __init__(self):
-        self.addTaskParam('type', 'instrument type')
-        self.addTaskParam('name', 'instrument name')
-        self.addTaskParam('description', 'instrument description dictionary')
-        self.addTaskParam('payload', 'main payload. Default is None')
-        self.addTaskParam('write', 'write processed instrument to output file')
-        self.addTaskParam('output', 'output object')
+        self.addTaskParam("type", "instrument type")
+        self.addTaskParam("name", "instrument name")
+        self.addTaskParam("description", "instrument description dictionary")
+        self.addTaskParam("payload", "main payload. Default is None")
+        self.addTaskParam("write", "write processed instrument to output file")
+        self.addTaskParam("output", "output object")
 
     def execute(self):
         try:
-            instrumentClass = instruments[self.get_task_param('type')]
+            instrumentClass = instruments[self.get_task_param("type")]
         except KeyError:
-            self.error('invalid instrument class')
+            self.error("invalid instrument class")
             raise ValueError
-        instrument = instrumentClass(self.get_task_param('name'),
-                                     self.get_task_param('description'),
-                                     self.get_task_param('payload'))
+        instrument = instrumentClass(
+            self.get_task_param("name"),
+            self.get_task_param("description"),
+            self.get_task_param("payload"),
+        )
         instrument.build()
-        if self.get_task_param('write'):
-            instrument.write(self.get_task_param('output'))
+        if self.get_task_param("write"):
+            instrument.write(self.get_task_param("output"))
         self.set_output(instrument)
 
 
@@ -94,56 +96,60 @@ class BuildChannels(Task):
     """
 
     def __init__(self):
-        self.addTaskParam('payload', 'main payload')
-        self.addTaskParam('write', 'write processed instrument to output file')
-        self.addTaskParam('output', 'output object')
+        self.addTaskParam("payload", "main payload")
+        self.addTaskParam("write", "write processed instrument to output file")
+        self.addTaskParam("output", "output object")
 
     def execute(self):
-        self.info('building channel')
+        self.info("building channel")
         channels = {}
-        self.debug('detectors found : {}'.format(
-            self.get_task_param('payload')['channel'].keys()))
+        self.debug(
+            "detectors found : {}".format(
+                self.get_task_param("payload")["channel"].keys()
+            )
+        )
 
         ch = None
-        if self.get_task_param('write'):
-            inst = self.get_task_param('output').create_group('payload')
-            inst.store_dictionary(self.get_task_param('payload'),
-                                  group_name='payload description')
-            ch = inst.create_group('channels')
+        if self.get_task_param("write"):
+            inst = self.get_task_param("output").create_group("payload")
+            inst.store_dictionary(
+                self.get_task_param("payload"),
+                group_name="payload description",
+            )
+            ch = inst.create_group("channels")
 
         buildInstrument = BuildInstrument()
-        if isinstance(self.get_task_param('payload')['channel'], OrderedDict):
-            for det in self.get_task_param('payload')['channel'].keys():
-                channel_type = \
-                    self.get_task_param('payload')['channel'][det][
-                        'channelClass'][
-                        'value'].lower()
-                channels[det] = buildInstrument(type=channel_type, name=det,
-                                                description=
-                                                self.get_task_param('payload')[
-                                                    'channel'][det],
-                                                payload=self.get_task_param(
-                                                    'payload'),
-                                                write=False,
-                                                output=None)
-                if self.get_task_param('write'):
+        if isinstance(self.get_task_param("payload")["channel"], OrderedDict):
+            for det in self.get_task_param("payload")["channel"].keys():
+                channel_type = self.get_task_param("payload")["channel"][det][
+                    "channelClass"
+                ]["value"].lower()
+                channels[det] = buildInstrument(
+                    type=channel_type,
+                    name=det,
+                    description=self.get_task_param("payload")["channel"][det],
+                    payload=self.get_task_param("payload"),
+                    write=False,
+                    output=None,
+                )
+                if self.get_task_param("write"):
                     channels[det].write(ch)
         else:
-            channel_type = \
-                self.get_task_param('payload')['channel']['channelClass'][
-                    'value'].lower()
-            det = self.get_task_param('payload')['channel']['value']
-            channels[det] = buildInstrument(type=channel_type, name=det,
-                                            description=
-                                            self.get_task_param('payload')[
-                                                'channel'],
-                                            payload=self.get_task_param(
-                                                'payload'),
-                                            write=False,
-                                            output=None)
-            if self.get_task_param('write'):
+            channel_type = self.get_task_param("payload")["channel"][
+                "channelClass"
+            ]["value"].lower()
+            det = self.get_task_param("payload")["channel"]["value"]
+            channels[det] = buildInstrument(
+                type=channel_type,
+                name=det,
+                description=self.get_task_param("payload")["channel"],
+                payload=self.get_task_param("payload"),
+                write=False,
+                output=None,
+            )
+            if self.get_task_param("write"):
                 channels[det].write(ch)
-        self.debug('channels : {}'.format(channels))
+        self.debug("channels : {}".format(channels))
         self.set_output(channels)
 
 
@@ -171,26 +177,28 @@ class LoadPayload(Task):
     """
 
     def __init__(self):
-        self.addTaskParam('input', 'input data')
+        self.addTaskParam("input", "input data")
 
     def execute(self):
-        payload_dir = self.get_task_param('input')['payload']
-        payload = load(payload_dir['payload description'])
-        channels_dir = payload_dir['channels']
+        payload_dir = self.get_task_param("input")["payload"]
+        payload = load(payload_dir["payload description"])
+        channels_dir = payload_dir["channels"]
         channels = {}
         for ch in channels_dir.keys():
             ch_dir = channels_dir[ch]
-            description = load(ch_dir['description'])
+            description = load(ch_dir["description"])
             instrument = instruments[
-                description['channelClass']['value'].lower().decode("utf-8")]
-            channels[ch] = instrument(name=ch,
-                                        description=description,
-                                        payload=payload,
-                                        )
+                description["channelClass"]["value"].lower().decode("utf-8")
+            ]
+            channels[ch] = instrument(
+                name=ch,
+                description=description,
+                payload=payload,
+            )
             table = read_table_hdf5(ch_dir, path=ch)
-            built_instr = load(ch_dir['built_instr'])
+            built_instr = load(ch_dir["built_instr"])
             channels[ch].load(table, built_instr)
-        self.debug('channels loaded: {}'.format(channels))
+        self.debug("channels loaded: {}".format(channels))
         self.set_output([payload, channels])
 
 
@@ -225,8 +233,8 @@ class PreparePayload(Task):
     """
 
     def __init__(self):
-        self.addTaskParam('payload_file', 'payload xml file')
-        self.addTaskParam('output', 'output file')
+        self.addTaskParam("payload_file", "payload xml file")
+        self.addTaskParam("output", "output file")
 
     def execute(self):
         import os
@@ -237,16 +245,16 @@ class PreparePayload(Task):
         buildChannels = BuildChannels()
         loadPayload = LoadPayload()
 
-        payload_file = self.get_task_param('payload_file')
-        output = self.get_task_param('output')
+        payload_file = self.get_task_param("payload_file")
+        output = self.get_task_param("output")
 
         if isinstance(payload_file, str):
             ext = os.path.splitext(payload_file)[1]
         else:
             ext = None
 
-        if (ext == '.xml') or isinstance(payload_file, dict):
-            if (ext == '.xml'):
+        if (ext == ".xml") or isinstance(payload_file, dict):
+            if ext == ".xml":
                 payload = loadOptions(filename=payload_file)
             if isinstance(payload_file, dict):
                 payload = payload_file
@@ -257,22 +265,27 @@ class PreparePayload(Task):
                 else:
                     append = False
                 with HDF5Output(output, append=append) as out:
-                    channels = buildChannels(payload=payload, write=True,
-                                            output=out)
+                    channels = buildChannels(
+                        payload=payload, write=True, output=out
+                    )
             else:
-                channels = buildChannels(payload=payload, write=False,
-                                            output=None)
+                channels = buildChannels(
+                    payload=payload, write=False, output=None
+                )
 
-        elif ext in ['.h5', '.hdf5']:
+        elif ext in [".h5", ".hdf5"]:
             import h5py
-            with h5py.File(payload_file, 'r') as f:
+
+            with h5py.File(payload_file, "r") as f:
                 payload, channels = loadPayload(input=f)
-#            payload, channels = loadPayload(input=payload_file)
+        #            payload, channels = loadPayload(input=payload_file)
         else:
-            self.error('Unsupported payload format')
-            raise IOError('Unsupported payload format')
-        wl_min, wl_max = payload['common']['wl_min']['value'], \
-                         payload['common']['wl_max']['value']
+            self.error("Unsupported payload format")
+            raise OSError("Unsupported payload format")
+        wl_min, wl_max = (
+            payload["common"]["wl_min"]["value"],
+            payload["common"]["wl_max"]["value"],
+        )
         self.set_output([payload, channels, (wl_min, wl_max)])
 
 
@@ -290,11 +303,12 @@ class MergeChannelsOutput(Task):
     """
 
     def __init__(self):
-        self.addTaskParam('channels', 'dict of channels')
+        self.addTaskParam("channels", "dict of channels")
 
     def execute(self):
         from exorad.utils.util import vstack_tables
-        channels = self.get_task_param('channels')
+
+        channels = self.get_task_param("channels")
         table_list = []
         for channel in channels.keys():
             table_list.append(channels[channel].table)
@@ -329,23 +343,29 @@ class GetChannelList(Task):
     """
 
     def __init__(self):
-        self.addTaskParam('options', 'instrument description class')
-        self.addTaskParam('channel_type', 'desired channel type')
+        self.addTaskParam("options", "instrument description class")
+        self.addTaskParam("channel_type", "desired channel type")
 
     def execute(self):
-        self._opt = self.get_task_param('options')
-        self._channel_type = self.get_task_param('channel_type')
+        self._opt = self.get_task_param("options")
+        self._channel_type = self.get_task_param("channel_type")
         self.channel_lst = self.__get_channel_list__()
-        self.info('{} type channel found: {}'.format(self._channel_type,
-                                                     self.channel_lst))
+        self.info(
+            "{} type channel found: {}".format(
+                self._channel_type, self.channel_lst
+            )
+        )
         self.set_output(self.channel_lst)
 
     def __get_channel_list__(self):
         channel_lst = []
-        for channel in self._opt['channel'].keys():
-            if self._opt['channel'][channel]['channelClass'][
-                'value'].lower() == self._channel_type.lower():
+        for channel in self._opt["channel"].keys():
+            if (
+                self._opt["channel"][channel]["channelClass"]["value"].lower()
+                == self._channel_type.lower()
+            ):
                 channel_lst.append(channel)
                 self.debug(
-                    '{} added as {}'.format(channel, self._channel_type))
+                    "{} added as {}".format(channel, self._channel_type)
+                )
         return channel_lst

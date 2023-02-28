@@ -6,13 +6,14 @@ import unittest
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-
 from conf import skip_plot
+from test_options import payload_file
+
 from exorad.log import setLogLevel
-from exorad.models.instruments import Photometer, Spectrometer
+from exorad.models.instruments import Photometer
+from exorad.models.instruments import Spectrometer
 from exorad.models.optics.opticalPath import OpticalPath
 from exorad.tasks.loadOptions import LoadOptions
-from test_options import payload_file
 
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')

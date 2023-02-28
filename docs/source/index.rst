@@ -49,4 +49,3 @@ We thank Billy Edwards for the thorough tests and for his help in improving the 
 .. _link: https://doi.org/10.1007/s10686-020-09676-7
 .. _cite: https://arxiv.org/abs/1912.07759
 .. _developers: mailto:lorenzo.mugnai@uniroma1.it
-

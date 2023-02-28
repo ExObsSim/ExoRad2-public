@@ -3,9 +3,10 @@ import os
 import pathlib
 import unittest
 
+from test_options import payload_file
+
 import exorad.tasks as tasks
 from exorad.log import setLogLevel
-from test_options import payload_file
 
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')

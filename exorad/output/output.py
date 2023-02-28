@@ -46,7 +46,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-
 from abc import ABC
 
 import numpy as np
@@ -55,7 +54,6 @@ from exorad.log import Logger
 
 
 class Output(Logger):
-
     def __init__(self):
         super().__init__()
 
@@ -76,7 +74,9 @@ class Output(Logger):
         self.close()
 
     def store_dictionary(self, dictionary, group_name=None):
-        from exorad.output.hdf5.util import recursively_save_dict_contents_to_output
+        from exorad.output.hdf5.util import (
+            recursively_save_dict_contents_to_output,
+        )
 
         out = self
         if group_name is not None:
@@ -86,7 +86,6 @@ class Output(Logger):
 
 
 class OutputGroup(Output, ABC):
-
     def __init__(self, name):
         super().__init__(name)
         self._name = name

@@ -70,5 +70,3 @@ column name         description
 `star D [pc]`       target distance in parsec
 `star magk`         target magnitude in K band
 ==================  ====================================
-
-

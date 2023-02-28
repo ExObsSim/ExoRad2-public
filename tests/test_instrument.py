@@ -4,14 +4,16 @@ import pathlib
 import unittest
 
 import h5py
+from test_options import payload_file
 
 from exorad.log import setLogLevel
-from exorad.models.instruments import Photometer, Spectrometer
+from exorad.models.instruments import Photometer
+from exorad.models.instruments import Spectrometer
 from exorad.output.hdf5 import HDF5Output
 from exorad.tasks import MergeChannelsOutput
-from exorad.tasks.instrumentHandler import BuildChannels, LoadPayload
+from exorad.tasks.instrumentHandler import BuildChannels
+from exorad.tasks.instrumentHandler import LoadPayload
 from exorad.tasks.loadOptions import LoadOptions
-from test_options import payload_file
 
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')

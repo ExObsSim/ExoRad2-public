@@ -1,4 +1,5 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
 
 from exorad.log.logger import Logger
 
@@ -16,17 +17,17 @@ class Task(Logger):
 
     @abstractmethod
     def __init__(self):
-        '''
+        """
         Class initialisation, needed to prepare the task inputs reader
-        '''
+        """
         pass
 
     @abstractmethod
     def execute(self):
-        '''
+        """
         Class execution. It runs on call and executes all the task actions returning the outputs.
         It requires the input with correct keywords
-        '''
+        """
         pass
 
     def __call__(self, **kwargs):
@@ -46,7 +47,7 @@ class Task(Logger):
     def _populate_empty_param(self):
         for key in self._task_params.keys():
             if key not in self._task_input.keys():
-                self._task_input[key] = self._task_params[key]['default']
+                self._task_input[key] = self._task_params[key]["default"]
 
     def get_output(self):
         return self._output
@@ -60,5 +61,7 @@ class Task(Logger):
     def addTaskParam(self, param_name, param_description, default=None):
         if self._task_params is None:
             self._task_params = {}
-        self._task_params[param_name] = {"description": param_description,
-                                         "default": default}
+        self._task_params[param_name] = {
+            "description": param_description,
+            "default": default,
+        }

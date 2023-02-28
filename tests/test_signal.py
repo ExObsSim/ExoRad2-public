@@ -6,7 +6,9 @@ import numpy as np
 
 from exorad.log import setLogLevel
 from exorad.models.noise import Noise
-from exorad.models.signal import Signal, CountsPerSeconds, Sed
+from exorad.models.signal import CountsPerSeconds
+from exorad.models.signal import Sed
+from exorad.models.signal import Signal
 
 setLogLevel(logging.DEBUG)
 
@@ -68,7 +70,7 @@ class SignalTest(unittest.TestCase):
             Signal(wl_grid=wl, data=data)
 
             wl = np.linspace(0.1, 1, 10) * u.um
-            data = np.random.random_sample((10))
+            data = np.random.random_sample(10)
             time_grid = np.linspace(1, 5, 10) * u.hr
             Signal(wl_grid=wl, data=data, time_grid=time_grid)
 

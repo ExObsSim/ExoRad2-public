@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.115] - 2023-02-28
+### Changed
+- updated setup.py to include all the requirements
+
 ## [2.1.114] - 2023-02-28
 ### Fixed
 - fixed load payload extension
@@ -234,6 +238,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.115]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.114...v2.1.115
 [2.1.114]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.113...v2.1.114
 [2.1.113]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.111...v2.1.113
 [2.1.111]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.108...v2.1.111

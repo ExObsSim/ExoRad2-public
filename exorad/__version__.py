@@ -1,1 +1,5 @@
-__version__ = '2.1.114'
+import importlib.metadata as metadata
+import os.path
+from datetime import date
+
+__version__ = metadata.version("exosim")

@@ -4,12 +4,14 @@ import pathlib
 import unittest
 
 import matplotlib.pyplot as plt
-
 from conf import skip_plot
-from exorad import tasks
-from exorad.log import setLogLevel, disableLogging, enableLogging
-from exorad.utils.plotter import Plotter
 from test_options import payload_file
+
+from exorad import tasks
+from exorad.log import disableLogging
+from exorad.log import enableLogging
+from exorad.log import setLogLevel
+from exorad.utils.plotter import Plotter
 
 path = pathlib.Path(__file__).parent.absolute()
 data_dir = os.path.join(path.parent.absolute(), 'examples')

@@ -1,6 +1,7 @@
 # Singleton Meta-Class method
 # https://refactoring.guru/design-patterns/singleton/python/example
 
+
 class SingletonMeta(type):
     """
     The Singleton class can be implemented in different ways in Python. Some
@@ -21,10 +22,11 @@ class SingletonMeta(type):
         return cls._instances[cls]
 
 
-class PassValInit(object, metaclass=SingletonMeta):
+class PassValInit(metaclass=SingletonMeta):
     """
     Class used to propagate values through the code.
     """
+
     _working_R = 6000
 
     @property

@@ -109,5 +109,3 @@ to plot the target between 0 and 1. If you have 1000 targets you can plot every 
 The target name option allows you to plot a single target selected by name::
 
     exorad-plot -i examples/first_run.h5 -o examples/plots -t myTest
-
-

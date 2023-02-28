@@ -1,5 +1,5 @@
 <root>
-    <ConfigPath> /home/lorenzo/Dropbox/git/ExoRad2
+    <ConfigPath> /home/lorenzo/Dropbox/git/ExoRad2-public
         <comment>Main directory for the configuration files</comment>
     </ConfigPath>
     <fileName>payload_example</fileName>

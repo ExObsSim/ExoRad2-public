@@ -22,7 +22,6 @@ def nprocs():
     return comm.Get_size()
 
 
-
 @lru_cache(maxsize=2)
 def get_rank():
     """Gets rank or returns 0 if mpi is not installed
@@ -44,20 +43,25 @@ def get_rank():
 
     return rank
 
+
 def scatter(data, root=0):
     from mpi4py import MPI
+
     comm = MPI.COMM_WORLD
     if len(data) < nprocs():
-        raise ValueError('not enough processes! work in progress')
+        raise ValueError("not enough processes! work in progress")
     else:
         data = comm.scatter(data, root=root)
     return data
 
+
 def gather(data, root=0):
     from mpi4py import MPI
+
     comm = MPI.COMM_WORLD
     data = comm.gather(data, root=root)
     return data
+
 
 # def only_master_rank(f):
 #     """
@@ -69,5 +73,3 @@ def gather(data, root=0):
 #         if get_rank() == 0:
 #             return f(*args, **kwargs)
 #     return wrapper
-
-

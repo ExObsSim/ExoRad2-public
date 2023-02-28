@@ -2,7 +2,8 @@ import logging
 import unittest
 
 from exorad.log import setLogLevel
-from exorad.utils.version_control import VersionControl, VersionError
+from exorad.utils.version_control import VersionControl
+from exorad.utils.version_control import VersionError
 
 setLogLevel(logging.DEBUG)
 

@@ -2,6 +2,7 @@ import re
 
 import numpy as np
 import xlrd
+
 xlrd.xlsx.ensure_elementtree_imported(False, None)
 xlrd.xlsx.Element_has_iter = True
 
@@ -11,11 +12,11 @@ from astropy.io import ascii
 from exorad.log import Logger
 from exorad.models.target import Target
 
-compactString = lambda string: string.replace(' ', '').replace('-', '').lower()
-stripUnitString = lambda string: string.replace('[', '').replace(']', '')
+compactString = lambda string: string.replace(" ", "").replace("-", "").lower()
+stripUnitString = lambda string: string.replace("[", "").replace("]", "")
 
 
-class BaseTargetList(Logger, object):
+class BaseTargetList(Logger):
     """
     Target list base class
     """
@@ -94,10 +95,9 @@ class BaseTargetList(Logger, object):
         returnList = []
 
         for target in self.target:
-            if re.search(searchName,
-                         compactString(str(target.star.name))) or re.search(
-                searchName, compactString(
-                    str(target.planet.name))):
+            if re.search(
+                searchName, compactString(str(target.star.name))
+            ) or re.search(searchName, compactString(str(target.planet.name))):
                 returnList.append(target)
 
         return returnList
@@ -107,6 +107,7 @@ class XLXSTargetList(BaseTargetList):
     """
     It parses a .xlsx file into a :class:`BaseTargetList` class
     """
+
     star_data_columns = (1, 6)
     planet_data_columns = (8, 18)
     number_to_be_observed_column = 20
@@ -120,8 +121,8 @@ class XLXSTargetList(BaseTargetList):
 
     def __parseData__(self, col_range):
         Sheet = self.tmpSheet
-        keys = Sheet.row_values(2)[col_range[0]:col_range[1] + 1]
-        keys[0] = 'name'
+        keys = Sheet.row_values(2)[col_range[0] : col_range[1] + 1]
+        keys[0] = "name"
         obj = {}
 
         for key, col in zip(keys, list(range(col_range[0], col_range[1] + 1))):
@@ -130,12 +131,12 @@ class XLXSTargetList(BaseTargetList):
                 try:
                     dim = u.Unit(stripUnitString(str_unit))
                 except ValueError:
-                    self.warning('Unrecognised physical units')
+                    self.warning("Unrecognised physical units")
                     dim = 1
             else:
                 dim = 1
 
-            obj[key] = Sheet.col_values(col)[self.data_row0:] * dim
+            obj[key] = Sheet.col_values(col)[self.data_row0 :] * dim
 
         return obj
 
@@ -156,11 +157,12 @@ class XLXSTargetList(BaseTargetList):
     def read_data(self):
 
         xl_workbook = xlrd.open_workbook(self.filename)
-        self.tmpSheet = xl_workbook.sheet_by_name('Sheet1')
+        self.tmpSheet = xl_workbook.sheet_by_name("Sheet1")
 
         self.planet = self.__parseData__(col_range=self.planet_data_columns)
-        self.planet['Nobs'] = self.tmpSheet.col_values(
-            self.number_to_be_observed_column)[self.data_row0:]
+        self.planet["Nobs"] = self.tmpSheet.col_values(
+            self.number_to_be_observed_column
+        )[self.data_row0 :]
 
         self.star = self.__parseData__(col_range=self.star_data_columns)
 
@@ -179,14 +181,14 @@ class CSVTargetList(BaseTargetList):
 
     def star_keys(self):
         s_col = [k for k in self.tmpTab.keys() if "star" in k]
-        return [k.split(' ')[1] for k in s_col]
+        return [k.split(" ")[1] for k in s_col]
 
     def star_data(self):
         star_k = [k for k in self.tmpTab.keys() if "star" in k]
         units = []
         for n, k in enumerate(star_k):
-            if len(k.split(' ')) == 3:
-                un = k.split(' ')[2]
+            if len(k.split(" ")) == 3:
+                un = k.split(" ")[2]
                 units.append(1 * u.Unit(stripUnitString(un)))
             else:
                 units.append(None)
@@ -202,14 +204,14 @@ class CSVTargetList(BaseTargetList):
 
     def planet_keys(self):
         s_col = [k for k in self.tmpTab.keys() if "planet" in k]
-        return [k.split(' ')[1] for k in s_col]
+        return [k.split(" ")[1] for k in s_col]
 
     def planet_data(self):
         planet_k = [k for k in self.tmpTab.keys() if "planet" in k]
         units = []
         for n, k in enumerate(planet_k):
-            if len(k.split(' ')) == 3:
-                un = k.split(' ')[2]
+            if len(k.split(" ")) == 3:
+                un = k.split(" ")[2]
                 units.append(1 * u.Unit(stripUnitString(un)))
             else:
                 units.append(None)
@@ -238,19 +240,33 @@ class CSVTargetListMRS(BaseTargetList):
 
     def star_keys(self):
         s_col = [k for k in self.tmpTab.keys() if "star" in k.lower()]
-        s_col = [k.split(' ', 1)[1].lower() for k in s_col if
-                 'error' not in k.lower()]
-        return [self.check_keys(
-            k[0:k.find("[") - 1]) if "[" in k else self.check_keys(k) for k in
-                s_col]
+        s_col = [
+            k.split(" ", 1)[1].lower()
+            for k in s_col
+            if "error" not in k.lower()
+        ]
+        return [
+            self.check_keys(k[0 : k.find("[") - 1])
+            if "[" in k
+            else self.check_keys(k)
+            for k in s_col
+        ]
 
     def star_data(self):
-        star_k = [k for k in self.tmpTab.keys() if "star" in k.lower() and  'error' not in k.lower()]
+        star_k = [
+            k
+            for k in self.tmpTab.keys()
+            if "star" in k.lower() and "error" not in k.lower()
+        ]
         units = []
         for n, k in enumerate(star_k):
             if "[" in k:
-                units.append(1 * u.Unit(
-                    self.check_units(k[k.find("[") + 1:k.find("]")])))
+                units.append(
+                    1
+                    * u.Unit(
+                        self.check_units(k[k.find("[") + 1 : k.find("]")])
+                    )
+                )
             else:
                 units.append(None)
         dat = []
@@ -258,9 +274,10 @@ class CSVTargetListMRS(BaseTargetList):
             val = list(self.tmpTab[star_k][i])
             for n in range(len(val)):
                 if isinstance(val[n], str):
-                    if ',' in val[
-                        n]:  # for some reason, comma are used instead of dots sometimes
-                        val[n] = val[n].replace(',', '.')
+                    if (
+                        "," in val[n]
+                    ):  # for some reason, comma are used instead of dots sometimes
+                        val[n] = val[n].replace(",", ".")
                     try:
                         float(val[n])
                     except ValueError:
@@ -272,19 +289,33 @@ class CSVTargetListMRS(BaseTargetList):
 
     def planet_keys(self):
         s_col = [k for k in self.tmpTab.keys() if "planet" in k.lower()]
-        s_col = [k.split(' ', 1)[1].lower() for k in s_col if
-                 'error' not in k.lower()]
-        return [self.check_keys(
-            k[0:k.find("[") - 1]) if "[" in k else self.check_keys(k) for k in
-                s_col]
+        s_col = [
+            k.split(" ", 1)[1].lower()
+            for k in s_col
+            if "error" not in k.lower()
+        ]
+        return [
+            self.check_keys(k[0 : k.find("[") - 1])
+            if "[" in k
+            else self.check_keys(k)
+            for k in s_col
+        ]
 
     def planet_data(self):
-        planet_k = [k for k in self.tmpTab.keys() if "planet" in k.lower() and  'error' not in k.lower()]
+        planet_k = [
+            k
+            for k in self.tmpTab.keys()
+            if "planet" in k.lower() and "error" not in k.lower()
+        ]
         units = []
         for n, k in enumerate(planet_k):
             if "[" in k:
-                units.append(1 * u.Unit(
-                    self.check_units(k[k.find("[") + 1:k.find("]")])))
+                units.append(
+                    1
+                    * u.Unit(
+                        self.check_units(k[k.find("[") + 1 : k.find("]")])
+                    )
+                )
             else:
                 units.append(None)
         dat = []
@@ -292,9 +323,10 @@ class CSVTargetListMRS(BaseTargetList):
             val = list(self.tmpTab[planet_k][i])
             for n in range(len(val)):
                 if isinstance(val[n], str):
-                    if ',' in val[
-                        n]:  # for some reason, comma are used instead of dots sometimes
-                        val[n] = val[n].replace(',', '.')
+                    if (
+                        "," in val[n]
+                    ):  # for some reason, comma are used instead of dots sometimes
+                        val[n] = val[n].replace(",", ".")
                     try:
                         float(val[n])
                     except ValueError:
@@ -306,53 +338,54 @@ class CSVTargetListMRS(BaseTargetList):
 
     @staticmethod
     def check_units(unit):
-        if unit == 'Rs':
-            return 'R_sun'
-        if unit == 'Ms':
-            return 'M_sun'
-        if unit == 'Re':
-            return 'R_earth'
-        if unit == 'Me':
-            return 'M_earth'
-        if unit == 'Rj':
-            return 'R_jupiter'
-        if unit == 'Mj':
-            return 'M_jupiter'
-        if unit == 'days':
-            return 'day'
+        if unit == "Rs":
+            return "R_sun"
+        if unit == "Ms":
+            return "M_sun"
+        if unit == "Re":
+            return "R_earth"
+        if unit == "Me":
+            return "M_earth"
+        if unit == "Rj":
+            return "R_jupiter"
+        if unit == "Mj":
+            return "M_jupiter"
+        if unit == "days":
+            return "day"
         else:
             return unit
 
     @staticmethod
     def check_keys(key):
-        if key == 'mass':
-            return 'M'
-        if key == 'radius':
-            return 'R'
-        if key == 'temperature':
-            return 'Teff'
-        if key == 'distance':
-            return 'D'
-        if key == 'period':
-            return 'P'
-        if key == 'molecular weight':
-            return 'mmw'
-        if key == 'semi-major axis':
-            return 'a'
-        if key == 'impact parameter':
-            return 'b'
-        if key == 'heat redistribution factor':
-            return 'Gamma'
-        if key == 'transit duration':
-            return 'T14'
+        if key == "mass":
+            return "M"
+        if key == "radius":
+            return "R"
+        if key == "temperature":
+            return "Teff"
+        if key == "distance":
+            return "D"
+        if key == "period":
+            return "P"
+        if key == "molecular weight":
+            return "mmw"
+        if key == "semi-major axis":
+            return "a"
+        if key == "impact parameter":
+            return "b"
+        if key == "heat redistribution factor":
+            return "Gamma"
+        if key == "transit duration":
+            return "T14"
         else:
             return key
 
 
-class OldExcelTargetList(Logger, object):
+class OldExcelTargetList(Logger):
     """
     It parses an .xls file into a :class:`BaseTargetList` class
     """
+
     star_data_columns = (1, 6)
     number_to_be_observed_column = 20
     data_row0 = 4
@@ -362,30 +395,31 @@ class OldExcelTargetList(Logger, object):
 
         self.set_log_name()
 
-        if filename.endswith('.xlsx'):
+        if filename.endswith(".xlsx"):
             xl_workbook = xlrd.open_workbook(filename)
 
-            tmpSheet = xl_workbook.sheet_by_name('Sheet1')
+            tmpSheet = xl_workbook.sheet_by_name("Sheet1")
             tmpSheet = tmpSheet
 
-            star = self.__parseData__(tmpSheet,
-                                      col_range=self.star_data_columns)
+            star = self.__parseData__(
+                tmpSheet, col_range=self.star_data_columns
+            )
 
             key0 = list(star.keys())[0]
             n_targets = len(star[key0])
 
             self.target = [Target() for k in range(n_targets)]
             for k, target in enumerate(self.target):
-                setattr(target, 'star', Target())
+                setattr(target, "star", Target())
                 for key in list(star.keys()):
                     setattr(target.star, key, star[key][k])
         else:
             self.error("Wrong target list format")
-            raise IOError("Wrong target list format")
+            raise OSError("Wrong target list format")
 
     def __parseData__(self, Sheet, col_range):
-        keys = Sheet.row_values(2)[col_range[0]:col_range[1] + 1]
-        keys[0] = 'name'
+        keys = Sheet.row_values(2)[col_range[0] : col_range[1] + 1]
+        keys[0] = "name"
         obj = {}
 
         for key, col in zip(keys, list(range(col_range[0], col_range[1] + 1))):
@@ -394,12 +428,12 @@ class OldExcelTargetList(Logger, object):
                 try:
                     dim = u.Unit(stripUnitString(str_unit))
                 except ValueError:
-                    self.warning('Unrecognised physical units')
+                    self.warning("Unrecognised physical units")
                     dim = 1
             else:
                 dim = 1
 
-            obj[key] = Sheet.col_values(col)[self.data_row0:] * dim
+            obj[key] = Sheet.col_values(col)[self.data_row0 :] * dim
 
         return obj
 
@@ -409,10 +443,9 @@ class OldExcelTargetList(Logger, object):
         returnList = []
 
         for target in self.target:
-            if re.search(searchName,
-                         compactString(str(target.star.name))) or re.search(
-                searchName, compactString(
-                    str(target.planet.name))):
+            if re.search(
+                searchName, compactString(str(target.star.name))
+            ) or re.search(searchName, compactString(str(target.planet.name))):
                 returnList.append(target)
 
         return returnList
@@ -432,7 +465,7 @@ class QTableTargetList(BaseTargetList):
 
     def star_keys(self):
         s_col = [k for k in self.tmpTab.keys() if "star" in k]
-        return [k.split(' ')[1] for k in s_col]
+        return [k.split(" ")[1] for k in s_col]
 
     def star_data(self):
         star_k = [k for k in self.tmpTab.keys() if "star" in k]
@@ -445,7 +478,7 @@ class QTableTargetList(BaseTargetList):
 
     def planet_keys(self):
         s_col = [k for k in self.tmpTab.keys() if "planet" in k]
-        return [k.split(' ')[1] for k in s_col]
+        return [k.split(" ")[1] for k in s_col]
 
     def planet_data(self):
         star_k = [k for k in self.tmpTab.keys() if "planet" in k]
@@ -459,8 +492,10 @@ class QTableTargetList(BaseTargetList):
     def _check_quantities(self, val):
         for v in val:
             if not isinstance(v, np.str_):
-                if not hasattr(v, 'unit'):
+                if not hasattr(v, "unit"):
                     self.error(
-                        'Wrong target list format: Quantities are required')
+                        "Wrong target list format: Quantities are required"
+                    )
                     raise TypeError(
-                        'Wrong target list format: Quantities are required')
+                        "Wrong target list format: Quantities are required"
+                    )

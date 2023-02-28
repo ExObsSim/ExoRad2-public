@@ -1,9 +1,9 @@
 import numpy as np
 from astropy import units as u
 from scipy.interpolate import interp1d
-from exorad.models.utils import get_wl_col_name
 
 from exorad.log import Logger
+from exorad.models.utils import get_wl_col_name
 
 
 class OpticalElement(Logger):
@@ -40,31 +40,31 @@ class OpticalElement(Logger):
 
     def __init__(self, description, wl):
         super().__init__()
-        self.name = description['value']
+        self.name = description["value"]
         self.debug(self.name)
         self.description = description
         self.wl = wl
-        self.type = self.description['type']['value']
+        self.type = self.description["type"]["value"]
         self.transmission = self._get_transmission()
         self.emissivity = self._get_emissivity()
         self.temperature = self._get_temperature()
         self.position = self._get_position()
 
     def _get_position(self):
-        if self.type == 'detector box':
-            return 'detector'
-        elif self.type == 'optics box':
-            return 'optics box'
+        if self.type == "detector box":
+            return "detector"
+        elif self.type == "optics box":
+            return "optics box"
         else:
-            return 'path'
+            return "path"
 
     def _get_temperature(self):
-        if 'temperature' in self.description:
-            if hasattr(self.description['temperature']['value'], 'unit'):
-                return self.description['temperature']['value'].to(u.K)
+        if "temperature" in self.description:
+            if hasattr(self.description["temperature"]["value"], "unit"):
+                return self.description["temperature"]["value"].to(u.K)
             else:
-                self.debug('Temperature assumed to be in K')
-                return self.description['temperature']['value'] * u.K
+                self.debug("Temperature assumed to be in K")
+                return self.description["temperature"]["value"] * u.K
         else:
             return None
 
@@ -75,84 +75,142 @@ class OpticalElement(Logger):
         Such use allow the use to select if wants to use transmission of reflectivity for dicroics.
         If "use" is not indicated in the description file, the code will look for "Transmission" keyword in column name.
         """
-        if 'data' in self.description:
-            self.debug('found transmission file')
-            if 'use' in self.description:
-                colname = self.description['use']['value']
+        if "data" in self.description:
+            self.debug("found transmission file")
+            if "use" in self.description:
+                colname = self.description["use"]["value"]
             else:
                 try:
-                    colname = 'Transmission'
-                    _ = self.description['data'][colname]
+                    colname = "Transmission"
+                    _ = self.description["data"][colname]
                 except KeyError:
                     try:
-                        colname = 'Reflectivity'
-                        _ = self.description['data'][colname]
+                        colname = "Reflectivity"
+                        _ = self.description["data"][colname]
                     except KeyError:
-                        self.error('{} column name not found in transmission data file'.format(colname))
-                        raise KeyError('{} column name not found in transmission data file'.format(colname))
+                        self.error(
+                            "{} column name not found in transmission data file".format(
+                                colname
+                            )
+                        )
+                        raise KeyError(
+                            "{} column name not found in transmission data file".format(
+                                colname
+                            )
+                        )
 
-            wl_colname = get_wl_col_name(self.description['data'], description=self.description)
-            tr_func = interp1d(self.description['data'][wl_colname],
-                               self.description['data'][colname],
-                               assume_sorted=False,
-                               fill_value=0.0,
-                               bounds_error=False)
+            wl_colname = get_wl_col_name(
+                self.description["data"], description=self.description
+            )
+            tr_func = interp1d(
+                self.description["data"][wl_colname],
+                self.description["data"][colname],
+                assume_sorted=False,
+                fill_value=0.0,
+                bounds_error=False,
+            )
 
             transmission = tr_func(self.wl)
-        elif 'transmission' in self.description and 'reflectivity' in self.description:
-            if 'use' in self.description:
-                key = self.description['use']['value']
-                transmission = np.ones(self.wl.size) * self.description[key]['value']
+        elif (
+            "transmission" in self.description
+            and "reflectivity" in self.description
+        ):
+            if "use" in self.description:
+                key = self.description["use"]["value"]
+                transmission = (
+                    np.ones(self.wl.size) * self.description[key]["value"]
+                )
             else:
-                self.error('both transmission and reflectivity are included but use is not indicated')
-                raise KeyError('both transmission and reflectivity are included but use is not indicated')
+                self.error(
+                    "both transmission and reflectivity are included but use is not indicated"
+                )
+                raise KeyError(
+                    "both transmission and reflectivity are included but use is not indicated"
+                )
 
-        elif 'transmission' in self.description or 'reflectivity' in self.description:
+        elif (
+            "transmission" in self.description
+            or "reflectivity" in self.description
+        ):
             try:
-                transmission = np.ones(self.wl.size) * self.description['transmission']['value']
+                transmission = (
+                    np.ones(self.wl.size)
+                    * self.description["transmission"]["value"]
+                )
             except KeyError:
-                transmission = np.ones(self.wl.size) * self.description['reflectivity']['value']
-                self.debug('reflectivity keyword found for transmission for {}'.format(self.name))
-            if 'wl_min' in self.description:
-                self.debug('found transmission inferior boundary : {}'.format(self.description['wl_min']['value']))
-                idx = np.where(self.wl < self.description['wl_min']['value'].to(self.wl.unit))
+                transmission = (
+                    np.ones(self.wl.size)
+                    * self.description["reflectivity"]["value"]
+                )
+                self.debug(
+                    "reflectivity keyword found for transmission for {}".format(
+                        self.name
+                    )
+                )
+            if "wl_min" in self.description:
+                self.debug(
+                    "found transmission inferior boundary : {}".format(
+                        self.description["wl_min"]["value"]
+                    )
+                )
+                idx = np.where(
+                    self.wl
+                    < self.description["wl_min"]["value"].to(self.wl.unit)
+                )
                 transmission[idx] = 0.0
-            if 'wl_max' in self.description:
-                self.debug('found transmission superior boundary : {}'.format(self.description['wl_min']['value']))
-                idx = np.where(self.wl > self.description['wl_max']['value'].to(self.wl.unit))
+            if "wl_max" in self.description:
+                self.debug(
+                    "found transmission superior boundary : {}".format(
+                        self.description["wl_min"]["value"]
+                    )
+                )
+                idx = np.where(
+                    self.wl
+                    > self.description["wl_max"]["value"].to(self.wl.unit)
+                )
                 transmission[idx] = 0.0
 
         else:
             transmission = np.ones(self.wl.size)
-        self.debug('transmission : {}'.format(transmission))
+        self.debug("transmission : {}".format(transmission))
         return transmission
 
     def _get_emissivity(self):
-        if 'data' in self.description:
-            self.debug('found emissivity file')
+        if "data" in self.description:
+            self.debug("found emissivity file")
 
-            wl_colname = get_wl_col_name(self.description['data'], description=self.description)
+            wl_colname = get_wl_col_name(
+                self.description["data"], description=self.description
+            )
 
             em_colname = None
-            for em_key in ['Emissivity', 'emissivity']:
-                if em_key in self.description['data'].keys():
-                    em_colname= em_key
+            for em_key in ["Emissivity", "emissivity"]:
+                if em_key in self.description["data"].keys():
+                    em_colname = em_key
             if em_colname is None:
-                self.error('Emissivity column not found in transmission data file')
-                raise KeyError('Emissivity column not found in transmission data file')
+                self.error(
+                    "Emissivity column not found in transmission data file"
+                )
+                raise KeyError(
+                    "Emissivity column not found in transmission data file"
+                )
 
-            em_func = interp1d(self.description['data'][wl_colname],
-                               self.description['data'][em_colname],
-                               assume_sorted=False,
-                               fill_value=0.0,
-                               bounds_error=False)
+            em_func = interp1d(
+                self.description["data"][wl_colname],
+                self.description["data"][em_colname],
+                assume_sorted=False,
+                fill_value=0.0,
+                bounds_error=False,
+            )
 
             emissivity = em_func(self.wl)
-        elif 'emissivity' in self.description:
-            emissivity = np.ones(self.wl.size) * self.description['emissivity']['value']
-        elif self.type == 'detector box':
+        elif "emissivity" in self.description:
+            emissivity = (
+                np.ones(self.wl.size) * self.description["emissivity"]["value"]
+            )
+        elif self.type == "detector box":
             emissivity = np.ones(self.wl.size)
         else:
             emissivity = np.zeros(self.wl.size)
-        self.debug('emissivity : {}'.format(emissivity))
+        self.debug("emissivity : {}".format(emissivity))
         return emissivity

@@ -55,9 +55,9 @@ class Signal(Logger):
         """
 
         self.set_log_name()
-        self.wl_grid = self.check_quantities(wl_grid, 'um')
-        self.data = self.check_quantities(data, '')
-        self.time_grid = self.check_quantities(time_grid, 'hr')
+        self.wl_grid = self.check_quantities(wl_grid, "um")
+        self.data = self.check_quantities(data, "")
+        self.time_grid = self.check_quantities(time_grid, "hr")
         self.check_sizes()
 
     @property
@@ -100,12 +100,18 @@ class Signal(Logger):
             if quantity.unit != units:
                 try:
                     data_converted = quantity.to(u.Unit(units))
-                    self.debug('input data: {}'.format(quantity))
-                    self.debug('converted {} to {}'.format(quantity.unit, units))
-                    self.debug('converted data: {}'.format(data_converted))
+                    self.debug("input data: {}".format(quantity))
+                    self.debug(
+                        "converted {} to {}".format(quantity.unit, units)
+                    )
+                    self.debug("converted data: {}".format(data_converted))
                     return data_converted
                 except u.UnitConversionError:
-                    self.error('Impossible to convert {} to {}'.format(quantity.unit, units))
+                    self.error(
+                        "Impossible to convert {} to {}".format(
+                            quantity.unit, units
+                        )
+                    )
                     raise u.UnitConversionError
 
             else:
@@ -128,20 +134,20 @@ class Signal(Logger):
             if there is a dimension mismatch
         """
         if self.wl_grid.ndim > 1:
-            self.error('wavelength grid cannot have multiple axes')
+            self.error("wavelength grid cannot have multiple axes")
             raise ValueError
         if self.time_grid.ndim > 1:
-            self.error('time grid cannot have multiple axes')
+            self.error("time grid cannot have multiple axes")
             raise ValueError
         if self.data.ndim > 2:
-            self.error('data cannot have more than 2 axes')
+            self.error("data cannot have more than 2 axes")
             raise ValueError
         if self.data.shape[0] != self.wl_grid.shape[0]:
-            self.error('dimension mismatch between wavelength grid and data')
+            self.error("dimension mismatch between wavelength grid and data")
             raise ValueError
         if self.time_grid.shape[0] > 1 or self.data.ndim > 1:
             if self.data.shape[1] - self.time_grid.shape[0] != 0:
-                self.error('dimension mismatch between time grid and data')
+                self.error("dimension mismatch between time grid and data")
                 raise ValueError
 
     def spectral_rebin(self, new_wl_grid):
@@ -164,6 +170,7 @@ class Signal(Logger):
         Converts the Signal class into standard python dict.
         """
         from exorad.utils.util import to_dict
+
         signal_dict = to_dict(self)
         return signal_dict
 
@@ -173,8 +180,8 @@ class Signal(Logger):
         """
         if (fig == None) and (ax == None):
             fig, ax = plt.subplots(1, 1)
-            ax.set_xlabel(r'Wavelength [${}$]'.format(self.wl_grid.unit))
-            ax.set_ylabel(r'${}$'.format(self.data.unit))
+            ax.set_xlabel(r"Wavelength [${}$]".format(self.wl_grid.unit))
+            ax.set_ylabel(r"${}$".format(self.data.unit))
         ax.plot(self.wl_grid, self.data, label=label)
 
         if yscale is not None:
@@ -191,9 +198,9 @@ class CustomSignal(Signal):
 
     def __init__(self, wl_grid, data, data_unit, time_grid=[0] * u.hr):
         self.set_log_name()
-        self.wl_grid = self.check_quantities(wl_grid, 'um')
+        self.wl_grid = self.check_quantities(wl_grid, "um")
         self.data = self.check_quantities(data, data_unit)
-        self.time_grid = self.check_quantities(time_grid, 'hr')
+        self.time_grid = self.check_quantities(time_grid, "hr")
         self.check_sizes()
 
 
@@ -203,7 +210,7 @@ class Sed(CustomSignal):
     """
 
     def __init__(self, wl_grid, data, time_grid=[0] * u.hr):
-        super().__init__(wl_grid, data, u.W / u.m ** 2 / u.um, time_grid)
+        super().__init__(wl_grid, data, u.W / u.m**2 / u.um, time_grid)
 
 
 class Radiance(CustomSignal):
@@ -212,7 +219,9 @@ class Radiance(CustomSignal):
     """
 
     def __init__(self, wl_grid, data, time_grid=[0] * u.hr):
-        super().__init__(wl_grid, data, u.W / u.m ** 2 / u.um / u.sr, time_grid)
+        super().__init__(
+            wl_grid, data, u.W / u.m**2 / u.um / u.sr, time_grid
+        )
 
 
 class CountsPerSeconds(CustomSignal):
@@ -221,6 +230,4 @@ class CountsPerSeconds(CustomSignal):
     """
 
     def __init__(self, wl_grid, data, time_grid=[0] * u.hr):
-        super().__init__(wl_grid, data, 'ct/s', time_grid)
-
-
+        super().__init__(wl_grid, data, "ct/s", time_grid)

@@ -2,14 +2,21 @@ import sys
 
 import astropy.units as u
 import numpy as np
-from astropy.table import Table, QTable, vstack
+from astropy.table import QTable
+from astropy.table import Table
+from astropy.table import vstack
 
-def progressbar(it, prefix="", size=60, file=sys.stdout, label=''):
+
+def progressbar(it, prefix="", size=60, file=sys.stdout, label=""):
     count = len(it)
     if count > 0:
+
         def show(j):
             x = int(size * j / count)
-            file.write("%s[%s%s] %i/%i %s\r" % (prefix, "#" * x, "." * (size - x), j, count, label))
+            file.write(
+                "%s[%s%s] %i/%i %s\r"
+                % (prefix, "#" * x, "." * (size - x), j, count, label)
+            )
             file.flush()
 
         show(0)
@@ -27,13 +34,12 @@ def to_dict(obj, classkey=None):
             data[k] = to_dict(v, classkey)
         return data
     elif isinstance(obj, u.Quantity):
-        data = {'value': obj.value,
-                'unit': str(obj.unit)}
+        data = {"value": obj.value, "unit": str(obj.unit)}
         return data
     elif hasattr(obj, "_ast"):
         return to_dict(obj._ast())
     elif isinstance(obj, QTable):
-        data = {'table': obj}
+        data = {"table": obj}
         #
         # commented lines convert table to dict, but table is already converted during the writing process!
         #
@@ -52,13 +58,17 @@ def to_dict(obj, classkey=None):
         keys = [k for k in obj.keys()]
         data = {}
         for k in keys:
-            data[k] = {'value': obj[k]}
+            data[k] = {"value": obj[k]}
         return data
 
     elif hasattr(obj, "__dict__"):
-        data = dict([(key, to_dict(value, classkey))
-                     for key, value in obj.__dict__.items()
-                     if not callable(value) and not key.startswith('_') and key not in ['name']])
+        data = {
+            key: to_dict(value, classkey)
+            for key, value in obj.__dict__.items()
+            if not callable(value)
+            and not key.startswith("_")
+            and key not in ["name"]
+        }
         if classkey is not None and hasattr(obj, "__class__"):
             data[classkey] = obj.__class__.__name__
         return data
@@ -80,16 +90,16 @@ def vstack_tables(table_list):
             if col_name2:
                 for c in col_name2:
                     table[c] = np.zeros(len(table)) * tab[c][0]
-            table = vstack([table, tab], join_type='outer')
+            table = vstack([table, tab], join_type="outer")
     return table
 
 
 def parse_range(inp, avail_values):
-    if inp.strip() == 'all':
+    if inp.strip() == "all":
         return [x for x in range(avail_values)]
-    if inp.strip() == 'none':
+    if inp.strip() == "none":
         return []
-    args = inp.split(',')
+    args = inp.split(",")
 
     numbers = []
 
@@ -97,7 +107,7 @@ def parse_range(inp, avail_values):
         start = None
         end = None
         try:
-            s = a.split('-')
+            s = a.split("-")
             start = int(s[0])
             end = int(s[1])
             end += 1
@@ -105,7 +115,7 @@ def parse_range(inp, avail_values):
             start = int(a)
             end = int(a) + 1
         except ValueError:
-            print('Invalid axis format, should be int')
+            print("Invalid axis format, should be int")
             return None
         for x in range(start, end):
             numbers.append(x)
@@ -114,4 +124,4 @@ def parse_range(inp, avail_values):
 
 def chunks(l, n):
     for i in range(0, len(l), n):
-        yield l[i:i + n]
+        yield l[i : i + n]
