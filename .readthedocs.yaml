@@ -20,4 +20,6 @@ formats: all
 python:
   version: 3.8
   install:
-    - requirements: docs/source/requirements.txt
+    extra_requirements:
+        - docs
+        
