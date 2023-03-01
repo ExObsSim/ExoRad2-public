@@ -21,9 +21,6 @@ As an example, for each target and for each photometric and spectroscopic channe
 7) inner sanctum
 8) sky foreground
 
-## Reports
-The code is under development, so, please report any issue or inaccuracy to the developers to support the implementation.
-
 ### Cite
 ExoRad has been developed from ArielRad. 
 If you use this software please cite:

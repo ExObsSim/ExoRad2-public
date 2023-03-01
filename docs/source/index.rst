@@ -1,4 +1,4 @@
-Welcome to ExoRad 2's documentation!
+Contributing
 =====================================
 
 ExoRad, the generic point source radiometric model, interfaces with any instrument to provide an estimate of several Payload performance metrics.
@@ -15,12 +15,6 @@ As an example, for each target and for each photometric and spectroscopic channe
 8. sky foreground
 
 Please, report any issue or inaccuracy to the developers to support the implementation.
-
-
-.. note:: We are still completing and testing the software right now, and more functions are coming.
-        if you want to be kept update, subscribe to the gitHub repository.
-
-.. warning:: This documentation is not completed yet. If you find any issue or difficulty, please contact the developers_ for help.
 
 
 Cite
@@ -43,9 +37,9 @@ We thank Billy Edwards for the thorough tests and for his help in improving the 
 
     Home <self>
     User Guide <user/index>
+    Contributing <contributing>
     API Guide <api/modules>
     Project Page <https://github.com/ExObsSim/ExoRad2-public>
 
 .. _link: https://doi.org/10.1007/s10686-020-09676-7
-.. _cite: https://arxiv.org/abs/1912.07759
-.. _developers: mailto:lorenzo.mugnai@uniroma1.it
+.. _cite: https://iopscience.iop.org/article/10.3847/1538-4357/ac0252
