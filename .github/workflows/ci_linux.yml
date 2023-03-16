@@ -1,12 +1,12 @@
-name: develop-build
+name: master-build
 
 on:
   push:
     branches:
-      - 'develop'
+      - 'master'
   pull_request:
     branches:
-      - 'develop'
+      - 'master'
 
 jobs:
   build:
