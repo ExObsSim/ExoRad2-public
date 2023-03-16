@@ -22,7 +22,7 @@
                     If neither StellarModels or CustomSed are present, a black body SED will be used.
                 </comment>
             </StellarModels>
-            <CustomSed>__ConfigPath__/examples/customsed.csv</CustomSed>
+            <CustomSed>__ConfigPath__/customsed.csv</CustomSed>
         </sourceSpectrum>
         <wl_min unit="micron">0.45</wl_min>
         <wl_max unit="micron">2.2</wl_max>
@@ -39,7 +39,7 @@
 
         </foreground>
         <foreground> skyFilter
-                    <datafile>__ConfigPath__/examples/modtran_38km_sun_180az_55zd_los_45zd.csv</datafile>
+                    <datafile>__ConfigPath__/modtran_38km_sun_180az_55zd_los_45zd.csv</datafile>
         </foreground>
 
         <!--customNoise> custom
@@ -188,7 +188,7 @@
         <Fnum_y unit="">30</Fnum_y>
         <NoiseX unit="">0.40</NoiseX>
         <wlSolution>
-            <datafile>__ConfigPath__/examples/Spec-wl_sol.csv</datafile>
+            <datafile>__ConfigPath__/Spec-wl_sol.csv</datafile>
             <comment>wavelength solution for spectrometers</comment>
         </wlSolution>
         <window_spatial_scale> 1
@@ -252,7 +252,7 @@
                 </comment>
             </f_well_depth>
             <qe unit="">
-                <datafile>__ConfigPath__/examples/QE.csv</datafile>
+                <datafile>__ConfigPath__/QE.csv</datafile>
                 <comment>QE can either be a single value or a table expressing QE vs Wavelength</comment>
             </qe>
             <freqNDR unit="Hz">0.
