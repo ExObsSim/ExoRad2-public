@@ -6,6 +6,7 @@
 [![ASCL.net](https://img.shields.io/badge/ascl-2210.006-blue.svg?colorB=262255)](https://ascl.net/2210.006)
 [![status](https://joss.theoj.org/papers/d770a319b30cf50ef5a48ed9cebbfd57/status.svg)](https://joss.theoj.org/papers/d770a319b30cf50ef5a48ed9cebbfd57)
 
+
 # ExoRad 2.0: The generic point source radiometric model
 
 
@@ -44,7 +45,7 @@ Then install
 
 ## Run
 Once Exorad is installed in your system you can run it from console. 
-Run `exorad -help` to read the list of accepted keywords.  
+Run `exorad --help` to read the list of accepted keywords.  
 
 An example to ExoRad is provide in the `ExoRad2/examples` folder. From the `ExoRad2` directory you can try
 
