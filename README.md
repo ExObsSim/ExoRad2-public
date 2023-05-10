@@ -44,7 +44,7 @@ Then install
 
 ## Run
 Once Exorad is installed in your system you can run it from console. 
-Run `exorad -help` to read the list of accepted keywords.  
+Run `exorad --help` to read the list of accepted keywords.  
 
 An example to ExoRad is provide in the `ExoRad2/examples` folder. From the `ExoRad2` directory you can try
 
