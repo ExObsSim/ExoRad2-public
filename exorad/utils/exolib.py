@@ -390,9 +390,7 @@ def paosPSF(wl, delta_pix, filename="", plot=False):
     assert wl.unit == u.micron, print("Wavelength unit should be micron. ")
 
     try:
-
         with h5py.File(os.path.expanduser(filename), mode="r") as fd:
-
             wavelength = wl.value[0]
             if str(wavelength) in list(fd.keys()):
                 ima, dx, dy, extent, fratio = load_paos_psf(
@@ -404,7 +402,6 @@ def paosPSF(wl, delta_pix, filename="", plot=False):
                 )
 
     except OSError as e:
-
         logger.error("Error loading PAOS psf file. ")
         raise FileNotFoundError(e.errno)
 

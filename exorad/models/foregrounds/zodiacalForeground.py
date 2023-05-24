@@ -36,7 +36,6 @@ class ZodiacalFrg(Logger):
         self.radiance = self._get_radiance(coordinates)
 
     def _get_radiance(self, coordinates):
-
         fit_coord = (
             self.description["zodiacalMap"]["value"]
             if "zodiacalMap" in self.description

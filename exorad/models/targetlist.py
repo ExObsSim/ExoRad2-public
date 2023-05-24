@@ -37,7 +37,6 @@ class BaseTargetList(Logger):
         raise NotImplementedError
 
     def create_target_list(self):
-
         star_keys = self.star_keys()
 
         star_data = self.star_data()
@@ -155,7 +154,6 @@ class XLXSTargetList(BaseTargetList):
         return list(map(list, zip(*star_list)))
 
     def read_data(self):
-
         xl_workbook = xlrd.open_workbook(self.filename)
         self.tmpSheet = xl_workbook.sheet_by_name("Sheet1")
 
@@ -392,7 +390,6 @@ class OldExcelTargetList(Logger):
     units_row = 3
 
     def __init__(self, filename):
-
         self.set_log_name()
 
         if filename.endswith(".xlsx"):

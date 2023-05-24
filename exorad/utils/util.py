@@ -30,7 +30,7 @@ def progressbar(it, prefix="", size=60, file=sys.stdout, label=""):
 def to_dict(obj, classkey=None):
     if isinstance(obj, dict):
         data = {}
-        for (k, v) in obj.items():
+        for k, v in obj.items():
             data[k] = to_dict(v, classkey)
         return data
     elif isinstance(obj, u.Quantity):

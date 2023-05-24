@@ -238,7 +238,6 @@ class Instrument(Logger):
         return out
 
     def _bin_signal(self, wl, signal, leftbin, rightbin):
-
         bsig = [
             np.mean(signal[np.logical_and(wl >= wlow, wl < whigh)])
             for wlow, whigh in zip(leftbin, rightbin)
@@ -246,7 +245,6 @@ class Instrument(Logger):
         return u.Quantity(bsig)
 
     def _get_transmission(self, wl_grid, tr_data=None):
-
         tr_func = interp1d(
             wl_grid,
             tr_data,

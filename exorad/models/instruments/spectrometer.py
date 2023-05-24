@@ -206,7 +206,6 @@ class Spectrometer(Instrument):
                 prf, pixel_prf, extent = pixel_based_psf(wl, delta, psf_file)
 
             elif psf_format == "paos":
-
                 prf, pixel_prf, extent = paosPSF(
                     wl=[wl] * u.micron, delta_pix=delta, filename=psf_file
                 )
