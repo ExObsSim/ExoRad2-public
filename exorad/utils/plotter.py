@@ -14,6 +14,7 @@ from exorad.log import setLogLevel
 mpl_logger = logging.getLogger("matplotlib")
 mpl_logger.setLevel(logging.WARNING)
 cmap = matplotlib.cm.get_cmap("Set1")
+matplotlib.rcParams.update({'font.size': 18})
 
 
 class Plotter(Logger):
@@ -54,6 +55,7 @@ class Plotter(Logger):
         The Class input_table input parameter is required for this method to work.
         """
         channels = set(self.inputTable["chName"])
+        cmap_bands = matplotlib.cm.get_cmap("tab10")
         norm = matplotlib.colors.Normalize(vmin=0.0, vmax=len(channels))
         tick_list = []
 
@@ -77,7 +79,7 @@ class Plotter(Logger):
                 wl_max,
                 alpha=0.1,
                 zorder=0,
-                color=cmap(
+                color=cmap_bands(
                     norm(k),
                 ),
             )
@@ -92,7 +94,7 @@ class Plotter(Logger):
 
         return ax
 
-    def plot_efficiency(self, scale="log", channel_edges=True):
+    def plot_efficiency(self, scale="log", channel_edges=False):
         """
         It produces a figure with payload efficiency over wavelength.
         The quantities reported are quantum efficiency, transmission and the photon conversion efficiency (pce)
@@ -110,18 +112,21 @@ class Plotter(Logger):
             from matplotlib.lines import Line2D
             from exorad.models.signal import Signal
 
+            keys = ["transmission", "qe"]
+
             norm = matplotlib.colors.Normalize(
-                vmin=0.0, vmax=len(self.channels)
+                vmin=0.0, vmax=len(self.channels)*len(keys)
             )
 
             fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-            fig.suptitle("Payload photon conversion efficiency")
+            # fig.suptitle("Payload photon conversion efficiency")
 
+            lines, labels = [], []
+            i = 0
             if self.channels:
-                keys = ["transmission", "qe"]
                 for ch in self.channels:
                     pce = None
-                    for i, key in enumerate(keys):
+                    for key in keys:
                         data = self.channels[ch].built_instr[
                             "{}_data".format(key)
                         ]
@@ -137,7 +142,21 @@ class Plotter(Logger):
                                 norm(i),
                             ),
                             zorder=10,
+                            lw=2
                         )
+                        lines.append(
+                            Line2D(
+                                [0],
+                                [0],
+                                color=cmap(
+                                    norm(i),
+                                ),
+                                lw=3,
+                            )
+                        )
+                        labels.append('{} {}'.format(key, ch))
+                        i+=1
+
                         if not pce:
                             pce = sig
                         else:
@@ -146,33 +165,18 @@ class Plotter(Logger):
                     ax.plot(
                         pce.wl_grid,
                         pce.data,
-                        color=cmap(
-                            norm(i + 1),
-                        ),
+                        lw=2,
                         zorder=10,
+                        c='k'
                     )
 
-                lines, labels = [], []
-                for i, key in enumerate(keys):
-                    lines.append(
-                        Line2D(
-                            [0],
-                            [0],
-                            color=cmap(
-                                norm(i),
-                            ),
-                            lw=4,
-                        )
-                    )
-                    labels.append(key)
                 lines.append(
                     Line2D(
                         [0],
                         [0],
-                        color=cmap(
-                            norm(i + 1),
-                        ),
-                        lw=4,
+                        lw=3,
+                        c='k'
+
                     )
                 )
                 labels.append("pce")
@@ -191,11 +195,21 @@ class Plotter(Logger):
                     # ax.plot(self.inputTable['Wavelength'], self.inputTable[e], c='None')
             ax.grid(zorder=0)
             ax = self.plot_bands(ax, scale, channel_edges)
-            ax.legend(handles=lines, labels=labels)
+            ax.legend(
+                handles=lines, labels=labels,
+                prop={"size": 14},
+                loc="upper left",
+                ncol=3,
+                bbox_to_anchor=(0.1, -0.12),
+                labelspacing=1.2,
+                handlelength=1,
+            )
             ax.set_title("Photon conversion efficiency")
             ax.set_xlabel(r"Wavelength [$\mu m$]")
-            ax.set_ylabel("efficiency")
+            ax.set_ylabel("Efficiency")
             # ax.set_xscale('log')
+            plt.tight_layout()
+            plt.subplots_adjust(top=0.9, bottom=0.22, hspace=0.7)
 
             self.fig_efficiency = fig
             return fig
@@ -205,7 +219,7 @@ class Plotter(Logger):
                 "channels parameter is required for this method to work"
             )
 
-    def plot_noise(self, ax, ylim=None, scale="log", channel_edges=True):
+    def plot_noise(self, ax, ylim=None, scale="log", channel_edges=False):
         """
         It plots the noise components found in the input table in the indicated axes.
 
@@ -234,7 +248,7 @@ class Plotter(Logger):
                     self.inputTable["Wavelength"],
                     self.inputTable[n],
                     zorder=9,
-                    lw=1,
+                    lw=3,
                     c="k",
                     marker=".",
                     markersize=5,
@@ -257,14 +271,14 @@ class Plotter(Logger):
                     self.inputTable["Wavelength"],
                     noise,
                     zorder=9,
-                    lw=1,
+                    lw=2,
                     alpha=0.5,
                     marker=".",
                     label=n,
                 )  # color=palette[k])  # c='None')
 
         if not ylim:
-            ax.set_ylim(1e-7)
+            ax.set_ylim(5e-7)
         else:
             ax.set_ylim(ylim)
         #        ax.grid(zorder=0, which='both')
@@ -279,16 +293,16 @@ class Plotter(Logger):
         ax.grid(axis="y", which="major", alpha=0.5)
         #        ax.legend(bbox_to_anchor=(1, 1))
         ax.legend(
-            prop={"size": 12},
+            prop={"size": 14},
             loc="upper left",
             ncol=3,
-            bbox_to_anchor=(0.05, -0.2),
+            bbox_to_anchor=(0.01, -0.25),
             labelspacing=1.2,
             handlelength=1,
         )
         ax.set_title("Noise Budget")
         ax.set_xlabel(r"Wavelength [$\mu m$]")
-        ax.set_ylabel(r"relative noise [$\sqrt{{hr}}$]")
+        ax.set_ylabel(r"Relative noise [$\sqrt{t_{int} \, / \, {hr}}$]")
         ax.set_yscale("log")
         # ax.set_xscale('log')
         ax = self.plot_bands(ax, scale, channel_edges)
@@ -326,7 +340,7 @@ class Plotter(Logger):
                 self.inputTable["Wavelength"],
                 self.inputTable[s],
                 zorder=9,
-                lw=1,
+                lw=2,
                 alpha=0.5,
                 marker=".",
                 label=s,
@@ -334,7 +348,7 @@ class Plotter(Logger):
             # color=palette[k])  # , c='None')
 
         if not ylim:
-            ax.set_ylim(1e-3)
+            ax.set_ylim(1e-1, 5e6)
         else:
             ax.set_ylim(ylim)
         #        ax.grid(zorder=0, which='both')
@@ -349,16 +363,16 @@ class Plotter(Logger):
         ax.grid(axis="y", which="major", alpha=0.5)
         #        ax.legend(bbox_to_anchor=(1, 1))
         ax.legend(
-            prop={"size": 12},
+            prop={"size": 14},
             loc="upper left",
             ncol=3,
-            bbox_to_anchor=(0.05, -0.2),
+            bbox_to_anchor=(0.05, -0.25),
             labelspacing=1.2,
             handlelength=1,
         )
         ax.set_title("Signals")
         ax.set_xlabel(r"Wavelength [$\mu m$]")
-        ax.set_ylabel("$ct/s$")
+        ax.set_ylabel("$counts/s$")
         ax.set_yscale("log")
         # ax.set_xscale('log')
         ax = self.plot_bands(ax, scale, channel_edges)
@@ -366,7 +380,7 @@ class Plotter(Logger):
         return ax
 
     def plot_table(
-        self, sig_ylim=None, noise_ylim=None, scale="log", channel_edges=True
+        self, sig_ylim=None, noise_ylim=None, scale="log", channel_edges=False
     ):
         """
         It produces a figure with signal and noise for the input table.
@@ -381,7 +395,7 @@ class Plotter(Logger):
         The Class input_table input parameter is required for this method to work.
         """
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
-        fig.suptitle(self.inputTable.meta["name"])
+        # fig.suptitle(self.inputTable.meta["name"])
         ax1 = self.plot_signal(
             ax1, ylim=sig_ylim, scale=scale, channel_edges=channel_edges
         )
@@ -389,7 +403,7 @@ class Plotter(Logger):
             ax2, ylim=noise_ylim, scale=scale, channel_edges=channel_edges
         )
         plt.tight_layout()
-        plt.subplots_adjust(top=0.9, bottom=0.22, hspace=0.7)
+        plt.subplots_adjust(top=0.95, bottom=0.25, hspace=0.8)
         self.fig = fig
         return fig, (ax1, ax2)
 
