@@ -14,7 +14,7 @@ from exorad.log import setLogLevel
 mpl_logger = logging.getLogger("matplotlib")
 mpl_logger.setLevel(logging.WARNING)
 cmap = matplotlib.cm.get_cmap("Set1")
-matplotlib.rcParams.update({'font.size': 18})
+matplotlib.rcParams.update({"font.size": 18})
 
 
 class Plotter(Logger):
@@ -115,7 +115,7 @@ class Plotter(Logger):
             keys = ["transmission", "qe"]
 
             norm = matplotlib.colors.Normalize(
-                vmin=0.0, vmax=len(self.channels)*len(keys)
+                vmin=0.0, vmax=len(self.channels) * len(keys)
             )
 
             fig, ax = plt.subplots(1, 1, figsize=(10, 8))
@@ -142,7 +142,7 @@ class Plotter(Logger):
                                 norm(i),
                             ),
                             zorder=10,
-                            lw=2
+                            lw=2,
                         )
                         lines.append(
                             Line2D(
@@ -154,31 +154,17 @@ class Plotter(Logger):
                                 lw=3,
                             )
                         )
-                        labels.append('{} {}'.format(key, ch))
-                        i+=1
+                        labels.append("{} {}".format(key, ch))
+                        i += 1
 
                         if not pce:
                             pce = sig
                         else:
                             sig.spectral_rebin(pce.wl_grid)
                             pce.data *= sig.data
-                    ax.plot(
-                        pce.wl_grid,
-                        pce.data,
-                        lw=2,
-                        zorder=10,
-                        c='k'
-                    )
+                    ax.plot(pce.wl_grid, pce.data, lw=2, zorder=10, c="k")
 
-                lines.append(
-                    Line2D(
-                        [0],
-                        [0],
-                        lw=3,
-                        c='k'
-
-                    )
-                )
+                lines.append(Line2D([0], [0], lw=3, c="k"))
                 labels.append("pce")
             else:
                 pce = self.inputTable["TR"] * self.inputTable["QE"]
@@ -196,7 +182,8 @@ class Plotter(Logger):
             ax.grid(zorder=0)
             ax = self.plot_bands(ax, scale, channel_edges)
             ax.legend(
-                handles=lines, labels=labels,
+                handles=lines,
+                labels=labels,
                 prop={"size": 14},
                 loc="upper left",
                 ncol=3,

@@ -259,7 +259,6 @@ class PreparePayload(Task):
             if isinstance(payload_file, dict):
                 payload = payload_file
             if output is not None:
-
                 if os.path.isfile(output):
                     append = True
                 else:

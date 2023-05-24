@@ -71,7 +71,6 @@ class LoadOptions(Task):
         root_dict = {}
 
         for ch in root:
-
             retval = self.__parser__(ch)
             # parse all attributes
             for key in list(ch.attrib.keys()):

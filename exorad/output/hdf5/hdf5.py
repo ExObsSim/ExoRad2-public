@@ -127,7 +127,6 @@ class HDF5OutputGroup(OutputGroup):
         return HDF5OutputGroup(entry)
 
     def write_string_array(self, string_name, string_array, metadata=None):
-
         asciiList = [n.encode("ascii", "ignore") for n in string_array]
         ds = self._entry.create_dataset(
             str(string_name), (len(asciiList), 1), "S64", asciiList
@@ -191,7 +190,6 @@ class HDF5Output(Output):
         self.fd = self._openFile(self.filename)
 
     def _openFile(self, fname):
-
         mode = "w"
         if self._append:
             mode = "a"

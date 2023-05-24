@@ -61,7 +61,6 @@ class Photometer(Instrument):
                 filename=psfFilename,
             )
         elif psf_format == "paos":
-
             prf, pixel_rf, extent = paosPSF(
                 wl=self.table["Wavelength"],
                 delta_pix=self.description["detector"]["delta_pix"]["value"],

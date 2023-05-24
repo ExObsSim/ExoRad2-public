@@ -74,4 +74,3 @@ This work was supported by the ARIEL ASI-INAF agreement n. 2021.5.HH.0. The auth
 The authors would also like to thank Billy Edwards, Andreas Papageorgiou and  Subhajit Sarkar for their help in the development of ArielRad [@arielrad].
 
 # References
-

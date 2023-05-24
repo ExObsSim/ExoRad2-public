@@ -93,7 +93,6 @@ class Star(Logger):
         self.filename = ph_file
 
     def __get_sed_list(self, path):
-
         sed_name = []
         # todo include more phoenix formats
         format_list = [
@@ -144,7 +143,6 @@ class Star(Logger):
         return ph_file
 
     def __read_phenix_spectrum(self, ph_file, star_distance, star_radius):
-
         """Read a PHENIX Stellar Spectrum.
 
         Parameters
