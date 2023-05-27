@@ -19,7 +19,7 @@ As an example, for each target and for each photometric and spectroscopic channe
 
 ExoRad 2.0 is a Python package that can be used as a standalone tool or as a library to be integrated in a larger software framework.
 In the framework of the Ariel Space Mission, we developed ExoRad 2.0, a versatile tool to estimate space instruments' performance. 
-ExoRad 2.0 is the core of the second version of the Ariel radiometric simulator, `ArielRad <https://doi.org/10.1007/s10686-020-09676-7>_`. 
+ExoRad 2.0 is the core of the second version of the Ariel radiometric simulator, `ArielRad <https://doi.org/10.1007/s10686-020-09676-7>`_. 
 The ArielRad software has been extensively used by the consortium to validate the mission design, optimize the instrument performances, 
 flow down the requirements to the subsystems' level, and prepare Ariel science.
 
@@ -38,7 +38,7 @@ Mugnai et al., 2020, "ArielRad: the ARIEL radiometric model", Exp. Astron, 50, 3
 
 Acknowledgments
 -----------------
-We thank Ahmed Al-Refaie for his support during the development and the inspiration provided by his code: `TauREx3 <https://iopscience.iop.org/article/10.3847/1538-4357/ac0252>_`.
+We thank Ahmed Al-Refaie for his support during the development and the inspiration provided by his code: `TauREx3 <https://iopscience.iop.org/article/10.3847/1538-4357/ac0252>`_.
 We thank Andreas Papageorgiou for the :class:`~exorad.tasks.task.Task` class.
 We thank Billy Edwards for the thorough tests and for his help in improving the code.
 
