@@ -49,6 +49,17 @@ class OpticalElement(Logger):
         self.emissivity = self._get_emissivity()
         self.temperature = self._get_temperature()
         self.position = self._get_position()
+        self.angle = self._get_angle()
+
+    def _get_angle(self):
+        if "solid_angle" in self.description:
+            if hasattr(self.description["solid_angle"]["value"], "unit"):
+                return self.description["solid_angle"]["value"].to(u.sr)
+            else:
+                self.debug("Angle assumed to be in sr")
+                return self.description["solid_angle"]["value"] * u.sr
+        else:  # if not specified, return None the get default value from the instrument
+            return None
 
     def _get_position(self):
         if self.type == "detector box":

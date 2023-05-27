@@ -244,36 +244,29 @@ class OpticalPath(Logger):
                 )
             else:
                 self.debug("no slit found")
-                if rad.position == "detector":
-                    self.debug("this is the detector box")
-                    rad.data *= (
-                        A
-                        * np.pi
-                        * u.sr
-                        * qe.data
-                        * (qe.wl_grid / const.c / const.h).to(1.0 / u.W / u.s)
-                        * u.count
-                    )
-                elif rad.position == "optics box":
-                    self.debug("this is the optics box")
-                    rad.data *= (
-                        A
-                        * (np.pi * u.sr - omega_pix)
-                        * qe.data
-                        * (qe.wl_grid / const.c / const.h).to(1.0 / u.W / u.s)
-                        * u.count
-                    )
-                else:
-                    rad.data *= (
-                        omega_pix
-                        * A
-                        * qe.data
-                        * (qe.wl_grid / const.c / const.h).to(1.0 / u.W / u.s)
-                        * u.count
-                    )
-                max_signal_per_pix, signal = integrate_light(
-                    rad, rad.wl_grid, ch_built_instr
+                rad.data *= (
+                    A
+                    * qe.data
+                    * (qe.wl_grid / const.c / const.h).to(1.0 / u.W / u.s)
+                    * u.count
                 )
+                if hasattr(rad, "angle") and rad.angle is not None:
+                    self.debug("angle found")
+                    rad.data *= rad.angle
+                else:
+                    if rad.position == "detector":
+                        self.debug("this is the detector box")
+                        rad.data *= np.pi * u.sr
+                    elif rad.position == "optics box":
+                        self.debug("this is the optics box")
+                        rad.data *= np.pi * u.sr - omega_pix
+                    else:
+                        self.debug("this is the optical path")
+                        rad.data *= omega_pix
+
+                    max_signal_per_pix, signal = integrate_light(
+                        rad, rad.wl_grid, ch_built_instr
+                    )
 
             self.signal_table["{} signal".format(item)] = signal
             self.max_signal_per_pixel[item] = max_signal_per_pix

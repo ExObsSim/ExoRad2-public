@@ -114,13 +114,13 @@ class Star(Logger):
         sed_name_cleaned = [os.path.basename(k) for k in sed_name]
 
         sed_T_list = np.array(
-            [np.float(name.split("-")[0][3:]) for name in sed_name_cleaned]
+            [float(name.split("-")[0][3:]) for name in sed_name_cleaned]
         )
         sed_Logg_list = np.array(
-            [np.float(name.split("-")[1]) for name in sed_name_cleaned]
+            [float(name.split("-")[1]) for name in sed_name_cleaned]
         )
         sed_Z_list = np.array(
-            [np.float(name.split("-")[2][:3]) for name in sed_name_cleaned]
+            [float(name.split("-")[2][:3]) for name in sed_name_cleaned]
         )
 
         temp_to_find = star_temperature.value / 100
