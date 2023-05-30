@@ -138,7 +138,7 @@ class Instrument(Logger):
         )
 
         self.opticalPath.chain()
-        if self.opticalPath.slit_width:
+        if self.opticalPath.slit_width is not None:
             self._add_data_to_built(
                 "slit_width", self.opticalPath.slit_width.to(u.um)
             )
