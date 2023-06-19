@@ -118,7 +118,7 @@ Then you need to add a detector to your channel.
         </detector>
 
 
-As shown in the example, the detector need information such as
+As shown in the example, the detector needs information such as
 pixel size (:xml:`delta_pix`), read noise (:xml:`read_noise`), dark current (:xml:`dark_current`), well depth (:xml:`well_depth`)
 and the fraction of well depth that the channel is allowed to fill (:xml:`f_well_depth`),
 minimum wavelength that the detector can detect (:xml:`wl_min`) and the maximum,

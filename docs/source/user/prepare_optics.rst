@@ -90,6 +90,46 @@ there is a shared optical path at the beginning of the instrument, and then a fi
 
 In the shared section it's also located another important information about the telescope, that is the collective area :xml:`Atel`.
 
+Input PSF
+====================================
+If no details are included in the configuration file, ExoRad will use a default PSF for the telescope, which is computed as an Airy PSF starting from the instrument F numbers.
+But the user can input the telescope PSF in different formats.
+ExoRad can read PSF in `fits`` formats. 
+Such input can be of two different kinds at the moment:
+
+    1. it can be a PSF expressed in F numbers, and then it will be scaled to the pixel on the focal plane by the :func:`~exorad.utils.exolib.binnedPSF` function. 
+    2. or it can be a PSF already expressed in pixel on the focal plane, and then it will be used as it is, by the :func:`~exorad.utils.exolib.pixel_based_psf`. 
+
+In the first case, the PSF can be included in the payload description file, as in the following example:
+
+    .. code-block:: xml
+
+         <PSF>
+            psf.fits
+         </PSF>
+
+In the second case the user should add the `format` keyword:
+
+    .. code-block:: xml
+
+         <PSF>
+            psf.fits
+            <format> pixel_based </format>
+         </PSF>
+
+Also, the user can point to an entire folder containing PSF computed at different wavelengths, and ExoRad will use the PSF corresponding to the channel wavelength.
+
+However, ExoRad is meant to express the maximum compatibility with PAOS code, which is a physical optical simulator that can produce wavelength depended PSF for different telescope configurations, and store them in a single HDF5 file.
+PAOS is not publicly available yet, but it will be released soon (a dedicated publication is under preparation).
+In a PAOS input is used, the user needs to state it in the format keyword, and then point to the HDF5 file containing the PSF.
+
+    .. code-block:: xml
+
+         <PSF>
+            psf.hdf5
+            <format> paos </format>
+         </PSF>
+
 Optics light propagation
 ==========================
 
