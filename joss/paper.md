@@ -48,7 +48,7 @@ ExoRad 2.0 has an extensive documentation, available on [readthedocs](https://ex
 
 The software has been extensively validated against the Ariel radiometric model ArielRad [@arielrad], the time domain simulator ExoSim [@exosim] and custom simulations performed by the Ariel consortium. 
 ExoRad 2.0 is now used not only by the Ariel consortium but also by other missions, such as the balloon-borne NASA EXCITE mission [@excite], the space telescope Twinkle [@twinkle], and an adaptation for the James Webb Space Telescope [@jwst] is under preparation.
-*Such JWST has been tested against the JWST Exposure Time Calculator [@pandeia] returning consistent results as an ulterior validation for the ExoRad code.*
+*Such JWST adatptation has been tested against the JWST Exposure Time Calculator [@pandeia] returning consistent results as an ulterior validation for the ExoRad code.*
 *Although the code has been validated and used mostly for space and airborne-based telescopes, there are no indications of any limitations to adaptation for ground-based telescopes as well.*
 
 # ExoRad 2 features
