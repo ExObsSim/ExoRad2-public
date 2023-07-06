@@ -46,10 +46,10 @@ ExoRad 2.0 is written in Python and it is compatible with Python 3.8 and higher.
 
 ExoRad 2.0 has an extensive documentation, available on [readthedocs](https://exorad.readthedocs.io/en/latest), including a quick-start guide, a tutorial, and a detailed description of the software functionalities. The documentation is continuously updated along with the code. The software source code, available on [GitHub](https://github.com/ExObsSim/ExoRad2-public), also includes a set of examples of the simulation inputs (for instruments and targets) to run the software and reproduce the results reported in the documentation.
 
-The software has been extensively validated against the Ariel radiometric model ArielRad [@arielrad], the time domain simulator ExoSim [@exosim] and custom simulations performed by the Ariel consortium. 
+The software has been extensively validated against the Ariel radiometric model ArielRad [@arielrad], the time domain simulator ExoSim [@exosim] and custom simulations performed by the Ariel consortium.
 ExoRad 2.0 is now used not only by the Ariel consortium but also by other missions, such as the balloon-borne NASA EXCITE mission [@excite], the space telescope Twinkle [@twinkle], and an adaptation for the James Webb Space Telescope [@jwst] is under preparation.
-*Such JWST adaptation has been tested against the JWST Exposure Time Calculator [@pandeia] and returned consistent results as an ulterior validation for the ExoRad code.*
-*Although the code has been validated and used mostly for space and airborne-based telescopes, there are no indications of any limitations to adaptation for ground-based telescopes as well.*
+Such JWST adaptation has been tested against the JWST Exposure Time Calculator [@pandeia] and returned consistent results, providing a validation of the code against a working system.
+Although the code has been validated and used mostly for space and airborne-based telescopes, we foresee no practical limitation to adaptation for ground-based systems
 
 # ExoRad 2 features
 
