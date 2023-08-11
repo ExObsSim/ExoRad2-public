@@ -100,6 +100,7 @@ def store_thing(output, key, item):
             float,
             int,
             np.int64,
+            np.int32,
             np.float64,
         ),
     ):

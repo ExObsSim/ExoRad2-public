@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.120] - 2023-08-10
+### Fixed
+- added support for np.int32 for Windows by @wqcannon
+- broken pyYaml package 5.4 with cython 3. Moved back to 5.3.1
 ## [2.1.118] - 2023-05-27
 ### Fixed
 - deprecated np.float removed
@@ -247,6 +251,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.120]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.118...v2.1.120
 [2.1.118]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.116...v2.1.118
 [2.1.116]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.115...v2.1.116
 [2.1.115]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.114...v2.1.115
