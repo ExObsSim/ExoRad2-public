@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.121] - 2023-09-21
+### Added
+- version number increased for Zenodo and JOSS
+
 ## [2.1.120] - 2023-08-10
 ### Fixed
 - added support for np.int32 for Windows by @wqcannon
@@ -251,6 +255,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.121]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.120...v2.1.121
 [2.1.120]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.118...v2.1.120
 [2.1.118]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.116...v2.1.118
 [2.1.116]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.115...v2.1.116
