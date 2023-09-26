@@ -12,6 +12,21 @@ from exorad.utils.passVal import PassVal
 compactString = lambda string: string.replace("\n", "").strip()
 
 
+def replace_env_vars(text: str) -> str:
+    """Replace all the environment variables in a string.
+
+    Args:
+        text (str): String to modify.
+
+    Returns:
+        text (str): Modified string.
+    """
+    import re
+    env_pattern = re.compile(r"[^$]*\${([^}^{]+)}.*")
+    for match in env_pattern.findall(text):
+        text = text.replace(f"${{{match}}}", os.environ.get(match, ""))
+    return text
+
 class LoadOptions(Task):
     """
     Reads the xml file with payload description and return an object with attributes related to the input data
@@ -77,6 +92,8 @@ class LoadOptions(Task):
                 retval[key] = ch.attrib[key]
 
             value = compactString(ch.text)
+            value = replace_env_vars(value)
+            
             if (value is not None) and (value != ""):
                 try:
                     value = int(value)
@@ -96,6 +113,7 @@ class LoadOptions(Task):
                 if value == "False":
                     value = bool(False)
                 if isinstance(value, str):
+                    
                     if "__ConfigPath__" in value:
                         value = value.replace(
                             "__ConfigPath__", self.configPath
