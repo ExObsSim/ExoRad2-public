@@ -25,9 +25,8 @@ As an example, for each target and for each photometric and spectroscopic channe
 8) sky foreground
 
 ### Cite
-ExoRad has been developed from ArielRad. 
 If you use this software please cite:
-Mugnai et al, "ArielRad: the ARIEL radiometric model", 2020 ([doi: 10.1007/s10686-020-09676-7](https://link.springer.com/article/10.1007%2Fs10686-020-09676-7))
+Mugnai et al., (2023). ExoRad 2.0: The generic point source radiometric model. Journal of Open Source Software, 8(89), 5348, `https://doi.org/10.21105/joss.05348 <https://doi.org/10.21105/joss.05348>`_
 
 ## Installation
 ### Installing from PyPi
