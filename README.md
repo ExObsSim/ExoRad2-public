@@ -26,8 +26,7 @@ As an example, for each target and for each photometric and spectroscopic channe
 
 ### Cite
 If you use this software please cite:
-Mugnai et al., (2023). ExoRad 2.0: The generic point source radiometric model. Journal of Open Source Software, 8(89), 5348, `https://doi.org/10.21105/joss.05348 <https://doi.org/10.21105/joss.05348>`_
-
+Mugnai et al., (2023). ExoRad 2.0: The generic point source radiometric model. Journal of Open Source Software, 8(89), 5348, ([doi: 10.21105/joss.05348](https://doi.org/10.21105/joss.05348))
 ## Installation
 ### Installing from PyPi
 You can install it by doing
