@@ -4,15 +4,13 @@ authors:
   - family-names: Mugnai
     given-names: Lorenzo V.
     orcid: https://orcid.org/0000-0002-9007-9802
-  - family-names: Pascale,
+  - family-names: Bocchieri
+    given-names: Andrea
+    orcid: http://orcid.org/0000-0002-8846-7961
+  - family-names: Pascale
     given-names: Enzo
-  - family-names: Edwards,
-    given-names: Billy
-    orcid: https://orcid.org/0000-0002-5494-3237
-  - family-names: Papageorgiou,
-    given-names: Andreas
-  - family-names: Sarkar,
-    given-names: Subhajit
-title: "ArielRad"
-doi: 10.48550/arXiv.2209.07535
-date-released: 2022-09-12
+    orcid: http://orcid.org/0000-0002-3242-8154
+
+title: "ExoRad 2.0: The generic point source radiometric model"
+doi: 10.21105/joss.05348
+date-released: 2023-09-26
