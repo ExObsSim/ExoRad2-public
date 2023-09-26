@@ -5,7 +5,8 @@
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![ASCL.net](https://img.shields.io/badge/ascl-2210.006-blue.svg?colorB=262255)](https://ascl.net/2210.006)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8367214.svg)](https://doi.org/10.5281/zenodo.8367214)
-[![status](https://joss.theoj.org/papers/d770a319b30cf50ef5a48ed9cebbfd57/status.svg)](https://joss.theoj.org/papers/d770a319b30cf50ef5a48ed9cebbfd57)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.05348/status.svg)](https://doi.org/10.21105/joss.05348)
+
 
 # ExoRad 2.0: The generic point source radiometric model
 

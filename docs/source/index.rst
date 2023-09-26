@@ -32,9 +32,15 @@ Please, report any issues or inaccuracies to the developers to support the imple
 
 Cite
 -----
-ExoRad has been developed from ArielRad (Mugnai et al. 2020).
 If you use this software please cite:
-Mugnai et al., 2020, "ArielRad: the ARIEL radiometric model", Exp. Astron, 50, 303-328 (link_)
+Mugnai et al., (2023). ExoRad 2.0: The generic point source radiometric model. Journal of Open Source Software, 8(89), 5348, `https://doi.org/10.21105/joss.05348 <https://doi.org/10.21105/joss.05348>`_
+
+
+Version `2.1.121 <https://github.com/ExObsSim/ExoRad2-public/releases/tag/v2.1.121>`_ of ExoRad 2 is also published on `Zenodo <https://doi.org/10.5281/zenodo.8367214>`_
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.8367214.svg
+   :target: https://doi.org/10.5281/zenodo.8367214
+
 
 Acknowledgments
 -----------------
@@ -53,5 +59,3 @@ We thank Billy Edwards for the thorough tests and for his help in improving the 
     Contributing <contributing>
     API Guide <api/modules>
     Project Page <https://github.com/ExObsSim/ExoRad2-public>
-
-.. _link: https://doi.org/10.1007/s10686-020-09676-7
