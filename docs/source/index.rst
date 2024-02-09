@@ -1,3 +1,5 @@
+Welcome to ExoRad2 documentation
+=================================
 
 ExoRad 2.0 is a generic radiometric simulator compatible with any instrument for point source photometry or spectroscopy.
 
