@@ -4,6 +4,13 @@
 Installation & updates
 =======================
 
+Installing from PyPi
+-------------------
+
+You can install it simply by doing::
+
+pip install exorad
+
 Installing from git
 -------------------
 You can clone ExoRad from our main git repository::
