@@ -9,7 +9,7 @@ Installing from PyPi
 
 You can install it simply by doing::
 
-pip install exorad
+    pip install exorad
 
 Installing from git
 -------------------
