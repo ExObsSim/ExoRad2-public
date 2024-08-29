@@ -6,7 +6,6 @@ from datetime import date
 __pkg_name__ = metadata.metadata("exorad")["Name"]
 __url__ = metadata.metadata("exorad")["Project-URL"]
 __author__ = metadata.metadata("exorad")["Author"]
-__email__ = metadata.metadata("exorad")["Author_email"]
 __license__ = metadata.metadata("exorad")["license"]
 __summary__ = metadata.metadata("exorad")["Summary"]
 
@@ -35,7 +34,7 @@ if __base_dir__ is not None and os.path.exists(
 __title__ = "ExoRad2"
 
 __copyright__ = "2020-{:d}, {}".format(date.today().year, __author__)
-__citation__ = "Mugnai et al., 2020, 'ArielRad: the ARIEL radiometric model', Exp. Astron, 50, 303-328"
+__citation__ = "Mugnai et al., 2023, 'ExoRad 2.0: The generic point source radiometric model'. Journal of Open Source Software, 8(89), 5348,"
 
 from .exorad import standard_pipeline
 
