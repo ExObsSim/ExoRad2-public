@@ -49,7 +49,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import datetime
 
 import h5py
-import hdfdict
 from astropy.table import meta
 
 from exorad import __author__
@@ -60,6 +59,7 @@ from exorad import __pkg_name__
 from exorad import __title__
 from exorad import __url__
 from exorad import __version__
+from exorad.output.hdf5.util import hdf5_group_to_dict
 from exorad.output.hdf5.util import recursively_read_dict_contents
 from exorad.output.output import Output
 from exorad.output.output import OutputGroup
@@ -243,19 +243,22 @@ class HDF5Output(Output):
             self.fd.close()
 
 
+
 def load(input_group):
     """
-    Reads and convert an HDF5 group into a dictionary
+    Reads and converts an HDF5 group into a dictionary.
 
     Parameters
     ----------
-    input_group: HDF5Group
-        input dumped group
+    input_group: h5py.Group
+        input HDF5 group
 
     Returns
     -------
     dict
+        Dictionary representing the HDF5 group
     """
-    input_group = hdfdict.load(input_group, lazy=False)
-    input_group = recursively_read_dict_contents(input_group)
-    return input_group
+    # Convert the HDF5 group into a dictionary recursively
+    input_dict = hdf5_group_to_dict(input_group)
+    input_dict = recursively_read_dict_contents(input_dict)
+    return input_dict

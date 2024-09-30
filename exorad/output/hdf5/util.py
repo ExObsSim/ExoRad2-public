@@ -1,4 +1,5 @@
 import astropy.units as u
+import h5py
 import numpy as np
 from astropy.table import meta
 from astropy.table import QTable
@@ -7,7 +8,6 @@ from astropy.table import Table
 
 from exorad.models.signal import Sed
 from exorad.models.signal import Signal
-
 signal = {"W / (m2 um)": Sed}
 
 
@@ -47,6 +47,30 @@ def recursively_read_dict_contents(input_dict):
         if isinstance(input_dict[key], dict):
             input_dict[key] = recursively_read_dict_contents(input_dict[key])
     return input_dict
+
+def hdf5_group_to_dict(h5_group):
+    """
+    Recursively converts an h5py group into a Python dictionary.
+
+    Parameters
+    ----------
+    h5_group : h5py.Group
+        The HDF5 group to be converted
+
+    Returns
+    -------
+    dict
+        A dictionary representing the HDF5 group structure
+    """
+    result = {}
+    for key, item in h5_group.items():
+        if isinstance(item, h5py.Dataset):
+            # Convert dataset to numpy array and store
+            result[key] = item[()]  # This reads the dataset into a numpy array
+        elif isinstance(item, h5py.Group):
+            # Recurse into subgroups
+            result[key] = hdf5_group_to_dict(item)
+    return result
 
 
 def load_table(input_table, k):

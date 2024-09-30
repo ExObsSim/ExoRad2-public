@@ -8,7 +8,7 @@ import numpy as np
 import photutils
 from astropy.io import fits
 from scipy import signal
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 from scipy.interpolate import interp1d
 from scipy.special import j1
 from scipy.stats import binned_statistic
@@ -146,7 +146,7 @@ def rebin_(x, xp, fp):
 
     if np.diff(xp).max() < np.diff(x).min():
         # Binning!
-        c = cumtrapz(fp.value, x=xp.value) * fp.unit * xp.unit
+        c = cumulative_trapezoid(fp.value, x=xp.value) * fp.unit * xp.unit
         xpc = xp[1:]
 
         delta = np.gradient(x)

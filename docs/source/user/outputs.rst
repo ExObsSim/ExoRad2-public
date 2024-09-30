@@ -51,7 +51,41 @@ Finally, the `built_instr` directory contains processed information related to t
 already built channel without initialize again the instrument.
 
 
-target
+Understanding the Channel table
++++++++++++++++++++++++++++++++
+
+The channel table contained in the `channels` group is a table that contains all the information about the channel.
+Every row reprents a spectral bin. In the following we describe the columns of the table:
+
+.. list-table:: Table keywords
+   :widths: 20 60
+   :header-rows: 1
+
+   * - Parameter
+     - Description
+   * - `ChName`
+     - The name of the channel. Which is just the repetition of the channel name.
+   * - `Wavelength`
+     - The central wavelength of the spectral bin.
+   * - `Bandwidth`
+     - The bandwidth of the spectral bin.
+   * - `LeftBinEdge`
+     - The left edge of the spectral bin.
+   * - `RightBinEdge`
+     - The right edge of the spectral bin.
+   * - `QE`
+     - The quantum efficiency of the detector in the spectral bin.
+   * - `WindowSize`
+     - The window size of the detector in the spectral bin in pixels.
+   * - `TR`
+     - The total transmission of the channel in the spectral bin.
+   * - `instrument_signal`
+     - The signal of the instrument in the spectral bin [ct/s].
+   * - `instrument_MaxSignal_inPixel`
+     - The maximum signal collected by a pixel of the instrument in the spectral bin [ct/s].
+
+
+Target
 ---------
 .. _target-output:
 
@@ -71,6 +105,90 @@ The final results are stored in the `table` group.
 
 .. image:: _static/output_target_table.png
    :width: 600
+
+Understanding the Target table
++++++++++++++++++++++++++++++++
+
+The target table contained in the `targets` group, under a folder named after the observed target, is the table that contains all the final products of the simulations.
+Every row reprents a spectral bin. In the following we describe the columns of the table:
+
+.. list-table:: Table keywords
+   :widths: 20 60
+   :header-rows: 1
+
+   * - Parameter
+     - Description
+   * - `ChName`
+     - The name of the channel. Which is just the repetition of the channel name.
+   * - `Wavelength`
+     - The central wavelength of the spectral bin.
+   * - `Bandwidth`
+     - The bandwidth of the spectral bin.
+   * - `LeftBinEdge`
+     - The left edge of the spectral bin.
+   * - `RightBinEdge`
+     - The right edge of the spectral bin.
+   * - `QE`
+     - The quantum efficiency of the detector in the spectral bin.
+   * - `WindowSize`
+     - The window size of the detector in the spectral bin in pixels.
+   * - `TR`
+     - The total transmission of the channel in the spectral bin.
+   * - `instrument_signal`
+     - The signal of the instrument in the spectral bin [ct/s].
+   * - `instrument_MaxSignal_inPixel`
+     - The maximum signal collected by a pixel of the instrument in the spectral bin [ct/s].
+   * - `skyFilter_signal`
+     - The signal of the sky filter (e.g. Earth's atmosphere) in the spectral bin [ct/s].
+   * - `skyFilter_MaxSignal_inPixel`
+     - The maximum signal collected by a pixel of the sky filter in the spectral bin [ct/s].
+   * - `zodi_signal`
+     - The signal of the zodiacal light in the spectral bin [ct/s].
+   * - `zodi_MaxSignal_inPixel`
+     - The maximum signal collected by a pixel of the zodiacal light in the spectral bin [ct/s].
+   * - `foreground_transmission`
+     - The total transmission of the foregrounds in the spectral bin. This is the transmission of all the elements in front of the telescope, as the transmission of the optical elements in the channel optical path is included in `TR`.
+   * - `starFlux`
+     - The flux of the star in the spectral bin [W/m^2].
+   * - `star_signal`
+     - The signal of the star in the spectral bin [ct/s].
+   * - `star_MaxSignal_inPixel`
+     - The maximum signal collected by a pixel of the star in the spectral bin [ct/s].
+   * - `MaxSignal_inPixel`
+     - The maximum signal collected by a pixel in the spectral bin [ct/s]. This is the combination of previous max signals. Note that the maximum signal in a pixel is the sum of the maximum signals of the instrument, sky filter, zodiacal light and star, and this is because using the same PSF, the most illuminated pixel is always the same.
+   * - `saturation_time`
+     - The time in seconds to saturate a pixel in the spectral bin [s].
+   * - `frameTime`
+     - The time in seconds to read a frame in the spectral bin [s]. This corresponds to the minimum saturation time in the detector.
+   * - `instrument_signal_noise`
+     - The noise of the instrument signal in the spectral bin for an hour integration time [ct h^(1/2)].
+   * - `skyFilter_signal_noise`
+     - The noise of the sky filter signal in the spectral bin for an hour integration time [ct h^(1/2)].
+   * - `zodi_signal_noise`
+     - The noise of the zodiacal light signal in the spectral bin for an hour integration time [ct h^(1/2)].
+   * - `star_signal_noise`
+     - The noise of the star signal in the spectral bin for an hour integration time [ct h^(1/2)].
+   * - `darkcurrent_noise`
+     - The noise of the dark current in the spectral bin for an hour integration time [ct h^(1/2)].
+   * - `readout_noise`
+     - The noise of the readout in the spectral bin for an hour integration time [ct h^(1/2)].
+   * - `total_noise`
+     - The total noise in the spectral bin for an hour integration time [ct h^(1/2)].
+
+Additionally, custom noises can appear in the table if they are included in the simulation (e.g., `gain_noise`).
+
+.. note::
+   The noise values are calculated for an hour integration time. If you want to calculate the noise for a different integration time, you can use the formula:
+
+   .. math::
+      \text{noise} = \text{noise}_{\text{hour}} \times \sqrt{\frac{\text{integration time}}{3600 \text{ s}}}
+
+   where `noise_{hour}` is the noise value for an hour integration time.
+
+
+.. note::
+   The first part of the table is the same as the channel table, as the target table is the result of the combination of the channel table with the foregrounds and the star.
+
 
 .. _QTable: https://docs.astropy.org/en/stable/api/astropy.table.QTable.html
 

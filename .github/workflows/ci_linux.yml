@@ -1,4 +1,4 @@
-name: master-build
+name: develop-build
 
 on:
   push:
@@ -14,32 +14,43 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, '3.10']
+        python-version: [3.9, '3.10', '3.11', '3.12']
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v4
+        
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install coverage pytest flake8
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+    
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+  
       - name: install exorad
-        run: |
-          pip install -e ".[test]"
+        run: poetry install --no-interaction
 
       - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        run: | 
+          poetry run flake8
 
-      - name: Run unittest 
+      - name: Run unittest and generate coverage report
         run: |
-          python -m unittest discover -s tests -t tests
+          poetry run coverage run -m unittest discover -s tests -t tests
+          poetry run coverage xml

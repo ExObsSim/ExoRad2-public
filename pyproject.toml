@@ -1,0 +1,57 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "exorad"
+version = "2.1.127"
+description = "The generic point source radiometric model"
+authors = ["Lorenzo V. Mugnai <lorenzo.mugnai@uniroma1.it>", "Enzo Pascale"]
+license = "BSD-3-Clause"
+readme = "README.md"
+homepage = "https://github.com/ExObsSim/ExoRad2-public"
+repository = "https://github.com/ExObsSim/ExoRad2-public"
+documentation = "https://exorad2-public.readthedocs.io/en/latest/" 
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Unix",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries",
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+astropy = "*"
+matplotlib = "*"
+mpmath = "*"
+numpy = "*"
+scipy = "*"
+h5py = "^3.2"
+xlrd = "1.2.0"
+xlwt = "*"
+requests = "*"
+photutils = "*"
+pandas = "*"
+
+[tool.poetry.dev-dependencies]
+sphinx = "*"
+sphinxcontrib-napoleon = "*"
+sphinxcontrib-jsmath = "*"
+nbsphinx = "*"
+pydata-sphinx-theme = "*"
+codecov = "*"
+flake8 = "*"
+pytest = "*"
+
+[tool.poetry.scripts]
+exorad = "exorad.exorad:main"
+exorad-plot = "exorad.utils.plotter:main"  

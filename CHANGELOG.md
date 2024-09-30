@@ -7,6 +7,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.127] - 2024-09-30
+### Changed
+- removed hdfd5 from requirements
+- moved to Poetry for dependency management
+- improved documentation for output table and optical path
+
+### Fixed
+- fixed custom angle for optical path
+- changed cumtrapz to cumulative_trapezoid in the exolib
+
+
 ## [2.1.122] - 2024-03-04
 ### Fixed
 - updated Python dependencies (pyYaml and Sphinx) 
@@ -259,6 +270,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Initial release
 
 [Unreleased]: https://github.com/ExObsSim/ExoRad2.0
+[2.1.127]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.122...v2.1.127
 [2.1.122]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.121...v2.1.122
 [2.1.121]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.120...v2.1.121
 [2.1.120]: https://github.com/ExObsSim/ExoRad2-public/compare/v2.1.118...v2.1.120
