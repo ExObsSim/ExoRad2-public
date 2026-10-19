@@ -10,6 +10,13 @@ Unreleased changes live as fragments in `changelog.d/` and are merged here by
 
 <!-- scriv-insert-here -->
 
+## [2.2.1] - Safe version check
+
+### Fixed
+
+- `import exorad` no longer fails when the online version check hits a problem: the downloaded changelog is decoded as UTF-8 (a non-ASCII character in it made every released version raise `UnicodeDecodeError` on import), the request has a 3 s timeout, and any error in the check is logged and ignored
+- the internet check no longer changes the process-wide default socket timeout
+
 ## [2.2.0] - Python 3.12+
 
 ### Added

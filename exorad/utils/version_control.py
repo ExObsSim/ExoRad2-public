@@ -17,32 +17,42 @@ class VersionControl(Logger):
         super().__init__()
 
         self.current_version = current_version
-        if self._check_internet():
-            self.content = self.get_content(package_url)
-            if self.content:
-                message, new_ver = self.get_message()
+        try:
+            self._run_check(package_url, force)
+        except VersionError:
+            raise
+        except Exception as ex:  # the version check must never break an import
+            self.debug(f"version check failed: {type(ex).__name__}: {ex}")
 
-                if message != "":
-                    self.warning("### NEW CODE VERSION ONLINE ###")
-                    self.warning(
-                        f"your version: {self.current_version}  - online version:{new_ver}"
-                    )
-                    self.warning(f"changelog: \n {message}")
-                    if force:
-                        raise VersionError(
-                            f"please update your code version. Your version: {self.current_version} - online version:{new_ver}"
-                        )
+    def _run_check(self, package_url, force):
+        if not self._check_internet():
+            return
+        self.content = self.get_content(package_url)
+        if not self.content:
+            return
+        message, new_ver = self.get_message()
+        if message == "":
+            return
+        self.warning("### NEW CODE VERSION ONLINE ###")
+        self.warning(
+            f"your version: {self.current_version}  - online version:{new_ver}"
+        )
+        self.warning(f"changelog: \n {message}")
+        if force:
+            raise VersionError(
+                f"please update your code version. Your version: {self.current_version} - online version:{new_ver}"
+            )
 
     def get_content(self, package_url):
         splitted_url = package_url.split("/")
         url = f"https://api.github.com/repos/{splitted_url[-2]}/{splitted_url[-1]}/contents/CHANGELOG.md"
         self.debug(f"package url: {url}")
-        req = requests.get(url)
+        req = requests.get(url, timeout=3)
         if req.status_code == requests.codes.ok:
             self.status_code = True
             req = req.json()
             content = base64.b64decode(req["content"])
-            content = content.decode("ascii")
+            content = content.decode("utf-8", errors="replace")
             content = content.splitlines()
         else:
             self.status_code = False
@@ -80,9 +90,8 @@ class VersionControl(Logger):
         solution from https://stackoverflow.com/a/33117579
         """
         try:
-            socket.setdefaulttimeout(timeout)
-            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
-            return True
+            with socket.create_connection((host, port), timeout=timeout):
+                return True
         except OSError as ex:
             self.debug(f"no internet connection: {ex}")
             return False
