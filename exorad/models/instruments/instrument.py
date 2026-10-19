@@ -11,9 +11,11 @@ from exorad.log.logger import Logger
 from exorad.models.optics.opticalPath import OpticalPath
 from exorad.models.signal import Signal
 from exorad.models.utils import get_wl_col_name
-from exorad.utils.diffuse_light_propagation import convolve_with_slit
-from exorad.utils.diffuse_light_propagation import integrate_light
-from exorad.utils.diffuse_light_propagation import prepare
+from exorad.utils.diffuse_light_propagation import (
+    convolve_with_slit,
+    integrate_light,
+    prepare,
+)
 from exorad.utils.passVal import PassVal
 
 
@@ -56,7 +58,7 @@ class Instrument(Logger):
         self.payload = payload
         self.table = QTable()
         self.built_instr = {}
-        self.debug("{} initialized".format(self.name))
+        self.debug(f"{self.name} initialized")
         self.loaded = False
         self.opticalPath = None
 
@@ -67,7 +69,7 @@ class Instrument(Logger):
         self.table = table
         self.built_instr = built_instr
         self.loaded = True
-        self.info("{} loaded".format(self.name))
+        self.info(f"{self.name} loaded")
 
     def write(self, output):
         """
@@ -94,9 +96,8 @@ class Instrument(Logger):
             # to build the instrument we need to be careful about the elements order, especially for optic emission!
             # you cannot load the description and run it again because it's not an ordered dictionary anymore
             raise ValueError("You cannot build a loaded instrument")
-        else:
-            self.builder()
-            self.build_optical_path()
+        self.builder()
+        self.build_optical_path()
 
     def build_optical_path(self):
         """
@@ -107,21 +108,15 @@ class Instrument(Logger):
         # what wl do I wanna use here?
         wl_grid = (
             np.logspace(
-                np.log10(
-                    self.description["detector"]["wl_min"]["value"].value
-                ),
-                np.log10(
-                    self.description["detector"]["cut_off"]["value"].value
-                ),
+                np.log10(self.description["detector"]["wl_min"]["value"].value),
+                np.log10(self.description["detector"]["cut_off"]["value"].value),
                 PassVal.working_R,
             )
             * u.um
         )
 
         common_optical_path = OpticalPath(wl=wl_grid, description=self.payload)
-        channel_optical_path = OpticalPath(
-            wl=wl_grid, description=self.description
-        )
+        channel_optical_path = OpticalPath(wl=wl_grid, description=self.description)
         channel_optical_path.prepend_optical_elements(
             common_optical_path.optical_element_dict
         )
@@ -133,22 +128,16 @@ class Instrument(Logger):
         self.table["TR"], transmission_data = self._get_transmission(
             wl_grid, transmission_table["total"]
         )
-        self._add_data_to_built(
-            "transmission_data", transmission_data.to_dict()
-        )
+        self._add_data_to_built("transmission_data", transmission_data.to_dict())
 
         self.opticalPath.chain()
         if self.opticalPath.slit_width is not None:
-            self._add_data_to_built(
-                "slit_width", self.opticalPath.slit_width.to(u.um)
-            )
+            self._add_data_to_built("slit_width", self.opticalPath.slit_width.to(u.um))
 
-        self.table = self.opticalPath.compute_signal(
-            self.table, self.built_instr
+        self.table = self.opticalPath.compute_signal(self.table, self.built_instr)
+        optical_path_dict["max_signal_per_pixel"] = (
+            self.opticalPath.max_signal_per_pixel
         )
-        optical_path_dict[
-            "max_signal_per_pixel"
-        ] = self.opticalPath.max_signal_per_pixel
         optical_path_dict["signal_table"] = self.opticalPath.signal_table
         optical_path_dict["radiance_table"] = self.opticalPath.radiance_table
         self._add_data_to_built("optical_path", optical_path_dict)
@@ -158,14 +147,12 @@ class Instrument(Logger):
         """
         build the instrument and populate the output table and dict
         """
-        pass
 
     @abstractmethod
     def propagate_target(self, target):
         """
         propagates the target light through the instrument
         """
-        pass
 
     def propagate_diffuse_foreground(self, target):
         """
@@ -178,23 +165,23 @@ class Instrument(Logger):
         (
             total_max_signal,
             total_signal,
-            wl_table,
+            _wl_table,
             A,
             qe,
             omega_pix,
             transmission,
         ) = prepare(self.table, self.built_instr, self.description)
         foregrounds = list(target.foreground.keys())
-        foregrounds = reversed(foregrounds)
-        for i, frg in enumerate(foregrounds):
-            self.debug("propagating {}".format(frg))
+        foregrounds.reverse()
+        for _i, frg in enumerate(foregrounds):
+            self.debug(f"propagating {frg}")
             radiance = copy.deepcopy(target.foreground[frg])
-            self.debug("{} radiance . {}".format(frg, radiance.data))
+            self.debug(f"{frg} radiance . {radiance.data}")
 
             if hasattr(frg, "transmission"):
                 frg.transmission.spectral_rebin(transmission.wl_grid)
                 transmission.data *= frg.transmission.data
-                self.debug("added {} transmission".format(frg))
+                self.debug(f"added {frg} transmission")
 
             transmission.spectral_rebin(radiance.wl_grid)
             radiance.data *= transmission.data
@@ -223,24 +210,24 @@ class Instrument(Logger):
                     * u.count
                 )
                 # try:
-                #     signal = np.trapz(radiance.data * self._window_function(radiance), x=radiance.wl_grid).to(u.ct / u.s)
+                #     signal = np.trapezoid(radiance.data * self._window_function(radiance), x=radiance.wl_grid).to(u.ct / u.s)
                 #     signal *= self.built_instr['window_spatial_width']
                 # except KeyError:
                 max_signal_per_pix, signal = integrate_light(
                     radiance, radiance.wl_grid, self.built_instr
                 )
             total_signal = copy.deepcopy(signal)
-            self.debug("sed : {}".format(total_signal))
+            self.debug(f"sed : {total_signal}")
             total_max_signal = copy.deepcopy(max_signal_per_pix)
 
-            out["{}_signal".format(frg)] = total_signal
-            out["{}_MaxSignal_inPixel".format(frg)] = total_max_signal
+            out[f"{frg}_signal"] = total_signal
+            out[f"{frg}_MaxSignal_inPixel"] = total_max_signal
         return out
 
     def _bin_signal(self, wl, signal, leftbin, rightbin):
         bsig = [
             np.mean(signal[np.logical_and(wl >= wlow, wl < whigh)])
-            for wlow, whigh in zip(leftbin, rightbin)
+            for wlow, whigh in zip(leftbin, rightbin, strict=False)
         ]
         return u.Quantity(bsig)
 
@@ -267,36 +254,26 @@ class Instrument(Logger):
             self.debug("force channel wl edge enabled")
             idx = np.logical_or(
                 self.table["Wavelength"]
-                < self.description["wl_min"]["value"].to(
-                    self.table["Wavelength"].unit
-                ),
+                < self.description["wl_min"]["value"].to(self.table["Wavelength"].unit),
                 self.table["Wavelength"]
-                > self.description["wl_max"]["value"].to(
-                    self.table["Wavelength"].unit
-                ),
+                > self.description["wl_max"]["value"].to(self.table["Wavelength"].unit),
             )
             transmission[idx] = 0.0
             idx = np.logical_or(
                 transmission_data.wl_grid
-                < self.description["wl_min"]["value"].to(
-                    self.table["Wavelength"].unit
-                ),
+                < self.description["wl_min"]["value"].to(self.table["Wavelength"].unit),
                 transmission_data.wl_grid
-                > self.description["wl_max"]["value"].to(
-                    self.table["Wavelength"].unit
-                ),
+                > self.description["wl_max"]["value"].to(self.table["Wavelength"].unit),
             )
             transmission_data.data[idx] = 0.0
 
-        self.debug("transmission in channel : {}".format(transmission))
+        self.debug(f"transmission in channel : {transmission}")
         return transmission, transmission_data
 
     def _get_qe(self):
         if "datafile" in self.description["detector"]["qe"]:
             self.debug("QE data file found")
-            wl_colname = get_wl_col_name(
-                self.description["detector"]["qe"]["data"]
-            )
+            wl_colname = get_wl_col_name(self.description["detector"]["qe"]["data"])
             qe_data = Signal(
                 self.description["detector"]["qe"]["data"][wl_colname],
                 self.description["detector"]["qe"]["data"][self.name],
@@ -305,14 +282,10 @@ class Instrument(Logger):
             wl_grid = (
                 np.logspace(
                     np.log10(
-                        self.description["detector"]["wl_min"]["value"]
-                        .to(u.um)
-                        .value
+                        self.description["detector"]["wl_min"]["value"].to(u.um).value
                     ),
                     np.log10(
-                        self.description["detector"]["cut_off"]["value"]
-                        .to(u.um)
-                        .value
+                        self.description["detector"]["cut_off"]["value"].to(u.um).value
                     ),
                     PassVal.working_R,
                 )
@@ -320,8 +293,7 @@ class Instrument(Logger):
             )
             qe_data = Signal(
                 wl_grid,
-                self.description["detector"]["qe"]["value"]
-                * np.ones(wl_grid.size),
+                self.description["detector"]["qe"]["value"] * np.ones(wl_grid.size),
             )
 
         qe_func = interp1d(
@@ -337,7 +309,7 @@ class Instrument(Logger):
             self.table["LeftBinEdge"],
             self.table["RightBinEdge"],
         )
-        self.debug("qe in channel : {}".format(qe))
+        self.debug(f"qe in channel : {qe}")
         return qe, qe_data
 
     def _get_efficiency(self, wl, target):
@@ -377,12 +349,12 @@ class Instrument(Logger):
     def _window_function(self, signal):
         window_function = []
         for wld, wlu in zip(
-            self.table["LeftBinEdge"], self.table["RightBinEdge"]
+            self.table["LeftBinEdge"], self.table["RightBinEdge"], strict=False
         ):
-            mask = np.logical_and(
-                signal.wl_grid >= wld, signal.wl_grid < wlu
-            ).astype(float)
+            mask = np.logical_and(signal.wl_grid >= wld, signal.wl_grid < wlu).astype(
+                float
+            )
             window_function.append(mask)
         window_function = np.array(window_function)
-        self.debug("window function: {}".format(window_function))
+        self.debug(f"window function: {window_function}")
         return window_function

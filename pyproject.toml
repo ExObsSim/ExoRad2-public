@@ -1,57 +1,285 @@
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
 
-[tool.poetry]
+[project]
 name = "exorad"
-version = "2.1.127"
+dynamic = ["version"]
 description = "The generic point source radiometric model"
-authors = ["Lorenzo V. Mugnai <lorenzo.mugnai@uniroma1.it>", "Enzo Pascale"]
-license = "BSD-3-Clause"
+authors = [
+    {name = "L. V. Mugnai", email = "lorenzo.mugnai@uniroma1.it"},
+    {name = "E. Pascale"}
+]
+license = {text = "BSD-3-Clause"}
 readme = "README.md"
-homepage = "https://github.com/ExObsSim/ExoRad2-public"
-repository = "https://github.com/ExObsSim/ExoRad2-public"
-documentation = "https://exorad2-public.readthedocs.io/en/latest/" 
-
+requires-python = ">=3.12,<3.15"
+keywords = ["exoplanets", "radiometry", "astronomy", "simulation"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
-    "Operating System :: POSIX",
-    "Operating System :: POSIX :: Linux",
-    "Operating System :: Unix",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Astronomy",
     "Topic :: Software Development :: Libraries",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-astropy = "*"
-matplotlib = "*"
-mpmath = "*"
-numpy = "*"
-scipy = "*"
-h5py = "^3.2"
-xlrd = "1.2.0"
-xlwt = "*"
-requests = "*"
-photutils = "*"
-pandas = "*"
+dependencies = [
+    "astropy>=7.0.0",
+    "matplotlib>=3.9.0",
+    "mpmath",
+    "numpy>=2.0.0",
+    "scipy>=1.9.3",
+    "h5py>=3.11",
+    "openpyxl>=3.0.0",
+    "requests",
+    "photutils>=2.2.0",
+    "pandas",
+]
 
-[tool.poetry.dev-dependencies]
-sphinx = "*"
-sphinxcontrib-napoleon = "*"
-sphinxcontrib-jsmath = "*"
-nbsphinx = "*"
-sphinx_rtd_theme = "*"
-codecov = "*"
-flake8 = "*"
-pytest = "*"
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.12.12",
+    "pre-commit>=4.0.1",
+    "nox>=2024.4.15",
+    "scriv>=1.5.0",
+    "build>=1.2.1",
+    "twine>=5.1.1",
+    "mypy>=1.11.2",
+    "types-requests",
+    "types-PyYAML",
+]
 
-[tool.poetry.scripts]
+docs = [
+    "sphinx>=8.1.3",
+    "pydata-sphinx-theme>=0.16",
+    "sphinx-design>=0.6",
+    "sphinx-autoapi>=3.3",
+    "sphinx-autobuild>=2024.10",
+    "sphinxcontrib-jsmath",
+    "myst-parser>=4.0",
+    "matplotlib>=3.9.0",
+]
+
+[project.scripts]
 exorad = "exorad.exorad:main"
-exorad-plot = "exorad.utils.plotter:main"  
+exorad-plot = "exorad.utils.plotter:main"
+
+[project.urls]
+Homepage = "https://github.com/ExObsSim/ExoRad2-public"
+Repository = "https://github.com/ExObsSim/ExoRad2-public"
+Documentation = "https://exorad2-public.readthedocs.io/en/latest/"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["exorad*"]
+
+[tool.setuptools.package-data]
+exorad = ["py.typed"]
+
+# ============================================================================
+# Version management - setuptools-scm (git-tag driven, PEP 440)
+# ============================================================================
+# The version is derived from git:
+#   - on a release tag  vX.Y.Z          -> X.Y.Z
+#   - N commits after a tag on develop  -> X.Y.(Z+1).devN
+# No version string is stored in the repo; ``exorad/_version.py`` is generated
+# at build time and git-ignored. See docs/source/contributing/releasing.rst.
+[tool.setuptools_scm]
+version_file = "exorad/_version.py"
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"   # PyPI rejects +local segments
+fallback_version = "0.0.0"          # used when building without git metadata
+git_describe_command = [
+    "git", "describe", "--dirty", "--tags", "--long",
+    "--match", "v[0-9]*.[0-9]*.[0-9]*",
+    "--exclude", "*.*.*.*",
+    "--exclude", "*-*",
+]
+
+# ============================================================================
+# Changelog - scriv (hand-written fragments in changelog.d/, collected at release)
+# ============================================================================
+[tool.scriv]
+format = "md"
+output_file = "CHANGELOG.md"
+fragment_directory = "changelog.d"
+insert_marker = "scriv-insert-here"
+categories = ["Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"]
+entry_title_template = "[{{ version }}] - {{ date.strftime('%Y-%m-%d') }}"
+md_header_level = "2"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["exorad"]
+exclude = [
+    ".git",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "build",
+    "dist",
+    "site-packages",
+    "docs/_build",
+    "*.ipynb",
+    "exorad/_version.py",   # generated by setuptools-scm
+]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # import order (isort)
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "C4",   # comprehensions
+    "PIE",  # flake8-pie
+    "SIM",  # simplify
+    "RET",  # return
+    "C90",  # mccabe complexity
+    "N",    # pep8-naming
+    "T20",  # print detector
+    "RUF",  # ruff extras
+    "TID",  # tidy-imports
+    "PT",   # pytest style
+    "PERF", # performance anti-patterns
+    "FURB", # refurb
+    "LOG",  # logging best practices
+    "ICN",  # import conventions
+    "TCH",  # type checking imports
+]
+ignore = [
+    "E501",   # line too long, handled by formatter
+    "E203",   # compat slicing
+    "C901",   # too complex
+    # Naming: ExoRad's public API and config keys use camelCase / PascalCase
+    # matching the payload XML and the science conventions. Renaming them would
+    # be a breaking change, so the pep8-naming rules that would flag existing
+    # names are disabled rather than "fixed".
+    "N801",   # class name should use CapWords
+    "N802",   # function name should be lowercase
+    "N803",   # argument name should be lowercase
+    "N806",   # variable in function should be lowercase
+    "N815",   # mixed-case variable in class scope
+    "N816",   # mixed-case variable in global scope
+    "N999",   # invalid module name (e.g. loadOptions.py)
+    "ARG",    # unused arguments
+    # ``x in table.keys()`` is the correct idiom for astropy Table / QTable
+    # (iterating the table yields Rows, not column names), so SIM118 would
+    # silently change behaviour across this astropy-heavy codebase.
+    "SIM118", # in-dict-keys
+    "ICN001", # the plotter accesses matplotlib.colors / .ticker via the
+              # top-level name; aliasing it to mpl would touch dozens of call
+              # sites and the docstrings
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["exorad"]
+combine-as-imports = true
+force-wrap-aliases = true
+split-on-trailing-comma = true
+order-by-type = true
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.lint.per-file-ignores]
+"exorad/**/__init__.py" = ["F401"]
+"exorad/__init__.py" = ["F401", "E402"]  # metadata is defined before the imports
+"examples/**" = ["T20"]
+"scripts/**" = ["T20", "S603", "S607"]
+"noxfile.py" = ["T20"]
+"tests/**" = [
+    "T20",    # diagnostic prints are fine in tests
+    "PT011",  # pytest.raises without match= is acceptable here
+    "PT012",  # multi-statement pytest.raises blocks
+    "B008",   # path helpers as argument defaults
+    "RUF012", # class-level fixtures on TestCase subclasses
+    "N813",   # aliasing a camelCase module (loadOptions, downloadSed, ...) as
+              # lowercase is the natural convention for these test helpers
+]
+"docs/**" = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = 60
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+filterwarnings = [
+    # plotting helpers call plt.show(); the test suite forces the Agg backend
+    "ignore:FigureCanvasAgg is non-interactive:UserWarning",
+    "ignore::astropy.units.UnitsWarning",
+]
+
+[tool.coverage.run]
+source = ["exorad"]
+branch = true
+omit = [
+    "exorad/_version.py",
+    "exorad/utils/mpi.py",  # exercised only under an MPI launcher
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+fail_under = 92
+
+# ============================================================================
+# mypy - lenient by default, strict on the modules that are fully annotated
+# ============================================================================
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+namespace_packages = true
+explicit_package_bases = true
+exclude = ['^exorad/_version\.py$', '^docs/', '^build/']
+# Global level: only checks annotated signatures. Modules listed below opt in
+# to full body checking as they get typed.
+check_untyped_defs = false
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = [
+    "exorad.__version__",
+    "exorad.log.logger",
+    "exorad.models.signal",
+    "exorad.models.target",
+    "exorad.tasks.task",
+    "exorad.utils.util",
+]
+check_untyped_defs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.uv]
+index-url = "https://pypi.org/simple"
+resolution = "highest"

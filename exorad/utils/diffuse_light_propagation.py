@@ -14,7 +14,7 @@ logger = logging.getLogger("exorad.diffuse light")
 def prepare(ch_table, ch_built_instr, description):
     logger.info("computing signal")
     wl_table = ch_table["Wavelength"]
-    logger.debug("wl table : {}".format(wl_table))
+    logger.debug(f"wl table : {wl_table}")
 
     fnum_x = description["Fnum_x"]["value"].value
     if "Fnum_y" in description.keys():
@@ -22,7 +22,7 @@ def prepare(ch_table, ch_built_instr, description):
     else:
         fnum_y = None
     omega_pix = OmegaPix(fnum_x, fnum_y)
-    logger.debug("omega pix : {}".format(omega_pix))
+    logger.debug(f"omega pix : {omega_pix}")
     A = (
         description["detector"]["delta_pix"]["value"]
         * description["detector"]["delta_pix"]["value"]
@@ -32,7 +32,7 @@ def prepare(ch_table, ch_built_instr, description):
         * u.Unit(ch_built_instr["qe_data"]["wl_grid"]["unit"]),
         ch_built_instr["qe_data"]["data"]["value"],
     )
-    logger.debug("wl qe : {}".format(qe.wl_grid))
+    logger.debug(f"wl qe : {qe.wl_grid}")
 
     transmission = Signal(
         ch_built_instr["transmission_data"]["wl_grid"]["value"]
@@ -60,7 +60,7 @@ def convolve_with_slit(
     wl_pix = ch_built_instr["wl_pix_center"]
     dwl_pic = ch_built_instr["pixel_bandwidth"]
     radiance.spectral_rebin(wl_pix)
-    logger.debug("radiance : {}".format(radiance.data))
+    logger.debug(f"radiance : {radiance.data}")
 
     qe_func = interp1d(
         qe.wl_grid,
@@ -76,38 +76,33 @@ def convolve_with_slit(
         * (wl_pix / const.c / const.h).to(1.0 / u.W / u.s)
         * u.count
     )
-    logger.debug("AOmega : {}".format(aomega))
+    logger.debug(f"AOmega : {aomega}")
     radiance.data *= aomega
-    logger.debug("sed : {}".format(radiance.data))
+    logger.debug(f"sed : {radiance.data}")
     logger.debug("convolving with slit")
     slit_kernel = np.ones(
-        int(
-            slit_width
-            / ch_description["detector"]["delta_pix"]["value"].to(u.um)
-        )
+        int(slit_width / ch_description["detector"]["delta_pix"]["value"].to(u.um))
     )
-    signal_tmp = (
-        np.convolve(radiance.data * dwl_pic, slit_kernel, "same")
-    ).to(u.count / u.s)
-    logger.debug("signal_tmp: {}".format(signal_tmp))
+    signal_tmp = (np.convolve(radiance.data * dwl_pic, slit_kernel, "same")).to(
+        u.count / u.s
+    )
+    logger.debug(f"signal_tmp: {signal_tmp}")
     idx = [
         np.logical_and(wl_pix > wlow, wl_pix <= whigh)
         for wlow, whigh in zip(
-            ch_table["LeftBinEdge"], ch_table["RightBinEdge"]
+            ch_table["LeftBinEdge"], ch_table["RightBinEdge"], strict=False
         )
     ]
     signal = [signal_tmp[idx[k]].sum() for k in range(len(idx))]
     signal = [
         sig * w
         for sig, w in zip(
-            signal, np.array(ch_built_instr["window_spatial_width"])
+            signal, np.array(ch_built_instr["window_spatial_width"]), strict=False
         )
     ]
-    logger.debug("signal: {}".format(signal))
+    logger.debug(f"signal: {signal}")
     try:
-        max_signal_per_pix = [
-            signal_tmp[idx[k]].max() for k in range(len(idx))
-        ]
+        max_signal_per_pix = [signal_tmp[idx[k]].max() for k in range(len(idx))]
     except ValueError:
         logger.error("no max value in the array")
         raise
@@ -115,12 +110,10 @@ def convolve_with_slit(
 
 
 def integrate_light(radiance, wl_qe, ch_built_instr):
-    logger.debug("sed : {}".format(radiance.data))
-    signal_tmp = np.trapz(radiance.data, x=wl_qe).to(u.count / u.s)
-    # signal_tmp = (np.trapz(radiance.data[~np.isnan(radiance.data)], x=wl_qe[~np.isnan(radiance.data)])).to(
+    logger.debug(f"sed : {radiance.data}")
+    signal_tmp = np.trapezoid(radiance.data, x=wl_qe).to(u.count / u.s)
+    # signal_tmp = (np.trapezoid(radiance.data[~np.isnan(radiance.data)], x=wl_qe[~np.isnan(radiance.data)])).to(
     #     u.count / u.s)
     signal = signal_tmp * np.asarray(ch_built_instr["window_size_px"])
-    max_signal_per_pix = signal_tmp * np.ones_like(
-        ch_built_instr["window_size_px"]
-    )
+    max_signal_per_pix = signal_tmp * np.ones_like(ch_built_instr["window_size_px"])
     return max_signal_per_pix, signal

@@ -13,4 +13,5 @@ authors:
 
 title: "ExoRad 2.0: The generic point source radiometric model"
 doi: 10.21105/joss.05348
-date-released: 2023-09-26
+version: 2.2.0
+date-released: 2026-10-19

@@ -1,14 +1,16 @@
 import os
 from copy import deepcopy
 
-from ..models.targetlist import CSVTargetList
-from ..models.targetlist import CSVTargetListMRS
-from ..models.targetlist import QTableTargetList
-from ..models.targetlist import XLXSTargetList
-from .task import Task
 from exorad.__version__ import __version__
-from exorad.log import disableLogging
-from exorad.log import enableLogging
+from exorad.log import disableLogging, enableLogging
+from exorad.models.targetlist import (
+    CSVTargetList,
+    CSVTargetListMRS,
+    QTableTargetList,
+    XLXSTargetList,
+)
+
+from .task import Task
 
 
 class LoadTargetList(Task):
@@ -29,7 +31,7 @@ class LoadTargetList(Task):
     Examples
     --------
     >>> loadTargetList = LoadTargetList()
-    >>> targets = loadTargetList(target_list='target_list/address')
+    >>> targets = loadTargetList(target_list="target_list/address")
     """
 
     def __init__(self):
@@ -37,7 +39,7 @@ class LoadTargetList(Task):
 
     def execute(self):
         target_list_file = self.get_task_param("target_list")
-        self.info("target list file : {}".format(target_list_file))
+        self.info(f"target list file : {target_list_file}")
 
         target_list_format = {
             ".xlsx": XLXSTargetList,
@@ -46,17 +48,16 @@ class LoadTargetList(Task):
 
         try:
             ext = os.path.splitext(target_list_file)[1]
-            self.info("target list file : {}".format(target_list_file))
-            self.debug("target list format : {}".format(ext))
+            self.info(f"target list file : {target_list_file}")
+            self.debug(f"target list format : {ext}")
             target_klass = target_list_format[ext]
             tt = target_klass(target_list_file)
-            if not tt.target:
-                if ext == ".csv":
-                    tt = CSVTargetListMRS(target_list_file)
+            if not tt.target and ext == ".csv":
+                tt = CSVTargetListMRS(target_list_file)
 
         except KeyError:
-            self.error("unsupported target list format: {}".format(ext))
-            raise OSError("unsupported target list format: {}".format(ext))
+            self.error(f"unsupported target list format: {ext}")
+            raise OSError(f"unsupported target list format: {ext}") from None
         except TypeError:
             self.debug("target list is not a file. It is assumed to be QTable")
             tt = QTableTargetList(target_list_file)
@@ -132,14 +133,10 @@ class UpdateTargetTable(Task):
         target_table = target.table
         table = self.get_task_param("table")
 
-        repeated_keys = [
-            key for key in target_table.keys() if key in table.keys()
-        ]
+        repeated_keys = [key for key in target_table.keys() if key in table.keys()]
         if repeated_keys:
             self.debug(
-                "the following keys are already in both table and will be replaced : {}".format(
-                    repeated_keys
-                )
+                f"the following keys are already in both table and will be replaced : {repeated_keys}"
             )
             target.table.remove_columns(repeated_keys)
         target.table = hstack([target_table, table])
@@ -166,8 +163,8 @@ class EstimateMaxSignal(Task):
         self.addTaskParam("target", "target to prepare")
 
     def execute(self):
-        import numpy as np
         import astropy.units as u
+        import numpy as np
         from astropy.table import QTable
 
         updateTargetTable = UpdateTargetTable()
@@ -227,12 +224,12 @@ class ObserveTarget(Task):
         wl_min, wl_max = self.get_task_param("wl_range")
 
         from . import (
-            PrepareTarget,
-            PropagateTargetLight,
             EstimateForegrounds,
-            PropagateForegroundLight,
             EstimateNoise,
             LoadSource,
+            PrepareTarget,
+            PropagateForegroundLight,
+            PropagateTargetLight,
         )
 
         prepareTarget = PrepareTarget()
@@ -252,7 +249,7 @@ class ObserveTarget(Task):
             )
         target = propagateForegroundLight(channels=channels, target=target)
 
-        target, sed = loadSource(
+        target, _sed = loadSource(
             target=target,
             source=payload["common"]["sourceSpectrum"],
             wl_range=(wl_min, wl_max),
@@ -274,12 +271,13 @@ def pipeline_to_dict(
     debug,
 ):
     """This will be executed using concurrent futures"""
-    from . import ObserveTarget
     from exorad.log.logger import root_logger
+
+    from . import ObserveTarget
 
     observeTarget = ObserveTarget()
 
-    root_logger.info("observing {}".format(target.name))
+    root_logger.info(f"observing {target.name}")
     if not debug:
         disableLogging()
     try:
@@ -293,24 +291,21 @@ def pipeline_to_dict(
         outputDict = deepcopy(target)
 
         if plot:
-            import matplotlib.pyplot as plt
             import matplotlib
+            import matplotlib.pyplot as plt
+
             from exorad.utils.plotter import Plotter
 
             matplotlib.use("Agg")
             plotter = Plotter(input_table=target.table)
             plotter.plot_table()
-            plotter.save_fig(
-                os.path.join(out_dir, "{}.png".format(target.name))
-            )
+            plotter.save_fig(os.path.join(out_dir, f"{target.name}.png"))
             plt.close()
         return target.name, outputDict
-    except:
+    except Exception:
         enableLogging()
         root_logger.warning(
-            "target {} skipped. Please check for previous error messages".format(
-                target.name
-            )
+            f"target {target.name} skipped. Please check for previous error messages"
         )
         return None, None
 
@@ -352,9 +347,7 @@ class ObserveTargetlist(Task):
             "wl_range", "wavelength range to investigate. (wl_min, wl_max)"
         )
         self.addTaskParam("plot", "allow to save plots")
-        self.addTaskParam(
-            "out_dir", "indicate the directory where to save plots"
-        )
+        self.addTaskParam("out_dir", "indicate the directory where to save plots")
         self.addTaskParam("n_thread", "number of threads", 1)
         self.addTaskParam("debug", "debug mode", False)
 
@@ -367,29 +360,28 @@ class ObserveTargetlist(Task):
         plot = self.get_task_param("plot")
         out_dir = self.get_task_param("out_dir")
         debug = self.get_task_param("debug")
-        outputDict = {}
 
         if n_thread > 1:
             from concurrent.futures import (
                 ProcessPoolExecutor,
-                ThreadPoolExecutor,
             )
             from itertools import repeat
 
             # Does the distribution and chunking for you
             # Switch to ThreadPoolExecutor if you want to use python threading
             with ProcessPoolExecutor(max_workers=n_thread) as executor:
-                for t_name, output in executor.map(
-                    pipeline_to_dict,
-                    targets,
-                    repeat(payload),
-                    repeat(channels),
-                    repeat(wl_range),
-                    repeat(plot),
-                    repeat(out_dir),
-                    repeat(debug),
-                ):
-                    outputDict[t_name] = output
+                outputDict = dict(
+                    executor.map(
+                        pipeline_to_dict,
+                        targets,
+                        repeat(payload),
+                        repeat(channels),
+                        repeat(wl_range),
+                        repeat(plot),
+                        repeat(out_dir),
+                        repeat(debug),
+                    )
+                )
         else:
             outputDict = {}
             for target in targets:

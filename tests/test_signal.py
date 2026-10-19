@@ -3,29 +3,27 @@ import unittest
 
 import astropy.units as u
 import numpy as np
+import pytest
 
 from exorad.log import setLogLevel
 from exorad.models.noise import Noise
-from exorad.models.signal import CountsPerSeconds
-from exorad.models.signal import Sed
-from exorad.models.signal import Signal
+from exorad.models.signal import CountsPerSeconds, Sed, Signal
 
 setLogLevel(logging.DEBUG)
 
 
 class SignalTest(unittest.TestCase):
-
     def test_quantity_check(self):
         try:
             wl = np.linspace(0.1, 1, 10) * u.um
             data = np.random.random_sample((10, 10))
             time_grid = np.linspace(1, 5, 10) * u.hr
             Signal(wl_grid=wl, data=data, time_grid=time_grid)
-            CountsPerSeconds(wl_grid=wl, data=data * u.Unit('ct/s'),
-                             time_grid=time_grid)
-            Noise(wl_grid=wl, data=data * u.hr ** 0.5, time_grid=time_grid)
-            Sed(wl_grid=wl, data=data * u.W / u.m ** 2 / u.um,
-                time_grid=time_grid)
+            CountsPerSeconds(
+                wl_grid=wl, data=data * u.Unit("ct/s"), time_grid=time_grid
+            )
+            Noise(wl_grid=wl, data=data * u.hr**0.5, time_grid=time_grid)
+            Sed(wl_grid=wl, data=data * u.W / u.m**2 / u.um, time_grid=time_grid)
 
             wl = np.linspace(0.1, 1, 10) * u.m
             time_grid = np.linspace(1, 5, 10) * u.s
@@ -41,7 +39,7 @@ class SignalTest(unittest.TestCase):
         except u.UnitConversionError:
             self.fail("Signal raised Exception unexpectedly!")
 
-        with self.assertRaises(u.UnitConversionError):
+        with pytest.raises(u.UnitConversionError):
             wl = np.linspace(0.1, 1, 10) * u.s
             data = np.random.random_sample(10)
             Signal(wl_grid=wl, data=data)
@@ -51,20 +49,20 @@ class SignalTest(unittest.TestCase):
         data = np.random.random_sample((10, 10))
         time_grid = np.linspace(1, 5, 10)
         sig = Signal(wl_grid=wl, data=data, time_grid=time_grid)
-        with self.assertRaises(NotImplementedError):
-            sig.time_dependent
+        with pytest.raises(NotImplementedError):
+            _ = sig.time_dependent
         fl = CountsPerSeconds(wl_grid=wl, data=data, time_grid=time_grid)
-        with self.assertRaises(NotImplementedError):
-            fl.time_dependent
+        with pytest.raises(NotImplementedError):
+            _ = fl.time_dependent
 
         data = np.random.random_sample(10)
         sig = Signal(wl_grid=wl, data=data)
-        self.assertFalse(sig.time_dependent)
+        assert not sig.time_dependent
         fl = CountsPerSeconds(wl_grid=wl, data=data)
-        self.assertFalse(fl.time_dependent)
+        assert not fl.time_dependent
 
     def test_dimension_check(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             wl = np.linspace(0.1, 1, 10) * u.um
             data = np.random.random_sample((10, 2))
             Signal(wl_grid=wl, data=data)

@@ -6,14 +6,25 @@
     <common>
         <working_R> 6000 </working_R>
         <sourceSpectrum>custom
-            <comment>Source spectrum can be 'planck', 'phoenix' or 'custom'.
+            <comment>Source spectrum can be 'planck', 'phoenix', 'custom' or 'sed'.
                 If it's 'planck', no more information are needed here.
                 If it's 'phoenix' the phoenix spectra directory must be indicated in "StellarModels".
-                if it's 'custom' the custom Sed file must be indicated in "CustomSed".
+                If it's 'custom' the custom Sed file must be indicated in "CustomSed".
+                If it's 'sed' the spectrum is downloaded from an online model grid
+                (PHOENIX-ACES or the SVO service); pick the grid with "SedModel"
+                (default 'bt-settl-cifist'). On any download failure a Planck
+                spectrum is used instead.
             </comment>
+            <SedModel>bt-settl-cifist
+                <comment>Online grid for sourceSpectrum='sed'. 'phoenix-aces' for
+                    PHOENIX-ACES-AGSS-COND-2011 from Goettingen, or any SVO model
+                    name ('bt-settl', 'bt-settl-cifist', 'bt-nextgen-agss2009', ...).
+                    List them with exorad.tasks.downloadSed.get_svo_models().
+                </comment>
+            </SedModel>
             <StellarModels>/usr/local/project_data/sed
-                <comment>These should be BT-Settl Phoenix files of the type
-                    BT-Settl.spec.fits.gz
+                <comment>Local BT-Settl Phoenix files of the type
+                    BT-Settl.spec.fits.gz, for sourceSpectrum='phoenix'.
                     These can be downloaded from
                     https://phoenix.ens-lyon.fr/Grids/BT-Settl/CIFIST2011_2015/FITS/.
 

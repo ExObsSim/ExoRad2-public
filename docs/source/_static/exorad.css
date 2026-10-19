@@ -1,0 +1,18 @@
+/* ExoRad 2 documentation - small tweaks on top of pydata-sphinx-theme */
+
+.bd-main .bd-content .bd-article-container {
+  max-width: 66rem;
+}
+
+/* keep the landing-page cards a comfortable size */
+.sd-card {
+  border: 1px solid var(--pst-color-border);
+}
+.sd-card .sd-card-body {
+  padding: 1rem;
+}
+
+/* code blocks a touch calmer */
+div.highlight {
+  border-radius: 0.35rem;
+}

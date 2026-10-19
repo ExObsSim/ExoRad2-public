@@ -3,70 +3,82 @@
 .. role:: xml(code)
     :language: xml
 
-==========================
+========================
 Understanding the inputs
-==========================
+========================
 
-ExoRad supports a bunch of file formats and more can be added if necessary.
-Here are reported the main input files.
+ExoRad reads two inputs: a **payload description file** and a **target list**.
+Both file formats are described below.
 
 Payload
-====================
-To build the instrument ExoRad needs a `payload description file`. This is an `xml` file divided in separated section.
-An example for this file is reported in `exorad/example/payload_example.xml`.
+=======
 
-The whole content must be encapsulated between
+The payload is an XML file split into sections. A complete, commented example
+is in ``examples/payload_example.xml``.
 
-    .. code-block:: xml
+Everything sits inside a single root element:
 
-            <root>
-            </root>
+.. code-block:: xml
 
-The first two entries are the configuration path. This is the path where all the payload description data are located.
-Using the :xml:`_ConfigPath_` entry will help you to keep shorter the data file name in the following part of the description file,
-as :xml:`_ConfigPath_\path_to_file`.
+   <root>
+       ...
+   </root>
 
-    .. code-block:: xml
+The first entry is the configuration path — the directory that holds the data
+files referenced later in the description. Writing ``__ConfigPath__`` in a path
+value keeps the file names short: ExoRad replaces it with this directory at
+load time.
 
-            <ConfigPath> payload/description/directory/path/
-                <comment>Main directory for the configuration files</comment>
-            </ConfigPath>
+.. code-block:: xml
 
-Then the file must contain a `common` section to include information useful for the simulation but not strictly related to one of the channels.
-This section must be encapsulated between
+   <ConfigPath> payload/description/directory/
+       <comment> Main directory for the configuration files </comment>
+   </ConfigPath>
 
-    .. code-block:: xml
+Next comes a ``common`` section, for settings that are useful to the simulation
+but not tied to a single channel — the source spectrum, the foregrounds, any
+custom noise, and the wavelength range to simulate:
 
-            <common>
-            </common>
+.. code-block:: xml
 
-Inside this section you have to put information to build things such as the source, the foregrounds, or you can add custom noise that you want to add to the simulation.
-Each of this option will be described in a dedicated section.
-Here must also place the wavelength range we want to simulate, as example:
+   <common>
+       <wl_min unit="micron"> 0.45 </wl_min>
+       <wl_max unit="micron"> 2.2 </wl_max>
+   </common>
 
-    .. code-block:: xml
-
-        <common>
-            <wl_min unit="micron">0.45</wl_min>
-            <wl_max unit="micron">2.2</wl_max>
-        </common>
-
-After the common section you will have an `optics` section, that will contain all the information about the common optics.
-Then you can start listing the `channel` description.
+Each of these options has its own page in this guide. After ``common`` you
+have an ``optics`` section for the shared optics, and then one ``channel``
+block per photometer or spectrometer.
 
 .. _targetlist:
-Target
-====================
-The target list file is a simple `csv` file containing a list of target stars described by
 
+Target list
+===========
 
-==================  ====================================
-column name         description
-==================  ====================================
-`star name`         name of the target to observe
-`star M [M_sun]`    target mass in solar masses
-`star Teff [K]`     target temperature in Kelvin
-`star R [R_sun]`    target radius in solar radii
-`star D [pc]`       target distance in parsec
-`star magk`         target magnitude in K band
-==================  ====================================
+The target list is a CSV file, one row per star:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 75
+
+   * - Column
+     - Description
+   * - ``star name``
+     - name of the target
+   * - ``star M [M_sun]``
+     - stellar mass, in solar masses
+   * - ``star Teff [K]``
+     - effective temperature, in Kelvin
+   * - ``star R [R_sun]``
+     - stellar radius, in solar radii
+   * - ``star D [pc]``
+     - distance, in parsec
+   * - ``star magk``
+     - K-band magnitude
+
+The column name carries the unit in square brackets. A planet section can be
+added with ``planet <field> [<unit>]`` columns; ExoRad also reads the
+Ariel MRS format and an ``.xlsx`` layout (see
+:class:`~exorad.models.targetlist.CSVTargetListMRS` and
+:class:`~exorad.models.targetlist.XLXSTargetList`). A parsed
+:class:`astropy.table.QTable` can be passed directly instead of a file.

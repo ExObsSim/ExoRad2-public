@@ -1,174 +1,132 @@
 # Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-# -- Path setup --------------------------------------------------------------
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-# -- Project information -----------------------------------------------------
-from datetime import date
-
-project = "ExoRad2"
-copyright = "2020-{:d}, Lorenzo V. Mugnai, Enzo Pascale".format(
-    date.today().year
-)
-author = "Lorenzo V. Mugnai, Enzo Pascale"
 
 import os
 import sys
+from datetime import date
 
-sys.path.insert(0, os.path.abspath("../../"))
-from exorad.__version__ import __version__
+sys.path.insert(0, os.path.abspath("../.."))
 
-release = __version__
-version = str(__version__)
+from exorad.__version__ import __version__  # noqa: E402
+
+# -- Project information ------------------------------------------------------
+
+project = "ExoRad 2"
+author = "L. V. Mugnai, E. Pascale"
+copyright = f"2020-{date.today().year}, {author}"
+release = version = str(__version__)
 
 # -- General configuration ---------------------------------------------------
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.doctest",
     "sphinx.ext.todo",
-    "sphinx.ext.coverage",
     "sphinx.ext.mathjax",
+    "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosummary",
-    "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
+    "matplotlib.sphinxext.plot_directive",
+    "autoapi.extension",
+    "sphinx_design",
+    "myst_parser",
 ]
-autodoc_default_options = {
-    "members": True,
-    # 'member-order': 'bysource',
-    "undoc-members": False,
-    #    'exclude-members': '__weakref__'
-}
-napoleon_use_ivar = True
-autodoc_typehints = (
-    "description"  # show type hints in doc body instead of signature
-)
-autoclass_content = (
-    "both"  # get docstring from class level and init simultaneously
-)
 
-# Add any paths that contain templates here, relative to this directory.
+myst_enable_extensions = ["colon_fence", "deflist"]
+
 templates_path = ["_templates"]
-# The master toctree document.
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 master_doc = "index"
+language = "en"
 
-language = None
+# matplotlib config so a user matplotlibrc cannot break the build
+import matplotlib  # noqa: E402
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build"]
+matplotlib.use("agg")
 
-# -----------------------------------------------------------------------------
-# Intersphinx configuration
-# -----------------------------------------------------------------------------
+# -- Napoleon / autodoc ------------------------------------------------------
+
+napoleon_numpy_docstring = True
+napoleon_google_docstring = False
+napoleon_use_ivar = True
+napoleon_use_param = True
+napoleon_use_rtype = True
+autodoc_typehints = "description"
+autoclass_content = "both"
+
+# -- sphinx-autoapi ---------------------------------------------------------
+
+autoapi_dirs = ["../../exorad"]
+autoapi_root = "api"
+autoapi_type = "python"
+autoapi_options = [
+    "members",
+    "undoc-members",
+    "show-inheritance",
+]
+autoapi_member_order = "groupwise"
+autoapi_ignore = ["*/_version.py", "*/tests/*"]
+autoapi_keep_files = False
+autoapi_add_toctree_entry = False
+
+suppress_warnings = ["myst.header", "autoapi", "docutils", "toc.not_included"]
+
+# -- Intersphinx (resilient: drop unreachable inventories) ------------------
+
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/dev", None),
-    "numpy": ("https://numpy.org/devdocs", None),
-    "matplotlib": ("https://matplotlib.org", None),
-    "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
-    "astropy": ("http://docs.astropy.org/en/latest/", None),
-    "h5py": ("https://docs.h5py.org/en/latest/", None),
-    "photutils": ("https://photutils.readthedocs.io/en/stable/", None),
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy", None),
+    "astropy": ("https://docs.astropy.org/en/stable", None),
+    "h5py": ("https://docs.h5py.org/en/stable", None),
 }
+intersphinx_timeout = 10
 
-# -- Options for HTML output -------------------------------------------------
+try:
+    from urllib.request import urlopen
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-html_theme = "sphinx_rtd_theme"
+    _reachable = {}
+    for _key, _value in list(intersphinx_mapping.items()):
+        _inv = _value[0].rstrip("/") + "/objects.inv"
+        try:
+            with urlopen(_inv, timeout=5) as _resp:
+                if _resp.status == 200:
+                    _reachable[_key] = _value
+        except Exception as _exc:  # noqa: BLE001
+            print(f"intersphinx: skipping {_key} ({_inv}): {_exc}")
+    intersphinx_mapping = _reachable
+except Exception:  # noqa: BLE001
+    pass
 
+# -- HTML output ----------------------------------------------------------
+
+html_theme = "pydata_sphinx_theme"
+html_title = f"{project} documentation"
 html_logo = "_static/logo.png"
 html_favicon = "_static/favicon.ico"
+html_static_path = ["_static"]
+html_css_files = ["exorad.css"]
+html_show_sourcelink = False
+html_last_updated_fmt = "%b %d, %Y"
 
 html_theme_options = {
-    "collapse_navigation": False,
-    "sticky_navigation": True,
-    "navigation_depth": 4,
-    "includehidden": True,
-    "titles_only": False,
+    "github_url": "https://github.com/ExObsSim/ExoRad2-public",
+    "collapse_navigation": True,
+    "navbar_start": ["navbar-logo"],
+    "navbar_center": ["navbar-nav"],
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
 }
 
-html_show_sourcelink = False
+# -- plot_directive --------------------------------------------------------
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+plot_html_show_formats = False
+plot_html_show_source_link = False
 
-htmlhelp_basename = "exoraddoc"
+# -- LaTeX / man / texinfo ------------------------------------------------
 
-add_module_names = False
-
-nbsphinx_execute = "never"
-
-# mathjax_path = "scipy-mathjax/MathJax.js?config=scipy-mathjax"
-mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (
-        master_doc,
-        "exorad.tex",
-        "ExoRad Documentation",
-        "Lorenzo V. Mugnai",
-        "manual",
-    ),
+    (master_doc, "exorad.tex", "ExoRad 2 Documentation", author, "manual"),
 ]
-
-# -- Options for manual page output ------------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "ExoRad 2", "ExoRad 2 Documentation", [author], 1)]
-
-# -- Options for Texinfo output ----------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (
-        master_doc,
-        "exorad",
-        "exorad Documentation",
-        author,
-        "exorad",
-        "One line description of project.",
-        "Miscellaneous",
-    ),
-]
-
-# -- Options for Epub output -------------------------------------------------
-
-# Bibliographic Dublin Core info.
-epub_title = project
-
-# The unique identifier of the text. This can be a ISBN number
-# or the project homepage.
-#
-# epub_identifier = ''
-
-# A unique identification for the text.
-#
-# epub_uid = ''
-
-# A list of files that should not be packed into the epub file.
-epub_exclude_files = ["search.html"]
+man_pages = [(master_doc, "exorad", "ExoRad 2 Documentation", [author], 1)]

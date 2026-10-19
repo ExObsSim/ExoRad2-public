@@ -1,5 +1,4 @@
 from functools import lru_cache
-from functools import wraps
 
 
 @lru_cache(maxsize=2)
@@ -39,9 +38,7 @@ def get_rank():
         return 0
 
     comm = MPI.COMM_WORLD
-    rank = comm.Get_rank()
-
-    return rank
+    return comm.Get_rank()
 
 
 def scatter(data, root=0):
@@ -50,17 +47,14 @@ def scatter(data, root=0):
     comm = MPI.COMM_WORLD
     if len(data) < nprocs():
         raise ValueError("not enough processes! work in progress")
-    else:
-        data = comm.scatter(data, root=root)
-    return data
+    return comm.scatter(data, root=root)
 
 
 def gather(data, root=0):
     from mpi4py import MPI
 
     comm = MPI.COMM_WORLD
-    data = comm.gather(data, root=root)
-    return data
+    return comm.gather(data, root=root)
 
 
 # def only_master_rank(f):

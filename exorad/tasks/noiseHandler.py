@@ -25,24 +25,23 @@ class EstimateNoiseInChannel(Task):
         self.addTaskParam("payload", "payload common section")
 
     def execute(self):
-        from exorad.models import noise
-        import numpy as np
         import astropy.units as u
+        import numpy as np
         from astropy.table import QTable
+
+        from exorad.models import noise
 
         channel = self.get_task_param("channel")
         target = self.get_task_param("target")
         payload = self.get_task_param("payload")
 
         name = channel["value"]
-        self.info("estimating noise in {}".format(name))
+        self.info(f"estimating noise in {name}")
 
         out = QTable()
         out = noise.frame_time(target, channel, out)
         read_gain, shot_gain = noise.multiaccum(channel, out["frameTime"][0])
-        self.debug(
-            "read gain : {} , shot gain : {}".format(read_gain, shot_gain)
-        )
+        self.debug(f"read gain : {read_gain} , shot gain : {shot_gain}")
 
         out = noise.photon_noise(target.table, channel, shot_gain, out)
 
@@ -70,11 +69,8 @@ class EstimateNoiseInChannel(Task):
         )
         self.debug("read noise : {}".format(out["read_noise"]))
 
-        if "NoiseX" in channel:
-            NoiseX = channel["NoiseX"]["value"]
-        else:
-            NoiseX = 0.0
-        self.debug("NoiseX: {}".format(NoiseX))
+        NoiseX = channel["NoiseX"]["value"] if "NoiseX" in channel else 0.0
+        self.debug(f"NoiseX: {NoiseX}")
 
         photon_noise_variance = noise.photon_noise_variance(target.table, out)
         signal = target.table["star_signal_inAperture"][
@@ -93,9 +89,7 @@ class EstimateNoiseInChannel(Task):
         wl = target.table["Wavelength"][target.table["chName"] == name]
         if payload:
             try:
-                out = noise.add_custom_noise(
-                    payload["common"]["customNoise"], wl, out
-                )
+                out = noise.add_custom_noise(payload["common"]["customNoise"], wl, out)
             except KeyError:
                 self.debug("no custom noise found in common section")
         try:
@@ -129,9 +123,8 @@ class EstimateNoise(Task):
         self.addTaskParam("channels", "channel list to analyse")
 
     def execute(self):
+        from exorad.tasks import EstimateMaxSignal, UpdateTargetTable
         from exorad.utils.util import vstack_tables
-        from exorad.tasks import UpdateTargetTable
-        from exorad.tasks import EstimateMaxSignal
 
         estimateMaxSignal = EstimateMaxSignal()
         estimateNoiseInChannel = EstimateNoiseInChannel()
@@ -145,7 +138,7 @@ class EstimateNoise(Task):
 
         table_list = []
         for ch in self.get_task_param("channels"):
-            self.debug("computing noise in {}".format(ch))
+            self.debug(f"computing noise in {ch}")
             table_list.append(
                 estimateNoiseInChannel(
                     target=target,

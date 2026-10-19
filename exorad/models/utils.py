@@ -6,6 +6,6 @@ def get_wl_col_name(data, description=None):
         for wl_key in ["Wavelength", "wavelength"]:
             if wl_key in data.keys():
                 wl_colname = wl_key
-    if wl_key is None:
+    if wl_colname is None:
         raise KeyError("Wavelength column not found in transmission data file")
     return wl_colname

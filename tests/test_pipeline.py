@@ -9,7 +9,7 @@ import exorad.tasks as tasks
 from exorad.log import setLogLevel
 
 path = pathlib.Path(__file__).parent.absolute()
-data_dir = os.path.join(path.parent.absolute(), 'examples')
+data_dir = os.path.join(path.parent.absolute(), "examples")
 
 setLogLevel(logging.DEBUG)
 
@@ -22,11 +22,12 @@ class PipelineTest(unittest.TestCase):
     loadTargetList = tasks.LoadTargetList()
 
     payload = loadOptions(filename=payload_file())
-    wl_min, wl_max = payload['common']['wl_min']['value'], \
-                     payload['common']['wl_max']['value']
+    wl_min, wl_max = (
+        payload["common"]["wl_min"]["value"],
+        payload["common"]["wl_max"]["value"],
+    )
     channels = buildChannels(payload=payload, write=False, output=None)
-    targets = loadTargetList(
-        target_list=os.path.join(data_dir, 'test_target.csv'))
+    targets = loadTargetList(target_list=os.path.join(data_dir, "test_target.csv"))
 
     def test_full_pipe(self):
         prepareTarget = tasks.PrepareTarget()
@@ -39,20 +40,20 @@ class PipelineTest(unittest.TestCase):
         for target in self.targets.target:
             target = prepareTarget(target=target, channels=self.channels)
 
-            if 'foreground' in self.payload['common']:
+            if "foreground" in self.payload["common"]:
                 target = estimateForegrounds(
-                    foregrounds=self.payload['common']['foreground'],
+                    foregrounds=self.payload["common"]["foreground"],
                     target=target,
-                    wl_range=(self.wl_min, self.wl_max))
-                target = propagateForegroundLight(channels=self.channels,
-                                                  target=target)
+                    wl_range=(self.wl_min, self.wl_max),
+                )
+                target = propagateForegroundLight(channels=self.channels, target=target)
 
-            target, sed = loadSource(target=target,
-                                     source=self.payload['common'][
-                                         'sourceSpectrum'],
-                                     wl_range=(self.wl_min, self.wl_max))
-            target = propagateTargetLight(channels=self.channels,
-                                          target=target)
+            target, _sed = loadSource(
+                target=target,
+                source=self.payload["common"]["sourceSpectrum"],
+                wl_range=(self.wl_min, self.wl_max),
+            )
+            target = propagateTargetLight(channels=self.channels, target=target)
 
             target = estimateNoise(target=target, channels=self.channels)
 
@@ -60,15 +61,21 @@ class PipelineTest(unittest.TestCase):
         observeTarget = tasks.ObserveTarget()
 
         for target in self.targets.target:
-            target = observeTarget(target=target, payload=self.payload,
-                                   channels=self.channels,
-                                   wl_range=(self.wl_min, self.wl_max))
+            target = observeTarget(
+                target=target,
+                payload=self.payload,
+                channels=self.channels,
+                wl_range=(self.wl_min, self.wl_max),
+            )
 
     def test_obsTargetList(self):
         observeTargetList = tasks.ObserveTargetlist()
 
-        targets = observeTargetList(targets=self.targets.target,
-                                    payload=self.payload,
-                                    channels=self.channels,
-                                    wl_range=(self.wl_min, self.wl_max),
-                                    plot=False, out_dir=None)
+        observeTargetList(
+            targets=self.targets.target,
+            payload=self.payload,
+            channels=self.channels,
+            wl_range=(self.wl_min, self.wl_max),
+            plot=False,
+            out_dir=None,
+        )

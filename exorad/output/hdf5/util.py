@@ -1,13 +1,10 @@
 import astropy.units as u
 import h5py
 import numpy as np
-from astropy.table import meta
-from astropy.table import QTable
-from astropy.table import serialize
-from astropy.table import Table
+from astropy.table import QTable, Table, meta, serialize
 
-from exorad.models.signal import Sed
-from exorad.models.signal import Signal
+from exorad.models.signal import Sed, Signal
+
 signal = {"W / (m2 um)": Sed}
 
 
@@ -26,7 +23,7 @@ def recursively_read_dict_contents(input_dict):
         Dictionary we want to use
 
     """
-    new_keys = [k for k in input_dict.keys()]
+    new_keys = list(input_dict.keys())
     # if all(elem in new_keys for elem in ['wl_grid', 'data', 'time_grid']):
     #     wl = input['wl_grid']['value'] * u.Unit(input['wl_grid']['unit'])
     #     data = input['data']['value'] * u.Unit(input['data']['unit'])
@@ -36,9 +33,7 @@ def recursively_read_dict_contents(input_dict):
         input_dict["value"] = input_dict["value"] * u.Unit(input_dict["unit"])
 
     if any(".__table_column_meta__" in elem for elem in new_keys):
-        table_keys = [
-            elem for elem in new_keys if ".__table_column_meta__" in elem
-        ]
+        table_keys = [elem for elem in new_keys if ".__table_column_meta__" in elem]
         table_keys = (elem.split(".")[0] for elem in table_keys)
         for k in table_keys:
             table = load_table(input_dict, k)
@@ -47,6 +42,7 @@ def recursively_read_dict_contents(input_dict):
         if isinstance(input_dict[key], dict):
             input_dict[key] = recursively_read_dict_contents(input_dict[key])
     return input_dict
+
 
 def hdf5_group_to_dict(h5_group):
     """
@@ -76,8 +72,7 @@ def hdf5_group_to_dict(h5_group):
 def load_table(input_table, k):
     table = Table(np.array(input_table[k]))
     header = meta.get_header_from_yaml(
-        h.decode("utf-8")
-        for h in input_table["{}.__table_column_meta__".format(k)]
+        h.decode("utf-8") for h in input_table[f"{k}.__table_column_meta__"]
     )
     header_cols = {x["name"]: x for x in header["datatype"]}
     for col in table.columns.values():
@@ -110,8 +105,8 @@ def recursively_save_dict_contents_to_output(output, dic):
     for key, item in dic.items():
         try:
             store_thing(output, key, item)
-        except TypeError:
-            raise ValueError("Cannot write %s type" % type(item))
+        except TypeError as err:
+            raise ValueError(f"Cannot write {type(item)} type") from err
     return
 
 
@@ -158,7 +153,7 @@ def store_thing(output, key, item):
 
             except TypeError:
                 for idx, val in enumerate(item):
-                    new_key = "{}{}".format(key, idx)
+                    new_key = f"{key}{idx}"
                     store_thing(output, new_key, val)
 
     elif isinstance(item, dict):

@@ -8,12 +8,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io.misc.hdf5 import read_table_hdf5
 
-from exorad.log import Logger
-from exorad.log import setLogLevel
+from exorad.log import Logger, setLogLevel
 
 mpl_logger = logging.getLogger("matplotlib")
 mpl_logger.setLevel(logging.WARNING)
-cmap = matplotlib.cm.get_cmap("Set1")
+cmap = matplotlib.colormaps["Set1"]
 
 
 class Plotter(Logger):
@@ -86,9 +85,7 @@ class Plotter(Logger):
         ax.set_xscale(scale)
         if channel_edges:
             ax.set_xticks(tick_list)
-            ax.get_xaxis().set_major_formatter(
-                matplotlib.ticker.ScalarFormatter()
-            )
+            ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
 
         return ax
 
@@ -108,11 +105,10 @@ class Plotter(Logger):
         """
         if self.channels:
             from matplotlib.lines import Line2D
+
             from exorad.models.signal import Signal
 
-            norm = matplotlib.colors.Normalize(
-                vmin=0.0, vmax=len(self.channels)
-            )
+            norm = matplotlib.colors.Normalize(vmin=0.0, vmax=len(self.channels))
 
             fig, ax = plt.subplots(1, 1, figsize=(10, 8))
             fig.suptitle("Payload photon conversion efficiency")
@@ -122,9 +118,7 @@ class Plotter(Logger):
                 for ch in self.channels:
                     pce = None
                     for i, key in enumerate(keys):
-                        data = self.channels[ch].built_instr[
-                            "{}_data".format(key)
-                        ]
+                        data = self.channels[ch].built_instr[f"{key}_data"]
                         sig = Signal(
                             wl_grid=data["wl_grid"]["value"]
                             * u.Unit(data["wl_grid"]["unit"]),
@@ -180,7 +174,7 @@ class Plotter(Logger):
                 pce = self.inputTable["TR"] * self.inputTable["QE"]
                 self.inputTable["pce"] = pce
                 keys = ["TR", "QE", "pce"]
-                self.debug("efficiency keys : {}".format(keys))
+                self.debug(f"efficiency keys : {keys}")
                 for e in keys:
                     ax.plot(
                         self.inputTable["Wavelength"],
@@ -200,10 +194,8 @@ class Plotter(Logger):
             self.fig_efficiency = fig
             return fig
 
-        else:
-            self.error(
-                "channels parameter is required for this method to work"
-            )
+        self.error("channels parameter is required for this method to work")
+        return None
 
     def plot_noise(self, ax, ylim=None, scale="log", channel_edges=True):
         """
@@ -227,8 +219,8 @@ class Plotter(Logger):
         noise_keys = [
             x for x in self.inputTable.keys() if "noise" in x or "custom" in x
         ]
-        self.debug("noise keys : {}".format(noise_keys))
-        for k, n in enumerate(noise_keys):
+        self.debug(f"noise keys : {noise_keys}")
+        for _k, n in enumerate(noise_keys):
             if n == "total_noise":
                 ax.plot(
                     self.inputTable["Wavelength"],
@@ -245,12 +237,9 @@ class Plotter(Logger):
                 if self.inputTable[n].unit == u.hr**0.5:
                     noise = self.inputTable[n]
                 else:
-                    self.debug(
-                        "{} rescaled by starSignal_inAperture".format(n)
-                    )
+                    self.debug(f"{n} rescaled by starSignal_inAperture")
                     noise = (
-                        self.inputTable[n]
-                        / self.inputTable["star_signal_inAperture"]
+                        self.inputTable[n] / self.inputTable["star_signal_inAperture"]
                     )
                 # ax.scatter(self.inputTable['Wavelength'], noise, label=n, zorder=10, s=5, color=palette[k])
                 ax.plot(
@@ -291,8 +280,7 @@ class Plotter(Logger):
         ax.set_ylabel(r"relative noise [$\sqrt{{hr}}$]")
         ax.set_yscale("log")
         # ax.set_xscale('log')
-        ax = self.plot_bands(ax, scale, channel_edges)
-        return ax
+        return self.plot_bands(ax, scale, channel_edges)
 
     def plot_signal(self, ax, ylim=None, scale="log", channel_edges=True):
         """
@@ -314,13 +302,9 @@ class Plotter(Logger):
         The Class input_table input parameter is required for this method to work.
         """
 
-        keys = [
-            x
-            for x in self.inputTable.keys()
-            if "signal" in x and "noise" not in x
-        ]
-        self.debug("signal keys : {}".format(keys))
-        for k, s in enumerate(keys):
+        keys = [x for x in self.inputTable.keys() if "signal" in x and "noise" not in x]
+        self.debug(f"signal keys : {keys}")
+        for _k, s in enumerate(keys):
             # ax.scatter(self.inputTable['Wavelength'], self.inputTable[s], label=s, zorder=10, s=5, color=palette[k])
             ax.plot(
                 self.inputTable["Wavelength"],
@@ -361,9 +345,7 @@ class Plotter(Logger):
         ax.set_ylabel("$ct/s$")
         ax.set_yscale("log")
         # ax.set_xscale('log')
-        ax = self.plot_bands(ax, scale, channel_edges)
-
-        return ax
+        return self.plot_bands(ax, scale, channel_edges)
 
     def plot_table(
         self, sig_ylim=None, noise_ylim=None, scale="log", channel_edges=True
@@ -406,11 +388,11 @@ class Plotter(Logger):
         """
         try:
             if efficiency:
-                self.fig_efficiency.savefig("{}".format(name))
+                self.fig_efficiency.savefig(f"{name}")
             else:
-                self.fig.savefig("{}".format(name))
+                self.fig.savefig(f"{name}")
 
-            self.info("plot saved in {}".format(name))
+            self.info(f"plot saved in {name}")
         except AttributeError:
             self.error(
                 "the indicated figure is not available. Check if you have produced it."
@@ -419,12 +401,11 @@ class Plotter(Logger):
 
 def main():
     import argparse
+
     from exorad.__version__ import __version__
     from exorad.utils.util import parse_range
 
-    parser = argparse.ArgumentParser(
-        description="ExoRad {}".format(__version__)
-    )
+    parser = argparse.ArgumentParser(description=f"ExoRad {__version__}")
     parser.add_argument(
         "-i",
         "--input",
@@ -476,7 +457,7 @@ def main():
     from exorad.utils.ascii_art import ascii_plot
 
     logger.info(ascii_plot)
-    logger.info("code version {}".format(__version__))
+    logger.info(f"code version {__version__}")
 
     if args.debug:
         setLogLevel(logging.DEBUG)
@@ -485,7 +466,7 @@ def main():
         os.makedirs(args.out)
         logger.info("output directory created")
 
-    logger.info("reading {}".format(args.input))
+    logger.info(f"reading {args.input}")
     file = h5py.File(args.input)
 
     if args.target_number != "all" and args.target_name != "None":
@@ -493,9 +474,7 @@ def main():
         raise ValueError
 
     targets_dir = file["targets"]
-    targets_to_run_id = parse_range(
-        args.target_number, len(targets_dir.keys())
-    )
+    targets_to_run_id = parse_range(args.target_number, len(targets_dir.keys()))
     targets_to_run = [list(targets_dir.keys())[n] for n in targets_to_run_id]
 
     if args.target_name != "None":
@@ -510,5 +489,5 @@ def main():
 
         plotter = Plotter(input_table=table)
         plotter.plot_table()
-        plotter.save_fig(os.path.join(args.out, "{}.png".format(target)))
+        plotter.save_fig(os.path.join(args.out, f"{target}.png"))
         plt.close()

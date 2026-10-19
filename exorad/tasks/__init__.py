@@ -1,21 +1,22 @@
-from .foregroundHandler import EstimateForeground
-from .foregroundHandler import EstimateForegrounds
-from .foregroundHandler import EstimateZodi
-from .instrumentHandler import BuildChannels
-from .instrumentHandler import BuildInstrument
-from .instrumentHandler import GetChannelList
-from .instrumentHandler import LoadPayload
-from .instrumentHandler import MergeChannelsOutput
-from .instrumentHandler import PreparePayload
+from .downloadSed import DownloadSed
+from .foregroundHandler import EstimateForeground, EstimateForegrounds, EstimateZodi
+from .instrumentHandler import (
+    BuildChannels,
+    BuildInstrument,
+    GetChannelList,
+    LoadPayload,
+    MergeChannelsOutput,
+    PreparePayload,
+)
 from .loadOptions import LoadOptions
 from .loadSource import LoadSource
-from .noiseHandler import EstimateNoise
-from .noiseHandler import EstimateNoiseInChannel
-from .propagateLight import PropagateForegroundLight
-from .propagateLight import PropagateTargetLight
-from .targetHandler import EstimateMaxSignal
-from .targetHandler import LoadTargetList
-from .targetHandler import ObserveTarget
-from .targetHandler import ObserveTargetlist
-from .targetHandler import PrepareTarget
-from .targetHandler import UpdateTargetTable
+from .noiseHandler import EstimateNoise, EstimateNoiseInChannel
+from .propagateLight import PropagateForegroundLight, PropagateTargetLight
+from .targetHandler import (
+    EstimateMaxSignal,
+    LoadTargetList,
+    ObserveTarget,
+    ObserveTargetlist,
+    PrepareTarget,
+    UpdateTargetTable,
+)

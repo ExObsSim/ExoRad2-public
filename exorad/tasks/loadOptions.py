@@ -1,3 +1,4 @@
+import contextlib
 import os
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
@@ -6,10 +7,18 @@ from astropy import units as u
 from astropy.io import ascii
 from astropy.io.ascii.core import InconsistentTableError
 
-from .task import Task
 from exorad.utils.passVal import PassVal
 
-compactString = lambda string: string.replace("\n", "").strip()
+from .task import Task
+
+
+def compactString(string):
+    # ``Element.text`` is None for an empty element (``<foo></foo>``, ``<foo/>``,
+    # or one whose only children are other elements). Return None so the caller's
+    # ``value is not None`` guard treats it as "no value".
+    if string is None:
+        return None
+    return string.replace("\n", "").strip()
 
 
 class LoadOptions(Task):
@@ -36,7 +45,7 @@ class LoadOptions(Task):
     Examples
     --------
     >>> loadOptions = LoadOptions()
-    >>> options = loadOptions(filename = 'path/to/file.xml')
+    >>> options = loadOptions(filename="path/to/file.xml")
     """
 
     def __init__(self):
@@ -61,11 +70,11 @@ class LoadOptions(Task):
 
     def __get_root__(self):
         try:
-            self.debug("input option file found %s" % self._filename)
+            self.debug(f"input option file found {self._filename}")
             return ET.parse(self._filename).getroot()
         except OSError:
             self.error("No input option file found")
-            raise OSError
+            raise
 
     def __parser__(self, root):
         root_dict = {}
@@ -82,31 +91,26 @@ class LoadOptions(Task):
                     value = int(value)
                 except ValueError:
                     if value.replace(".", ""):
-                        try:
+                        with contextlib.suppress(ValueError):
                             value = float(value)
-                        except ValueError:
-                            pass
                 if "unit" in retval:
                     unitName = retval["unit"]
                     if unitName == "dimensionless":
                         unitName = ""
                     value = value * u.Unit(unitName)
                 if value == "True":
-                    value = bool(True)
+                    value = True
                 if value == "False":
-                    value = bool(False)
-                if isinstance(value, str):
-                    if "__ConfigPath__" in value:
-                        value = value.replace(
-                            "__ConfigPath__", self.configPath
-                        )
+                    value = False
+                if isinstance(value, str) and "__ConfigPath__" in value:
+                    value = value.replace("__ConfigPath__", self.configPath)
                 if ch.tag == "ConfigPath":
                     self.configPath = value
                 if self._config_path:
                     self.configPath = self._config_path
                 if ch.tag == "working_R":
                     PassVal.working_R = value
-                    print(PassVal.working_R)
+
                 # if isinstance(value, str):
                 #     retval = value
                 # else:
@@ -119,9 +123,7 @@ class LoadOptions(Task):
                     attr[value] = retval
                 else:
                     if not isinstance(attr, str):
-                        dtmp = OrderedDict(
-                            [(attr["value"], attr), (value, retval)]
-                        )
+                        dtmp = OrderedDict([(attr["value"], attr), (value, retval)])
                         root_dict[ch.tag] = dtmp
             else:
                 # othewise, set new attr
@@ -131,15 +133,13 @@ class LoadOptions(Task):
             try:
                 datatype_attr = root_dict["datatype"]
                 datatype = datatype_attr["value"]
-            except:
+            except (KeyError, TypeError):
                 datatype = "ecsv"
 
             attrValue = root_dict["datafile"]
             datafile = attrValue
             if "__ConfigPath__" in datafile["value"]:
-                datafile = datafile["value"].replace(
-                    "__ConfigPath__", self.configPath
-                )
+                datafile = datafile["value"].replace("__ConfigPath__", self.configPath)
             else:
                 datafile = datafile["value"]
             try:
@@ -147,41 +147,32 @@ class LoadOptions(Task):
                 root_dict["data"] = data
             except OSError:
                 self.error("Cannot read input file")
-                raise OSError
+                raise
 
         if "datadict" in root_dict:
             attrValue = root_dict["datadict"]
             datafile = attrValue
-            datafile = datafile["value"].replace(
-                "__ConfigPath__", self.configPath
-            )
+            datafile = datafile["value"].replace("__ConfigPath__", self.configPath)
             try:
                 data = self.__read_datadict__(datafile)
                 root_dict["data"] = data
             except OSError:
                 self.error("Cannot read input file")
-                raise OSError
+                raise
         if "config_dict" in root_dict:
             attrValue = root_dict["config_dict"]
             datafile = attrValue
-            datafile = datafile["value"].replace(
-                "__ConfigPath__", self.configPath
-            )
+            datafile = datafile["value"].replace("__ConfigPath__", self.configPath)
             try:
                 data = self.__read_datadict__(datafile)
                 root_dict = data
                 root_dict["config_dict"] = datafile
-                self.debug(
-                    "Configuration dictionary found in {}".format(datafile)
-                )
+                self.debug(f"Configuration dictionary found in {datafile}")
             except OSError:
                 self.error("Cannot read input file")
-                raise OSError
+                raise
 
         return root_dict
-
-    def getopt(self):
-        return self.__obj__
 
     def __read_datatable__(self, datafile, datatype):
         if datatype == "ecsv":
@@ -200,24 +191,22 @@ class LoadOptions(Task):
                 )
             return data
 
-        else:
-            self.error("inconsistent table")
-            raise OSError
+        self.error("inconsistent table")
+        raise OSError
 
     def __read_datadict__(self, datadict):
         ext = os.path.splitext(datadict)[1]
         if ext in [".h5", ".hdf5"]:
+            import h5py
+
             from exorad.output.hdf5 import load
 
-            data = load(datadict)
-            return data
-        elif ext == ".pickle":
+            with h5py.File(os.path.expanduser(datadict), mode="r") as f:
+                return load(f)
+        if ext == ".pickle":
             import pickle
 
-            f = open(datadict, "rb")
-            data = pickle.load(f)
-            f.close()
-            return data
-        else:
-            self.error("inconsistent table")
-            raise OSError
+            with open(datadict, "rb") as f:
+                return pickle.load(f)
+        self.error("inconsistent table")
+        raise OSError

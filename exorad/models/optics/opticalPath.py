@@ -4,15 +4,16 @@ from collections import OrderedDict
 import astropy.constants as const
 import astropy.units as u
 import numpy as np
-from astropy.table import hstack
-from astropy.table import QTable
+from astropy.table import QTable, hstack
 
 from exorad.log import Logger
 from exorad.models.optics.opticalElement import OpticalElement
 from exorad.models.signal import Radiance
-from exorad.utils.diffuse_light_propagation import convolve_with_slit
-from exorad.utils.diffuse_light_propagation import integrate_light
-from exorad.utils.diffuse_light_propagation import prepare
+from exorad.utils.diffuse_light_propagation import (
+    convolve_with_slit,
+    integrate_light,
+    prepare,
+)
 from exorad.utils.exolib import planck
 from exorad.utils.passVal import PassVal
 
@@ -44,13 +45,12 @@ def surface_radiance(wl, T, emissivity):
     T_ = T.to(u.K) if hasattr(T, "unit") else T
     try:
         # Calculate spectral radiance using Planck's law
-        I = planck(wl_, T_).to(u.W / (u.m**2 * u.micron * u.sr))
+        radiance = planck(wl_, T_).to(u.W / (u.m**2 * u.micron * u.sr))
     except AttributeError:
         # If Planck function fails, use zeros
-        I = np.zeros_like(wl_) * u.W / u.m**2 / u.sr / u.micron
+        radiance = np.zeros_like(wl_) * u.W / u.m**2 / u.sr / u.micron
     # Create Radiance object with emissivity applied
-    radiance = Radiance(wl_grid=wl, data=emissivity * I)
-    return radiance
+    return Radiance(wl_grid=wl, data=emissivity * radiance)
 
 
 class InstRadiance(Radiance):
@@ -98,24 +98,15 @@ class OpticalPath(Logger):
     slit_width : Quantity or None
         Slit width measurement, if a slit is in the optical path. Default is None.
 
-    Methods
-    -------
-    prepend_optical_elements(optical_element_dict)
-        Updates the class `optical_element_dict` by putting the input dictionary
-        at the top of the existing one.
-    chain()
-        Concatenates the optical elements, producing the `radiance_table` and `radiance_dict`.
-    build_transmission_table()
-        Produces the transmission table for the optical path.
-    compute_signal(ch_table, ch_built_instr)
-        Produces the telescope self-emission signal for the channel and returns
-        the updated channel table.
-
     Examples
     --------
     >>> telescope = OpticalPath(wl=wl_grid, description=options)
-    >>> spec = OpticalPath(wl=wl_grid, description=options['channel']['Spec'])
-    >>> spec.prepend_optical_elements(telescope.optical_element_dict)
+    >>> spec = OpticalPath(
+    ...     wl=wl_grid, description=options["channel"]["Spec"]
+    ... )
+    >>> spec.prepend_optical_elements(
+    ...     telescope.optical_element_dict
+    ... )
     >>> spec.build_transmission_table()
     >>> spec.chain()
     """
@@ -299,7 +290,7 @@ class OpticalPath(Logger):
         (
             total_max_signal,
             total_signal,
-            wl_table,
+            _wl_table,
             A,
             qe,
             omega_pix,
@@ -343,10 +334,10 @@ class OpticalPath(Logger):
                     else:
                         self.debug("This is the optical path")
                         rad.data *= omega_pix
-                # Integrate the radiance over wavelength
-                max_signal_per_pix, signal = integrate_light(
-                    rad, rad.wl_grid, ch_built_instr
-                )
+                    # Integrate the radiance over wavelength
+                    max_signal_per_pix, signal = integrate_light(
+                        rad, rad.wl_grid, ch_built_instr
+                    )
             # Store the signals
             self.signal_table[f"{item} signal"] = signal
             self.max_signal_per_pixel[item] = max_signal_per_pix

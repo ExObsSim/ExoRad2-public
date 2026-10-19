@@ -38,7 +38,7 @@ class SkyForeground(Logger):
         skyFilter = SkyFilter(
             self.wl, em_func(self.wl) * skyFilter_data["Radiance"].unit
         )
-        self.debug("radiance : {}".format(skyFilter.data))
+        self.debug(f"radiance : {skyFilter.data}")
 
         tr_func = interp1d(
             skyFilter_data["Wavelength"].to(self.wl.unit),
@@ -48,6 +48,6 @@ class SkyForeground(Logger):
             bounds_error=False,
         )
         skyFilter.transmission = tr_func(self.wl)
-        self.debug("transmission : {}".format(skyFilter.transmission))
+        self.debug(f"transmission : {skyFilter.transmission}")
 
         return skyFilter

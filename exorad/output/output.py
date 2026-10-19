@@ -46,6 +46,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+
 from abc import ABC
 
 import numpy as np
@@ -54,16 +55,78 @@ from exorad.log import Logger
 
 
 class Output(Logger):
+    """
+    Abstract base class for output file handlers.
+
+    This class provides the basic interface for writing ExoRad results to
+    various output formats. It implements context manager protocol for
+    safe file handling.
+
+    Attributes
+    ----------
+    None
+
+    Notes
+    -----
+    This is an abstract base class. Concrete implementations are provided
+    in submodules (e.g., HDF5Output in exorad.output.hdf5).
+
+    The class can be used as a context manager:
+
+    >>> with Output() as out:
+    ...     out.write_data(data)
+
+    Examples
+    --------
+    >>> from exorad.output.hdf5 import HDF5Output
+    >>> with HDF5Output("results.h5") as out:
+    ...     out.store_dictionary({"param": value})
+    """
+
     def __init__(self):
         super().__init__()
 
     def open(self):
+        """
+        Open the output file for writing.
+
+        Raises
+        ------
+        NotImplementedError
+            This method must be implemented by subclasses.
+        """
         raise NotImplementedError
 
     def create_group(self, group_name):
+        """
+        Create a named group within the output structure.
+
+        Parameters
+        ----------
+        group_name : str
+            Name of the group to create.
+
+        Returns
+        -------
+        OutputGroup
+            The created group object.
+
+        Raises
+        ------
+        NotImplementedError
+            This method must be implemented by subclasses.
+        """
         raise NotImplementedError
 
     def close(self):
+        """
+        Close the output file and flush all buffers.
+
+        Raises
+        ------
+        NotImplementedError
+            This method must be implemented by subclasses.
+        """
         raise NotImplementedError
 
     def __enter__(self):
@@ -74,6 +137,39 @@ class Output(Logger):
         self.close()
 
     def store_dictionary(self, dictionary, group_name=None):
+        """
+        Store a dictionary structure to the output file.
+
+        This method recursively traverses the dictionary and stores all
+        values appropriately (scalars, arrays, strings, nested dicts).
+
+        Parameters
+        ----------
+        dictionary : dict
+            Dictionary to store in the output file.
+        group_name : str, optional
+            If provided, create a group with this name and store the
+            dictionary inside it. Default is None.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        The method handles various data types:
+        - Scalars (int, float, bool)
+        - Arrays (numpy arrays, astropy Quantities)
+        - Strings
+        - Nested dictionaries (creates hierarchical groups)
+
+        Examples
+        --------
+        >>> output.store_dictionary({"param1": 1.5, "param2": "value"})
+        >>> output.store_dictionary(
+        ...     config_dict, group_name="configuration"
+        ... )
+        """
         from exorad.output.hdf5.util import (
             recursively_save_dict_contents_to_output,
         )

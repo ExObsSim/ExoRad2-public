@@ -1,119 +1,111 @@
 .. _prepare_target:
 
-
 .. role:: xml(code)
     :language: xml
 
-==========================
-Prepare Target
-==========================
+==================
+Prepare the target
+==================
 
-
-The target list
-================
-
-The target to observe are listed in the :ref:`target list <targetlist>` already mentioned.
-This file is read by :class:`~exorad.tasks.targetHandler.LoadTargetList`. At the moment only the `xlsx` and `csv` format are supported,
-but more loader can be written for dedicated format if needed.  An example of target list is contained in the `examples` folder as `test_target.csv`.
-
-Once the target list has been loaded, each target must be prepared before the observation, and this is done by :class:`~exorad.tasks.targetHandler.PrepareTarget`.
-
-Load the source
----------------
-Now the target needs a source. ExoRad allow the user to choose between three different kind of source,
-and this can be set in the payload description file in the :xml:`common` section under the keyword :xml:`sourceSpectrum`.
-
-The first option is `planck`. In this case a planck function for the target temperature is produced by :func:`exorad.utils.exolib.planck`.
-
-    .. code-block:: xml
-
-        <sourceSpectrum>planck </sourceSpectrum>
-
-The second option is `phoenix`. In this case the code select the phoenix star that suits the target best. You have to indicate the directory containing the phoenix spectra.
-The phoenix spectra should be BT-Settl Phoenix files of the type `BT-Settl.spec.fits.gz` that can be downloaded from the Phoenix database_.
-
-    .. code-block:: xml
-
-        <sourceSpectrum>phoenix
-            <StellarModels> path/to/phoenix </StellarModels>
-        </sourceSpectrum>
-
-The last option is `custom` that allows you to use a specific sed input. An example of a custom sed is reported in `examples/customsed.csv`.
-
-    .. code-block:: xml
-
-        <sourceSpectrum>custom
-            <CustomSed>__ConfigPath__/examples/customsed.csv</CustomSed>
-        </sourceSpectrum>
-
-The source is set by :class:`~exorad.tasks.loadSource.LoadSource`, that associate a source :class:`~exorad.models.signal.Sed` to the target.
-
-
-Include foregrounds
+Load the target list
 ====================
 
-ExoRad can handle foregrounds that produce diffuse light between the telescope and the source.
-These are automatically read and loaded into the target by :class:`~exorad.tasks.foregroundHandler.EstimateForegrounds`.
-This tasks can read the ordered list of foreground contained in the payload description and choose the class to best handle them.
+The targets to observe are listed in the :ref:`target list <targetlist>`. It is
+read by :class:`~exorad.tasks.targetHandler.LoadTargetList`, which picks the
+parser from the file: ``.csv`` (with the Ariel MRS variant as a fallback),
+``.xlsx``, or a :class:`astropy.table.QTable` passed directly. An example is in
+``examples/test_target.csv``.
 
-There are two kinds of foregrounds in ExoRad: zodiacal and custom.
+Each target is then prepared for the observation by
+:class:`~exorad.tasks.targetHandler.PrepareTarget`, which creates the empty
+channel tables from the built payload.
 
-Remember that also the foreground order is important, as each of them my have a transmission that filters the signals from sources posed before it.
-The foreground must be added in the payload description document in the :xml:`common` section.
+Load the source
+===============
 
-zodiacal foreground
-----------------------
-The zodiacal foreground models the zodiacal light. It is handled by :class:`~exorad.models.foregrounds.zodiacalForeground.ZodiacalFrg`
-and it's an implementation of the model presented in Glasse et al. 2010, where the radiance is
+Every target needs a stellar spectrum. Choose one of four source types in the
+:xml:`<common>` section of the payload file, under :xml:`<sourceSpectrum>`.
+:class:`~exorad.tasks.loadSource.LoadSource` attaches the resulting
+:class:`~exorad.models.signal.Sed` to the target.
 
-    .. math::
+**Planck** — a black body at the target temperature
+(:func:`~exorad.utils.exolib.planck`):
 
-        zodi = A \cdot (3.5 \cdot 10^{-14} BB(T= 5500.0 K, \lambda) + 3.58 \cdot 10^{-8} BB(T= 270.0 K, \lambda))
+.. code-block:: xml
 
-where :math:`BB` is the planck model and :math:`A` is set by the user in the payload description file under the keyword :xml:`zodiacalFactor`.
+   <sourceSpectrum> planck </sourceSpectrum>
 
-To include the zodiacal foreground in your simulation add it in the payload description file as
+**PHOENIX** — the best-matching BT-Settl PHOENIX spectrum from a directory of
+``*.BT-Settl.spec.fits.gz`` files (from the `PHOENIX database <database_>`__).
+The directory can also be set with the ``PHOENIX_PATH`` environment variable; if
+the target temperature falls outside the grid, ExoRad falls back to a black
+body.
 
-    .. code-block:: xml
+.. code-block:: xml
 
-        <foreground> zodiacal
-                <zodiacFactor>2.5 </zodiacFactor>
-        </foreground>
+   <sourceSpectrum> phoenix
+       <StellarModels> path/to/phoenix </StellarModels>
+   </sourceSpectrum>
 
-In this case the `zodiacal` name is important because it tells ExoRad the model to use.
+**Custom** — a user-supplied SED, an ECSV file with ``Wavelength`` and ``Sed``
+columns (see ``examples/customsed.csv``):
 
-A model for zodiacal foreground depending on target position is also available by using the keyword
+.. code-block:: xml
 
-    .. code-block:: xml
+   <sourceSpectrum> custom
+       <CustomSed> __ConfigPath__/examples/customsed.csv </CustomSed>
+   </sourceSpectrum>
 
-        <foreground> zodiacal
-                <zodiacFactor>2.5 </zodiacFactor>
-                <zodiacalMap> True </zodiacalMap>
-        </foreground>
+**Downloaded SED** — the spectrum is fetched from an online model grid at run
+time by :class:`~exorad.tasks.downloadSed.DownloadSed`, so you do not need a
+local PHOENIX directory. Two backends, chosen with ``SedModel``:
 
-The fitted coefficient refers to Kelsall et al. 1998 model considering a 90 deg elongation from the Sun
+- ``phoenix-aces`` — PHOENIX-ACES-AGSS-COND-2011 from the Göttingen server;
+- any `SVO <https://svo2.cab.inta-csic.es/theory/newov2/>`__ model name
+  (``bt-settl``, ``bt-settl-cifist``, ``bt-nextgen-agss2009``, …) — the default
+  is ``bt-settl-cifist``. List the available names with
+  :func:`~exorad.tasks.downloadSed.get_svo_models`.
 
-.. warning:: The model for zodiacal foreground depending on target position is still under validation.
+.. code-block:: xml
 
-This foreground is added to the target by :class:`~exorad.tasks.foregroundHandler.EstimateZodi`, that is containted in :class:`~exorad.tasks.foregroundHandler.EstimateForegrounds`.
+   <sourceSpectrum> sed
+       <SedModel> bt-settl-cifist </SedModel>
+   </sourceSpectrum>
 
-custom foreground
-----------------------
-Also a custom foreground can be add. This must be a '.csv` file containing at least three columns: Wavelength, Transmission and Radiance.
-The foreground is used this time as a filter (:class:`~exorad.models.foregrounds.skyForegrounds.SkyFilter`) and handled by :class:`~exorad.models.foregrounds.skyForegrounds.SkyForeground`.
-Such foreground can be added as
+The nearest grid point to the target's temperature, surface gravity and
+metallicity is selected, the SED is scaled by :math:`(R/D)^2`, and SVO
+wavelengths are converted from air to vacuum (Ciddor 1996). Files are cached in
+the astropy download cache, so repeated runs do not re-download. On **any**
+failure — no network, an unreachable service, a parameter outside the grid — a
+Planck spectrum is used instead, with a warning. This uses only the standard
+library and astropy; ExoSim 2 is not required.
 
-    .. code-block:: xml
+Foregrounds
+===========
 
-        <foreground> custom
-                <datafile>custom/foreground/file.csv</datafile>
-        </foreground>
+Diffuse light between the telescope and the target is added by
+:class:`~exorad.tasks.foregroundHandler.EstimateForegrounds`, which reads the
+ordered list of :xml:`<foreground>` entries in the :xml:`<common>` section and
+picks a handler for each. **Order matters**: a foreground can carry a
+transmission that filters the sources in front of it.
 
-This time the name is not as important as before, and can be set to identify the filter.
+The physics — the zodiacal model and the custom sky foreground — is covered in
+:ref:`foregrounds`. In short:
 
-In the `payload_example.xml` we show how to use a custom foreground using a simulation of atmospheric foreground computed with Modtran and we call it `skyFilter`.
+.. code-block:: xml
 
-This foreground is added to the target by :class:`~exorad.tasks.foregroundHandler.EstimateForeground`, that is also contained in :class:`~exorad.tasks.foregroundHandler.EstimateForegrounds`.
+   <common>
+       <foreground> zodiacal
+           <zodiacFactor> 2.5 </zodiacFactor>
+       </foreground>
+       <foreground> skyFilter
+           <datafile> __ConfigPath__/examples/modtran_38km_sun_180az_55zd_los_45zd.csv </datafile>
+       </foreground>
+   </common>
 
+For a ``zodiacal`` foreground the name is significant — it selects the model.
+For a custom sky foreground the name is just a label. ``payload_example.xml``
+uses a Modtran atmospheric simulation as a custom foreground called
+``skyFilter``.
 
-.. _database: https://phoenix.ens-lyon.fr/Grids/BT-Settl/CIFIST2011_2015/FITS/.
+.. _database: https://phoenix.ens-lyon.fr/Grids/BT-Settl/CIFIST2011_2015/FITS/

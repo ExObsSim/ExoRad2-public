@@ -1,6 +1,8 @@
 # Singleton Meta-Class method
 # https://refactoring.guru/design-patterns/singleton/python/example
 
+from typing import ClassVar
+
 
 class SingletonMeta(type):
     """
@@ -9,7 +11,7 @@ class SingletonMeta(type):
     metaclass because it is best suited for this purpose.
     """
 
-    _instances = {}
+    _instances: ClassVar[dict] = {}
 
     def __call__(cls, *args, **kwargs):
         """

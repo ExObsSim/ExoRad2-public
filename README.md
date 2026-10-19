@@ -7,7 +7,6 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8367214.svg)](https://doi.org/10.5281/zenodo.8367214)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.05348/status.svg)](https://doi.org/10.21105/joss.05348)
 
-
 # ExoRad 2.0: The generic point source radiometric model
 
 
@@ -17,7 +16,7 @@ As an example, for each target and for each photometric and spectroscopic channe
 
 1) signals in pixels
 2) saturation times
-3) read noise 
+3) read noise
 4) photon noise
 5) dark current noise
 6) zodiacal bkg
@@ -36,42 +35,43 @@ You can install it by doing
     pip install exorad
 
 ### Installing from source
+ExoRad is compatible with Python 3.12, 3.13, and 3.14.
 Clone the directory using:
 
     git clone https://github.com/ExObsSim/ExoRad2-public
 
-Move into the `ExoRad2` folder.
+Move into the `ExoRad2` folder and install with `pip`:
 
-ExoRad uses **Poetry** for dependency management and package installation. If you haven't installed Poetry yet, you can do so by running the following command:
+    pip install .
 
-    pip install poetry
+or with `uv` for faster resolution:
 
-For more details, refer to the [official Poetry documentation](https://python-poetry.org/docs/#installation).
+    uv sync
 
-Once Poetry is installed, you can proceed with installing ExoRad:
+For development, install the optional `dev` dependencies (test and lint tools):
 
-    poetry install
+    pip install -e ".[dev]"
 
 
 ## Run
-Once Exorad is installed in your system you can run it from console. 
-Run `exorad --help` to read the list of accepted keywords.  
+Once Exorad is installed in your system you can run it from console.
+Run `exorad --help` to read the list of accepted keywords.
 
 An example to ExoRad is provide in the `ExoRad2/examples` folder. From the `ExoRad2` directory you can try
 
-    exorad -p examples/payload_example.xml -t examples/test_target.csv -o example_run/test.h5 
+    exorad -p examples/payload_example.xml -t examples/test_target.csv -o example_run/test.h5
 
 The code output will appear in a directory called `example_run`
 
 ## Documentation
-The full documentation is available [here](https://exorad2-public.readthedocs.io/en/latest/) 
+The full documentation is available [here](https://exorad2-public.readthedocs.io/en/latest/)
 
 Or you can build the documentation yourself using `sphinx` . To install it run
-    
+
     pip install sphinx sphinx_rtd_theme
-    
+
 From the `ExoRad2/docs` folder running
-    
+
     cd docs
     make html
 

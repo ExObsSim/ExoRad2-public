@@ -1,9 +1,17 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 
 from exorad.log.logger import Logger
 from exorad.utils.exolib import rebin
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 
 class Signal(Logger):
@@ -34,13 +42,19 @@ class Signal(Logger):
     Examples
     ---------
     >>> import numpy as np
-    >>> wl = np.linspace(0.1,1, 10)*u.um
-    >>> data = np.random.random_sample((10,10))
-    >>> time = np.linspace(1,5, 10)*u.hr
+    >>> wl = np.linspace(0.1, 1, 10) * u.um
+    >>> data = np.random.random_sample((10, 10))
+    >>> time = np.linspace(1, 5, 10) * u.hr
     >>> signal = Signal(wl_grid=wl, data=data, time_grid=time)
     """
 
-    def __init__(self, wl_grid, data, time_grid=[0] * u.hr):
+    wl_grid: u.Quantity
+    data: u.Quantity
+    time_grid: u.Quantity
+
+    def __init__(
+        self, wl_grid: u.Quantity, data: Any, time_grid: u.Quantity = [0] * u.hr
+    ) -> None:
         """
         class constructor
 
@@ -61,7 +75,7 @@ class Signal(Logger):
         self.check_sizes()
 
     @property
-    def time_dependent(self):
+    def time_dependent(self) -> bool:
         """
         It tells if the Signal is time dependent
         Returns
@@ -72,11 +86,10 @@ class Signal(Logger):
         """
         if all(self.time_grid == [0] * u.hr):
             return False
-        else:
-            #            return True
-            raise NotImplementedError
+        #            return True
+        raise NotImplementedError
 
-    def check_quantities(self, quantity, units):
+    def check_quantities(self, quantity: Any, units: str | u.UnitBase) -> u.Quantity:
         """
         It assures that the input data has the desired units, if not it converts the data.
         If the data are dimensionless it assumes that are reported with the correct units.
@@ -100,19 +113,13 @@ class Signal(Logger):
             if quantity.unit != units:
                 try:
                     data_converted = quantity.to(u.Unit(units))
-                    self.debug("input data: {}".format(quantity))
-                    self.debug(
-                        "converted {} to {}".format(quantity.unit, units)
-                    )
-                    self.debug("converted data: {}".format(data_converted))
+                    self.debug(f"input data: {quantity}")
+                    self.debug(f"converted {quantity.unit} to {units}")
+                    self.debug(f"converted data: {data_converted}")
                     return data_converted
                 except u.UnitConversionError:
-                    self.error(
-                        "Impossible to convert {} to {}".format(
-                            quantity.unit, units
-                        )
-                    )
-                    raise u.UnitConversionError
+                    self.error(f"Impossible to convert {quantity.unit} to {units}")
+                    raise
 
             else:
                 return quantity
@@ -121,10 +128,9 @@ class Signal(Logger):
             #     self.debug('assumed dimensionless quantity as input'.format(units))
             # else:
             #     self.debug('assumed {} as input units'.format(units))
-            data_converted = np.array(quantity) * u.Unit(units)
-            return data_converted
+            return np.array(quantity) * u.Unit(units)
 
-    def check_sizes(self):
+    def check_sizes(self) -> None:
         """
         Assures that the class attributes (wl_grid, data and time_grid) have the correct dimensions
 
@@ -145,12 +151,13 @@ class Signal(Logger):
         if self.data.shape[0] != self.wl_grid.shape[0]:
             self.error("dimension mismatch between wavelength grid and data")
             raise ValueError
-        if self.time_grid.shape[0] > 1 or self.data.ndim > 1:
-            if self.data.shape[1] - self.time_grid.shape[0] != 0:
-                self.error("dimension mismatch between time grid and data")
-                raise ValueError
+        if (self.time_grid.shape[0] > 1 or self.data.ndim > 1) and (
+            self.data.shape[1] - self.time_grid.shape[0] != 0
+        ):
+            self.error("dimension mismatch between time grid and data")
+            raise ValueError
 
-    def spectral_rebin(self, new_wl_grid):
+    def spectral_rebin(self, new_wl_grid: u.Quantity) -> None:
         """
         rebins the signal to the new wavelength grid
         """
@@ -159,29 +166,35 @@ class Signal(Logger):
         self.data[idx] = 0.0
         self.wl_grid = new_wl_grid
 
-    def temporal_rebin(self, new_time_grid):
+    def temporal_rebin(self, new_time_grid: u.Quantity) -> None:
         """
         rebins the signal to the new time grid
         """
         raise NotImplementedError
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """
         Converts the Signal class into standard python dict.
         """
         from exorad.utils.util import to_dict
 
-        signal_dict = to_dict(self)
-        return signal_dict
+        return to_dict(self)
 
-    def plot(self, fig=None, ax=None, yscale=None, xscale=None, label=None):
+    def plot(
+        self,
+        fig: Figure | None = None,
+        ax: Axes | None = None,
+        yscale: str | None = None,
+        xscale: str | None = None,
+        label: str | None = None,
+    ) -> tuple[Figure, Axes]:
         """
         plots the signal and return figure and axis or add the plot to an existing figure and axis
         """
-        if (fig == None) and (ax == None):
+        if fig is None or ax is None:
             fig, ax = plt.subplots(1, 1)
-            ax.set_xlabel(r"Wavelength [${}$]".format(self.wl_grid.unit))
-            ax.set_ylabel(r"${}$".format(self.data.unit))
+            ax.set_xlabel(rf"Wavelength [${self.wl_grid.unit}$]")
+            ax.set_ylabel(rf"${self.data.unit}$")
         ax.plot(self.wl_grid, self.data, label=label)
 
         if yscale is not None:
@@ -196,7 +209,13 @@ class CustomSignal(Signal):
     It's a Signal class with data having units custom units
     """
 
-    def __init__(self, wl_grid, data, data_unit, time_grid=[0] * u.hr):
+    def __init__(
+        self,
+        wl_grid: u.Quantity,
+        data: Any,
+        data_unit: str | u.UnitBase,
+        time_grid: u.Quantity = [0] * u.hr,
+    ) -> None:
         self.set_log_name()
         self.wl_grid = self.check_quantities(wl_grid, "um")
         self.data = self.check_quantities(data, data_unit)
@@ -209,7 +228,9 @@ class Sed(CustomSignal):
     It's a Signal class with data having units of [W m^-2 mu^-1]
     """
 
-    def __init__(self, wl_grid, data, time_grid=[0] * u.hr):
+    def __init__(
+        self, wl_grid: u.Quantity, data: Any, time_grid: u.Quantity = [0] * u.hr
+    ) -> None:
         super().__init__(wl_grid, data, u.W / u.m**2 / u.um, time_grid)
 
 
@@ -218,10 +239,10 @@ class Radiance(CustomSignal):
     It's a Signal class with data having units of [W m^-2 mu^-1 sr^-1]
     """
 
-    def __init__(self, wl_grid, data, time_grid=[0] * u.hr):
-        super().__init__(
-            wl_grid, data, u.W / u.m**2 / u.um / u.sr, time_grid
-        )
+    def __init__(
+        self, wl_grid: u.Quantity, data: Any, time_grid: u.Quantity = [0] * u.hr
+    ) -> None:
+        super().__init__(wl_grid, data, u.W / u.m**2 / u.um / u.sr, time_grid)
 
 
 class CountsPerSeconds(CustomSignal):
@@ -229,5 +250,7 @@ class CountsPerSeconds(CustomSignal):
     It's a Signal class with data having units of [ct/s]
     """
 
-    def __init__(self, wl_grid, data, time_grid=[0] * u.hr):
+    def __init__(
+        self, wl_grid: u.Quantity, data: Any, time_grid: u.Quantity = [0] * u.hr
+    ) -> None:
         super().__init__(wl_grid, data, "ct/s", time_grid)

@@ -3,10 +3,11 @@ from collections import OrderedDict
 import astropy.units as u
 import numpy as np
 
-from .task import Task
 from exorad.models.foregrounds.skyForegrounds import SkyForeground
 from exorad.models.foregrounds.zodiacalForeground import ZodiacalFrg
 from exorad.utils.passVal import PassVal
+
+from .task import Task
 
 
 class EstimateZodi(Task):
@@ -61,7 +62,7 @@ class EstimateZodi(Task):
             zodi = ZodiacalFrg(wl=wl, description=zodi_dict)
 
         if not hasattr(target, "foreground"):
-            setattr(target, "foreground", OrderedDict())
+            target.foreground = OrderedDict()
         target.foreground["zodi"] = zodi.radiance
         self.set_output(target)
 
@@ -107,16 +108,12 @@ class EstimateForeground(Task):
         foreground_name = foreground_dict["value"]
         foreground = SkyForeground(wl, foreground_dict)
         if not hasattr(target, "foreground"):
-            setattr(target, "foreground", OrderedDict())
+            target.foreground = OrderedDict()
         target.foreground[foreground_name] = foreground.skyFilter
         if not hasattr(target, "skyTransmission"):
             from exorad.models.signal import Signal
 
-            setattr(
-                target,
-                "skyTransmission",
-                Signal(wl, foreground.skyFilter.transmission),
-            )
+            target.skyTransmission = Signal(wl, foreground.skyFilter.transmission)
         else:
             target.skyTransmission.data *= foreground.skyFilter.transmission
         self.set_output(target)

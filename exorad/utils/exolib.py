@@ -5,10 +5,9 @@ import os
 import astropy.units as u
 import mpmath
 import numpy as np
-import photutils
+import photutils.aperture
 from astropy.io import fits
 from scipy import signal
-from scipy.integrate import cumulative_trapezoid
 from scipy.interpolate import interp1d
 from scipy.special import j1
 from scipy.stats import binned_statistic
@@ -36,9 +35,7 @@ def rebin(x, xp, fp):
     """
 
     if x.unit != xp.unit:
-        logger.fatal(
-            "Units mismatch in rebin {:s}, {:s}".format(x.unit, xp.unit)
-        )
+        logger.fatal(f"Units mismatch in rebin {x.unit:s}, {xp.unit:s}")
         raise ValueError
 
     idx = np.where(np.logical_and(xp > 0.9 * x.min(), xp < 1.1 * x.max()))[0]
@@ -82,13 +79,11 @@ def rebin(x, xp, fp):
         x1 = x[-1] + (x[-1] - bin_x[-1]) / 2.0
         bin_x = np.insert(bin_x, [0], x0)
         bin_x = np.append(bin_x, x1)
-        new_f = (
-            binned_statistic(xp, fp, bins=bin_x, statistic="mean")[0] * funits
-        )
+        new_f = binned_statistic(xp, fp, bins=bin_x, statistic="mean")[0] * funits
 
     #    idx = np.where(np.logical_and(xp >= x.min(), xp <= x.max()))[0]
-    #    print np.trapz(fp[idx], x=xp[idx])
-    #    print np.trapz(new_f, x=x)
+    #    print np.trapezoid(fp[idx], x=xp[idx])
+    #    print np.trapezoid(new_f, x=x)
     #    asd
     else:
         logger.debug("interpolating")
@@ -111,55 +106,6 @@ def rebin(x, xp, fp):
         if not hasattr(new_f, "unit"):
             logger.debug("output units force to inputs fp")
             new_f *= funits
-
-    return x, new_f
-
-
-def rebin_(x, xp, fp):
-    """Resample a function fp(xp) over the new grid x, rebinning if necessary,
-    otherwise interpolates
-    Parameters
-    ----------
-    x	: 	array like
-    New coordinates
-    fp 	:	array like
-    y-coordinates to be resampled
-    xp 	:	array like
-    x-coordinates at which fp are sampled
-
-    Returns
-    -------
-    out	: 	array like
-    new samples
-
-    """
-
-    if x.unit != xp.unit:
-        logger.fatal(
-            "Units mismatch in rebin {:s}, {:s}".format(x.unit, xp.unit)
-        )
-        raise ValueError
-
-    idx = np.where(np.logical_and(xp > 0.9 * x.min(), xp < 1.1 * x.max()))[0]
-    xp = xp[idx]
-    fp = fp[idx]
-
-    if np.diff(xp).max() < np.diff(x).min():
-        # Binning!
-        c = cumulative_trapezoid(fp.value, x=xp.value) * fp.unit * xp.unit
-        xpc = xp[1:]
-
-        delta = np.gradient(x)
-        new_c_1 = (
-            np.interp(x - 0.5 * delta, xpc, c, left=0.0, right=0.0) * c.unit
-        )
-        new_c_2 = (
-            np.interp(x + 0.5 * delta, xpc, c, left=0.0, right=0.0) * c.unit
-        )
-        new_f = (new_c_2 - new_c_1) / delta
-    else:
-        # Interpolate !
-        new_f = np.interp(x, xp, fp, left=0.0, right=0.0) * fp.unit
 
     return x, new_f
 
@@ -218,9 +164,7 @@ def binnedPSF(
                 hdr = hdu[0].header
                 # define a kernel representing the detector pixel response
                 # and use fractional pixel
-                k_x, k_y, extent = load_standard_psf(
-                    F_x, F_y, wl, delta_pix, hdr
-                )
+                k_x, k_y, extent = load_standard_psf(F_x, F_y, wl, delta_pix, hdr)
         elif os.path.isdir(filename):
             filenames = np.sort(glob.glob(filename + "*.fits"))
             psf_wl = []
@@ -231,9 +175,7 @@ def binnedPSF(
             with fits.open(os.path.expanduser(filenames[idx])) as hdu:
                 ima = hdu[0].data
                 hdr = hdu[0].header
-                k_x, k_y, extent = load_standard_psf(
-                    F_x, F_y, wl, delta_pix, hdr
-                )
+                k_x, k_y, extent = load_standard_psf(F_x, F_y, wl, delta_pix, hdr)
     else:
         x = np.linspace(-4.0, 4.0, 256)
         xx, yy = np.meshgrid(x, x)
@@ -257,7 +199,11 @@ def binnedPSF(
     fk_x, ik_x = np.modf(k_x)
     fk_y, ik_y = np.modf(k_y)
 
-    kernel = np.ones((int(ik_y) + 2, int(ik_x) + 2)) * fk_x.unit
+    # numpy 2.0 no longer casts size-1 arrays to Python scalars, so pull the
+    # integer pixel count out explicitly before sizing the kernel.
+    n_y = int(np.atleast_1d(ik_y.value)[0]) + 2
+    n_x = int(np.atleast_1d(ik_x.value)[0]) + 2
+    kernel = np.ones((n_y, n_x)) * fk_x.unit
     kernel[:, 0] *= 0.5 * fk_x
     kernel[:, -1] *= 0.5 * fk_x
     kernel[0, :] *= 0.5 * fk_y
@@ -276,8 +222,7 @@ def load_pixel_psf_size(delta_pix, hdr):
     xmax = [hdr["NAXIS2"] / 2.0 * delta_pix.value] * u.micron
     ymin = [-hdr["NAXIS1"] / 2.0 * delta_pix.value] * u.micron
     ymax = [hdr["NAXIS1"] / 2.0 * delta_pix.value] * u.micron
-    extent = (xmin, xmax, ymin, ymax)
-    return extent
+    return (xmin, xmax, ymin, ymax)
 
 
 def pixel_based_psf(wl, delta_pix, filename):
@@ -321,25 +266,21 @@ def load_paos_psf(wl_group):
 
 
 def interpolate_paos_psf(fd, wl):
-    wavelengths = np.asarray(
-        [key for key in list(fd.keys()) if key != "info"]
-    ).astype(np.float64)
+    wavelengths = np.asarray([key for key in list(fd.keys()) if key != "info"]).astype(
+        np.float64
+    )
     wavelengths.sort()
 
     if len(wavelengths) == 1:
         logger.error("Can't interpolate, PAOS file has only one wavelength")
-        raise ValueError(
-            "Can't interpolate, PAOS file has only one wavelength"
-        )
+        raise ValueError("Can't interpolate, PAOS file has only one wavelength")
 
     idx0 = np.argmin(np.abs(wavelengths - wl))
 
     if np.min(wavelengths) <= wl <= np.max(wavelengths):
         idx1 = idx0 - 1 if wavelengths[idx0] - wl > 0 else idx0 + 1
     else:
-        logger.warning(
-            "Wavelength is outside interpolation region, extrapolating..."
-        )
+        logger.warning("Wavelength is outside interpolation region, extrapolating...")
         idx1 = idx0 + 1 if wavelengths[idx0] - wl > 0 else idx0 - 1
 
     wl0, wl1 = wavelengths[idx0], wavelengths[idx1]
@@ -358,12 +299,12 @@ def interpolate_paos_psf(fd, wl):
         fill_value="extrapolate",
         axis=0,
     )(wl)
-    dx = interp1d(
-        x=[wl0, wl1], y=[dx0, dx1], kind="linear", fill_value="extrapolate"
-    )(wl)
-    dy = interp1d(
-        x=[wl0, wl1], y=[dy0, dy1], kind="linear", fill_value="extrapolate"
-    )(wl)
+    dx = interp1d(x=[wl0, wl1], y=[dx0, dx1], kind="linear", fill_value="extrapolate")(
+        wl
+    )
+    dy = interp1d(x=[wl0, wl1], y=[dy0, dy1], kind="linear", fill_value="extrapolate")(
+        wl
+    )
     extent = interp1d(
         x=[wl0, wl1],
         y=[extent0, extent1],
@@ -387,23 +328,21 @@ def paosPSF(wl, delta_pix, filename="", plot=False):
 
     logger.debug("loading PAOS psf")
 
-    assert wl.unit == u.micron, print("Wavelength unit should be micron. ")
+    assert wl.unit == u.micron, "Wavelength unit should be micron."
 
     try:
         with h5py.File(os.path.expanduser(filename), mode="r") as fd:
             wavelength = wl.value[0]
             if str(wavelength) in list(fd.keys()):
-                ima, dx, dy, extent, fratio = load_paos_psf(
+                ima, dx, dy, extent, _fratio = load_paos_psf(
                     wl_group=fd[f"{wavelength}"]
                 )
             else:
-                ima, dx, dy, extent, fratio = interpolate_paos_psf(
-                    fd, wavelength
-                )
+                ima, dx, dy, extent, _fratio = interpolate_paos_psf(fd, wavelength)
 
     except OSError as e:
         logger.error("Error loading PAOS psf file. ")
-        raise FileNotFoundError(e.errno)
+        raise FileNotFoundError(e.errno) from e
 
     k_x = delta_pix / dx
     k_y = delta_pix / dy
@@ -411,7 +350,11 @@ def paosPSF(wl, delta_pix, filename="", plot=False):
     fk_x, ik_x = np.modf(k_x)
     fk_y, ik_y = np.modf(k_y)
 
-    kernel = np.ones((int(ik_y) + 2, int(ik_x) + 2)) * fk_x.unit
+    # numpy 2.0 no longer casts size-1 arrays to Python scalars, so pull the
+    # integer pixel count out explicitly before sizing the kernel.
+    n_y = int(np.atleast_1d(ik_y.value)[0]) + 2
+    n_x = int(np.atleast_1d(ik_x.value)[0]) + 2
+    kernel = np.ones((n_y, n_x)) * fk_x.unit
 
     kernel[:, 0] *= 0.5 * fk_x
     kernel[:, -1] *= 0.5 * fk_x
@@ -432,9 +375,9 @@ def plot_imac(imac, extent, xlim=None, ylim=None):
 
     extent = np.asarray([ext.value for ext in extent]).ravel()
 
-    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+    _fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 
-    im = ax.imshow(imac, cmap=plt.get_cmap("viridis"), origin="lower")
+    im = ax.imshow(imac, cmap=plt.colormaps["viridis"], origin="lower")
     extent = np.asarray(extent).astype(np.float64)
     im.set_extent(extent=extent)
 
@@ -450,29 +393,6 @@ def plot_imac(imac, extent, xlim=None, ylim=None):
     plt.show()
 
     return 0
-
-
-def wl_encircled_energy(filename, eec, format, Fnum_x, Fnum_y, delta_pix):
-    filenames = np.sort(glob.glob(filename + "*.fits"))
-    psf_wl, enc = [], []
-    for file in filenames:
-        with fits.open(os.path.expanduser(file)) as hdu:
-            psf_wl.append(hdu[0].header["WAVELEN"])
-        if format == "pixel_based":
-            ima, _, _ = pixel_based_psf(
-                hdu[0].header["WAVELEN"], delta_pix, file
-            )
-            enc += [find_aperture_radius(ima, eec, 1, 1, 1)]
-        else:
-            ima, _, _ = binnedPSF(
-                Fnum_x, Fnum_y, hdu[0].header["WAVELEN"], delta_pix
-            )
-            enc += [
-                find_aperture_radius(
-                    ima, eec, Fnum_x, Fnum_y, hdu[0].header["WAVELEN"]
-                )
-            ]
-    return psf_wl, enc
 
 
 def find_aperture_radius(ima, eec, Fnum_x, Fnum_y, wavelength):
@@ -504,8 +424,7 @@ def find_aperture_radius(ima, eec, Fnum_x, Fnum_y, wavelength):
         enc += [encircled_energy(i, ima, Fnum_x, Fnum_y, wavelength)]
         last_enc = enc[-1]
     inter = interp1d(enc, rs)
-    r = inter(eec)
-    return r
+    return inter(eec)
 
 
 def encircled_energy(r, ima, Fnum_x, Fnum_y, wavelength):
@@ -513,8 +432,8 @@ def encircled_energy(r, ima, Fnum_x, Fnum_y, wavelength):
     r_pix_y = r * Fnum_y * wavelength
     aper = photutils.aperture.EllipticalAperture(
         (ima.shape[1] // 2, ima.shape[0] // 2),
-        b=float(r_pix_y.value),
-        a=float(r_pix_x.value),
+        b=float(np.atleast_1d(r_pix_y.value)[0]),
+        a=float(np.atleast_1d(r_pix_x.value)[0]),
     )
     phot_ = photutils.aperture.aperture_photometry(ima, aper)
     phot = phot_["aperture_sum"].data[0]
@@ -571,4 +490,4 @@ if __name__ == "__main__":
 
     sigma = np.arctan(1.0 / 10)
     OmegaCheck = 2.0 * np.pi * (1 - np.cos(sigma))
-    print((Omega, OmegaCheck))
+    print((Omega, OmegaCheck))  # noqa: T201

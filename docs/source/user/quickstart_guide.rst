@@ -1,111 +1,111 @@
 .. _quickstart_guide:
 
-=================
+================
 Quickstart guide
-=================
+================
 
-Let's warm up with an example run. We will now try to use ExoRad with an example provided by the developer: if it doesn't work, don't blame us.
-The starting points will be the target list ``examples\test_target.csv`` and the payload description ``examples/payload_example.xml``.
+This is a first run with the example files shipped with ExoRad: the target list
+``examples/test_target.csv`` and the payload description
+``examples/payload_example.xml``.
 
 The target list
-----------------
+===============
 
-The provided target list is a full example of one of the input format supported.
-It's a comma separated value table containing all the target information required by ExoRad.
-This default example is build upon a star as target, but we will see later that you can set up Exorad to work with any kind of celestial object, as long as it is a point source.
-Also, in this example we only have one target in the file, but ExoRad is made to handle a list of targets: you just have to add lines to your csv file.
+``examples/test_target.csv`` is a complete example of one of the supported
+input formats — a comma-separated table with the target information ExoRad
+needs. The example uses a star as the target, but ExoRad works with any point
+source. It has a single target here; add rows to the CSV to run a whole list at
+once.
 
-Payload description file
--------------------------
-The payload description file is a xml file with all the payload specifics.
-In the example one you will find a full example of all the possibilities you can have from ExoRad v 2.0.
-Other will come and will be described separately.
+The payload description file
+============================
 
-In order to make ExoRad work you have now to edit this file.
-The first element of the file is `ConfigPath`. You have to change the value to point to the ExoRad installation folder.
-This is important because it tells ExoRad where to find all the payload related file.
+``examples/payload_example.xml`` is an XML file describing the payload. The
+example exercises most of the options ExoRad supports; each is covered in its
+own page of this guide.
 
-Our First run
---------------
-We can now run ExoRad for the firs time.
-Navigate into your installation folder::
+Before running, set the ``ConfigPath`` value near the top of the file to your
+ExoRad checkout — it tells ExoRad where to find the payload data files:
 
-    cd /your_path/ExoRad
+.. code-block:: xml
 
-and open the file `examples/payload_example.xml`.
-Replace the value of the keyword `ConfigPath` located at the second row, with your installation folder path as
+   <ConfigPath> /your_path/ExoRad
+       <comment> Main directory for the configuration files </comment>
+   </ConfigPath>
 
-    .. code-block:: xml
+Your first run
+==============
 
-        <ConfigPath> /your_path/ExoRad
-            <comment>Main directory for the configuration files</comment>
-        </ConfigPath>
+From the checkout directory:
 
-From the installation folder open the command line and write::
+.. code-block:: console
 
-    exorad -t examples/test_target.csv -p examples/payload_example.xml -o examples/first_run.h5
+   exorad -t examples/test_target.csv -p examples/payload_example.xml -o examples/first_run.h5
 
-Now we are asking to ExoRad to analyse `examples/test_target.csv` target list using the `examples/payload_example.xml` payload and to save the results in `example` directory using a `first_run.h5` format.
+ExoRad analyses ``test_target.csv`` with the ``payload_example.xml`` payload and
+writes the results to ``examples/first_run.h5``, alongside a copy of the two
+input files for reproducibility.
 
-For a description of the flags, you can run::
+Run ``exorad --help`` for the full list of flags. The most useful ones:
 
-    exorad --help
+.. list-table::
+   :header-rows: 1
+   :widths: 22 78
 
-Here is a summary of the most important flags
-
-==================  =======================================================================
-flags               description
-==================  =======================================================================
--p, --payload       Input payload description file
--t, --targetlist    Input target list file
--o, --outDir        Output directory
--c, --full_contrib  plot all the contributions to the signal
--d, --debug         Log output on screen
--P, --plot          automatically produce plots
--n, --nThreads      number of threads for parallel processing
--l, --log           store the log output on file
-==================  =======================================================================
-
-Now you can navigate into `examples` and you will find ExoRad outcomes.
-You will find a copy of the payload description file and of the target list and one h5 file containing all your output.
-
+   * - Flag
+     - Description
+   * - ``-p``, ``--payload``
+     - input payload description file
+   * - ``-t``, ``--targetList``
+     - input target list file
+   * - ``-o``, ``--output``
+     - output HDF5 file
+   * - ``-c``, ``--full_contrib``
+     - keep every contribution to the signal in the output
+   * - ``-P``, ``--plot``
+     - save diagnostic plots
+   * - ``-n``, ``--nThreads``
+     - number of threads for parallel processing
+   * - ``-d``, ``--debug``
+     - log to the screen
+   * - ``-l``, ``--log``
+     - also write the log to a file
 
 Producing some plots
---------------------------------
-ExoRad can produce some simple diagnostic plots from the output. You can enable this option just by adding the flag `-P`
-to the command::
+====================
 
-    exorad -t examples/test_target.csv -p examples/payload_example.xml -o examples/first_run.h5 -P
+Add ``-P`` to save diagnostic plots — one PNG per target plus one for the
+instrument efficiency:
 
-Now ExoRad will produce a `png` file for each target in the targetlist and one for the instrument efficiency.
+.. code-block:: console
+
+   exorad -t examples/test_target.csv -p examples/payload_example.xml -o examples/first_run.h5 -P
 
 .. image:: _static/efficiency.png
    :width: 600
 
-The efficiency plot shows for the investigated wavelength range the instrument quantum efficiency, transmission
-and the resulting photon conversion efficiency.
+The efficiency plot shows, over the simulated wavelength range, the detector
+quantum efficiency, the optical transmission and the resulting photon
+conversion efficiency.
 
 .. image:: _static/myTest.png
    :width: 600
 
-The target picture will contain a panel for the signal information with a cut for contributes lower than 1e-3, and a panel for the noise budget with a cut for contributions lower than 1e-7.
+The per-target plot has one panel for the signal (contributions below
+:math:`10^{-3}` clipped) and one for the noise budget (contributions below
+:math:`10^{-7}` clipped).
 
-You can also produce a plot of an ExoRad `.h5` output file by::
+You can also re-plot an existing output file with ``exorad-plot``:
 
-    exorad-plot -i examples/first_run.h5 -o examples/plots
+.. code-block:: console
 
-and ExoRad will produce a plot for each of the target inside the pickle file.
+   exorad-plot -i examples/first_run.h5 -o examples/plots
 
-The exorad-plot command also accepts the either a list of a range of number of target to plot in the h5 file of the name of the target to plot::
+``exorad-plot`` accepts a range or a list of target indices, or a target name:
 
-    exorad-plot -i examples/first_run.h5 -o examples/plots -n 0
+.. code-block:: console
 
-to plot the first target in the list::
-
-    exorad-plot -i examples/first_run.h5 -o examples/plots -n 0:1
-
-to plot the target between 0 and 1. If you have 1000 targets you can plot every range or a list of target (eg -n 1,2,50 or -n 1:30)
-
-The target name option allows you to plot a single target selected by name::
-
-    exorad-plot -i examples/first_run.h5 -o examples/plots -t myTest
+   exorad-plot -i examples/first_run.h5 -o examples/plots -n 0          # the first target
+   exorad-plot -i examples/first_run.h5 -o examples/plots -n 0:1        # a range
+   exorad-plot -i examples/first_run.h5 -o examples/plots -n 1,2,50     # a list
+   exorad-plot -i examples/first_run.h5 -o examples/plots -t myTest     # by name

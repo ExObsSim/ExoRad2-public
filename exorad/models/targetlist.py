@@ -1,19 +1,19 @@
 import re
 
-import numpy as np
-import xlrd
-
-xlrd.xlsx.ensure_elementtree_imported(False, None)
-xlrd.xlsx.Element_has_iter = True
-
+import openpyxl
 from astropy import units as u
 from astropy.io import ascii
 
 from exorad.log import Logger
 from exorad.models.target import Target
 
-compactString = lambda string: string.replace(" ", "").replace("-", "").lower()
-stripUnitString = lambda string: string.replace("[", "").replace("]", "")
+
+def compactString(string):
+    return string.replace(" ", "").replace("-", "").lower()
+
+
+def stripUnitString(string):
+    return string.replace("[", "").replace("]", "")
 
 
 class BaseTargetList(Logger):
@@ -49,21 +49,23 @@ class BaseTargetList(Logger):
         try:
             planet_keys = self.planet_keys()
             planet_data = self.planet_data()
-        except:
+        except Exception:
             pass
 
         target_list = []
         if planet_data:
-            for i, (star, planet) in enumerate(zip(star_data, planet_data)):
+            for i, (star, planet) in enumerate(
+                zip(star_data, planet_data, strict=False)
+            ):
                 target = Target()
                 target.planet = Target()
                 target.star = Target()
 
-                planet_dict = dict(zip(planet_keys, planet))
+                planet_dict = dict(zip(planet_keys, planet, strict=False))
 
                 target.planet.__dict__.update(planet_dict)
 
-                star_dict = dict(zip(star_keys, star))
+                star_dict = dict(zip(star_keys, star, strict=False))
 
                 target.star.__dict__.update(star_dict)
                 target.name = target.planet.name
@@ -76,7 +78,7 @@ class BaseTargetList(Logger):
                 target.star = Target()
                 target.id = i
 
-                star_dict = dict(zip(star_keys, star))
+                star_dict = dict(zip(star_keys, star, strict=False))
 
                 target.star.__dict__.update(star_dict)
                 target.name = target.star.name
@@ -91,15 +93,12 @@ class BaseTargetList(Logger):
     def searchTarget(self, name):
         # method inspired from similar functionality in ExoData
         searchName = compactString(name)
-        returnList = []
-
-        for target in self.target:
-            if re.search(
-                searchName, compactString(str(target.star.name))
-            ) or re.search(searchName, compactString(str(target.planet.name))):
-                returnList.append(target)
-
-        return returnList
+        return [
+            target
+            for target in self.target
+            if re.search(searchName, compactString(str(target.star.name)))
+            or re.search(searchName, compactString(str(target.planet.name)))
+        ]
 
 
 class XLXSTargetList(BaseTargetList):
@@ -118,24 +117,39 @@ class XLXSTargetList(BaseTargetList):
 
         super().__init__()
 
+    def _get_cell_value(self, row, col):
+        cell = self.tmpSheet.cell(row=row + 1, column=col + 1)
+        if cell.value is None:
+            return ""
+        return cell.value
+
+    def _get_row_values(self, row):
+        return [
+            self._get_cell_value(row, col) for col in range(self.tmpSheet.max_column)
+        ]
+
+    def _get_col_values(self, col):
+        return [self._get_cell_value(row, col) for row in range(self.tmpSheet.max_row)]
+
     def __parseData__(self, col_range):
-        Sheet = self.tmpSheet
-        keys = Sheet.row_values(2)[col_range[0] : col_range[1] + 1]
+        keys = self._get_row_values(2)[col_range[0] : col_range[1] + 1]
         keys[0] = "name"
         obj = {}
 
-        for key, col in zip(keys, list(range(col_range[0], col_range[1] + 1))):
-            str_unit = Sheet.cell_value(rowx=self.units_row, colx=col)
-            if len(str_unit) > 0:
+        for key, col in zip(
+            keys, list(range(col_range[0], col_range[1] + 1)), strict=False
+        ):
+            str_unit = self._get_cell_value(self.units_row, col)
+            if str_unit is not None and len(str(str_unit)) > 0:
                 try:
-                    dim = u.Unit(stripUnitString(str_unit))
+                    dim = u.Unit(stripUnitString(str(str_unit)))
                 except ValueError:
                     self.warning("Unrecognised physical units")
                     dim = 1
             else:
                 dim = 1
 
-            obj[key] = Sheet.col_values(col)[self.data_row0 :] * dim
+            obj[key] = self._get_col_values(col)[self.data_row0 :] * dim
 
         return obj
 
@@ -147,20 +161,20 @@ class XLXSTargetList(BaseTargetList):
 
     def planet_data(self):
         planet_list = list(self.planet.values())
-        return list(map(list, zip(*planet_list)))
+        return list(map(list, zip(*planet_list, strict=False)))
 
     def star_data(self):
         star_list = list(self.star.values())
-        return list(map(list, zip(*star_list)))
+        return list(map(list, zip(*star_list, strict=False)))
 
     def read_data(self):
-        xl_workbook = xlrd.open_workbook(self.filename)
-        self.tmpSheet = xl_workbook.sheet_by_name("Sheet1")
+        wb = openpyxl.load_workbook(self.filename, data_only=True)
+        self.tmpSheet = wb["Sheet1"]
 
         self.planet = self.__parseData__(col_range=self.planet_data_columns)
-        self.planet["Nobs"] = self.tmpSheet.col_values(
-            self.number_to_be_observed_column
-        )[self.data_row0 :]
+        self.planet["Nobs"] = self._get_col_values(self.number_to_be_observed_column)[
+            self.data_row0 :
+        ]
 
         self.star = self.__parseData__(col_range=self.star_data_columns)
 
@@ -184,7 +198,7 @@ class CSVTargetList(BaseTargetList):
     def star_data(self):
         star_k = [k for k in self.tmpTab.keys() if "star" in k]
         units = []
-        for n, k in enumerate(star_k):
+        for k in star_k:
             if len(k.split(" ")) == 3:
                 un = k.split(" ")[2]
                 units.append(1 * u.Unit(stripUnitString(un)))
@@ -197,7 +211,7 @@ class CSVTargetList(BaseTargetList):
             for n in range(len(val)):
                 if units[n] is not None:
                     val[n] = val[n] * units[n]
-            dat.append([str(x) if isinstance(x, np.str_) else x for x in val])
+            dat.append([str(x) if isinstance(x, str) else x for x in val])
         return dat
 
     def planet_keys(self):
@@ -207,7 +221,7 @@ class CSVTargetList(BaseTargetList):
     def planet_data(self):
         planet_k = [k for k in self.tmpTab.keys() if "planet" in k]
         units = []
-        for n, k in enumerate(planet_k):
+        for k in planet_k:
             if len(k.split(" ")) == 3:
                 un = k.split(" ")[2]
                 units.append(1 * u.Unit(stripUnitString(un)))
@@ -220,7 +234,7 @@ class CSVTargetList(BaseTargetList):
             for n in range(len(val)):
                 if units[n] is not None:
                     val[n] = val[n] * units[n]
-            dat.append([str(x) if isinstance(x, np.str_) else x for x in val])
+            dat.append([str(x) if isinstance(x, str) else x for x in val])
         return dat
 
 
@@ -238,15 +252,9 @@ class CSVTargetListMRS(BaseTargetList):
 
     def star_keys(self):
         s_col = [k for k in self.tmpTab.keys() if "star" in k.lower()]
-        s_col = [
-            k.split(" ", 1)[1].lower()
-            for k in s_col
-            if "error" not in k.lower()
-        ]
+        s_col = [k.split(" ", 1)[1].lower() for k in s_col if "error" not in k.lower()]
         return [
-            self.check_keys(k[0 : k.find("[") - 1])
-            if "[" in k
-            else self.check_keys(k)
+            self.check_keys(k[0 : k.find("[") - 1]) if "[" in k else self.check_keys(k)
             for k in s_col
         ]
 
@@ -257,13 +265,10 @@ class CSVTargetListMRS(BaseTargetList):
             if "star" in k.lower() and "error" not in k.lower()
         ]
         units = []
-        for n, k in enumerate(star_k):
+        for k in star_k:
             if "[" in k:
                 units.append(
-                    1
-                    * u.Unit(
-                        self.check_units(k[k.find("[") + 1 : k.find("]")])
-                    )
+                    1 * u.Unit(self.check_units(k[k.find("[") + 1 : k.find("]")]))
                 )
             else:
                 units.append(None)
@@ -282,20 +287,14 @@ class CSVTargetListMRS(BaseTargetList):
                         val[n]
                 if units[n] is not None:
                     val[n] = val[n] * units[n]
-            dat.append([str(x) if isinstance(x, np.str_) else x for x in val])
+            dat.append([str(x) if isinstance(x, str) else x for x in val])
         return dat
 
     def planet_keys(self):
         s_col = [k for k in self.tmpTab.keys() if "planet" in k.lower()]
-        s_col = [
-            k.split(" ", 1)[1].lower()
-            for k in s_col
-            if "error" not in k.lower()
-        ]
+        s_col = [k.split(" ", 1)[1].lower() for k in s_col if "error" not in k.lower()]
         return [
-            self.check_keys(k[0 : k.find("[") - 1])
-            if "[" in k
-            else self.check_keys(k)
+            self.check_keys(k[0 : k.find("[") - 1]) if "[" in k else self.check_keys(k)
             for k in s_col
         ]
 
@@ -306,13 +305,10 @@ class CSVTargetListMRS(BaseTargetList):
             if "planet" in k.lower() and "error" not in k.lower()
         ]
         units = []
-        for n, k in enumerate(planet_k):
+        for k in planet_k:
             if "[" in k:
                 units.append(
-                    1
-                    * u.Unit(
-                        self.check_units(k[k.find("[") + 1 : k.find("]")])
-                    )
+                    1 * u.Unit(self.check_units(k[k.find("[") + 1 : k.find("]")]))
                 )
             else:
                 units.append(None)
@@ -331,7 +327,7 @@ class CSVTargetListMRS(BaseTargetList):
                         val[n]
                 if units[n] is not None:
                     val[n] = val[n] * units[n]
-            dat.append([str(x) if isinstance(x, np.str_) else x for x in val])
+            dat.append([str(x) if isinstance(x, str) else x for x in val])
         return dat
 
     @staticmethod
@@ -350,8 +346,7 @@ class CSVTargetListMRS(BaseTargetList):
             return "M_jupiter"
         if unit == "days":
             return "day"
-        else:
-            return unit
+        return unit
 
     @staticmethod
     def check_keys(key):
@@ -375,77 +370,7 @@ class CSVTargetListMRS(BaseTargetList):
             return "Gamma"
         if key == "transit duration":
             return "T14"
-        else:
-            return key
-
-
-class OldExcelTargetList(Logger):
-    """
-    It parses an .xls file into a :class:`BaseTargetList` class
-    """
-
-    star_data_columns = (1, 6)
-    number_to_be_observed_column = 20
-    data_row0 = 4
-    units_row = 3
-
-    def __init__(self, filename):
-        self.set_log_name()
-
-        if filename.endswith(".xlsx"):
-            xl_workbook = xlrd.open_workbook(filename)
-
-            tmpSheet = xl_workbook.sheet_by_name("Sheet1")
-            tmpSheet = tmpSheet
-
-            star = self.__parseData__(
-                tmpSheet, col_range=self.star_data_columns
-            )
-
-            key0 = list(star.keys())[0]
-            n_targets = len(star[key0])
-
-            self.target = [Target() for k in range(n_targets)]
-            for k, target in enumerate(self.target):
-                setattr(target, "star", Target())
-                for key in list(star.keys()):
-                    setattr(target.star, key, star[key][k])
-        else:
-            self.error("Wrong target list format")
-            raise OSError("Wrong target list format")
-
-    def __parseData__(self, Sheet, col_range):
-        keys = Sheet.row_values(2)[col_range[0] : col_range[1] + 1]
-        keys[0] = "name"
-        obj = {}
-
-        for key, col in zip(keys, list(range(col_range[0], col_range[1] + 1))):
-            str_unit = Sheet.cell_value(rowx=self.units_row, colx=col)
-            if len(str_unit) > 0:
-                try:
-                    dim = u.Unit(stripUnitString(str_unit))
-                except ValueError:
-                    self.warning("Unrecognised physical units")
-                    dim = 1
-            else:
-                dim = 1
-
-            obj[key] = Sheet.col_values(col)[self.data_row0 :] * dim
-
-        return obj
-
-    def searchTarget(self, name):
-        # method inspired from similar functionality in ExoData
-        searchName = compactString(name)
-        returnList = []
-
-        for target in self.target:
-            if re.search(
-                searchName, compactString(str(target.star.name))
-            ) or re.search(searchName, compactString(str(target.planet.name))):
-                returnList.append(target)
-
-        return returnList
+        return key
 
 
 class QTableTargetList(BaseTargetList):
@@ -470,7 +395,7 @@ class QTableTargetList(BaseTargetList):
         for i in range(len(self.tmpTab[star_k])):
             val = list(self.tmpTab[star_k][i])
             self._check_quantities(val)
-            dat.append([str(x) if isinstance(x, np.str_) else x for x in val])
+            dat.append([str(x) if isinstance(x, str) else x for x in val])
         return dat
 
     def planet_keys(self):
@@ -483,16 +408,11 @@ class QTableTargetList(BaseTargetList):
         for i in range(len(self.tmpTab[star_k])):
             val = list(self.tmpTab[star_k][i])
             self._check_quantities(val)
-            dat.append([str(x) if isinstance(x, np.str_) else x for x in val])
+            dat.append([str(x) if isinstance(x, str) else x for x in val])
         return dat
 
     def _check_quantities(self, val):
         for v in val:
-            if not isinstance(v, np.str_):
-                if not hasattr(v, "unit"):
-                    self.error(
-                        "Wrong target list format: Quantities are required"
-                    )
-                    raise TypeError(
-                        "Wrong target list format: Quantities are required"
-                    )
+            if not isinstance(v, str) and not hasattr(v, "unit"):
+                self.error("Wrong target list format: Quantities are required")
+                raise TypeError("Wrong target list format: Quantities are required")

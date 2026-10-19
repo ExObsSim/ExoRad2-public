@@ -4,12 +4,12 @@ import warnings
 
 import numpy as np
 from astropy import units as u
-from astropy.io import ascii
-from astropy.io import fits
+from astropy.io import ascii, fits
 
-from .signal import Sed
 from exorad.log import Logger
 from exorad.utils import exolib
+
+from .signal import Sed
 
 warnings.filterwarnings("ignore", category=UserWarning, append=True)
 
@@ -59,7 +59,7 @@ class Star(Logger):
         self.set_log_name()
         self.model = None
 
-        if use_planck_spectrum == True:
+        if use_planck_spectrum:
             self.debug("Planck spectrum used")
             wl = np.linspace(wl_min, wl_max, 10000)
             ph_wl, ph_sed, ph_L = self.__get_star_spectrum(
@@ -73,7 +73,7 @@ class Star(Logger):
         else:
             if phoenix_model_filename:
                 ph_file = os.path.join(star_sed_path, phoenix_model_filename)
-                self.debug("phoenix file name : {}".format(ph_file))
+                self.debug(f"phoenix file name : {ph_file}")
             else:
                 ph_file = self.__get_phonix_model_filename(
                     star_sed_path,
@@ -81,7 +81,7 @@ class Star(Logger):
                     starLogg,
                     starMetallicity,
                 )
-                self.debug("phoenix file name : {}".format(ph_file))
+                self.debug(f"phoenix file name : {ph_file}")
 
             ph_wl, ph_sed, ph_L = self.__read_phenix_spectrum(
                 ph_file, starDistance.to(u.m), starRadius.to(u.m)
@@ -106,10 +106,9 @@ class Star(Logger):
         if len(sed_name) == 0:
             self.error("No stellar SED files found")
             raise OSError("No stellar SED files found")
+        return None
 
-    def __get_phonix_model_filename(
-        self, path, star_temperature, star_logg, star_f_h
-    ):
+    def __get_phonix_model_filename(self, path, star_temperature, star_logg, star_f_h):
         sed_name = self.__get_sed_list(path)
         sed_name_cleaned = [os.path.basename(k) for k in sed_name]
 
@@ -127,9 +126,9 @@ class Star(Logger):
         # if 'HiRes' not in sed_name_cleaned[0]:
         #     temp_to_find /= 100.0
 
-        if np.round(temp_to_find) < min(sed_T_list) or np.round(
-            temp_to_find
-        ) > max(sed_T_list):
+        if np.round(temp_to_find) < min(sed_T_list) or np.round(temp_to_find) > max(
+            sed_T_list
+        ):
             raise ValueError
 
         idx = np.argmin(
@@ -138,9 +137,7 @@ class Star(Logger):
             + np.abs(sed_Z_list - star_f_h)
         )
 
-        ph_file = sed_name[idx]
-
-        return ph_file
+        return sed_name[idx]
 
     def __read_phenix_spectrum(self, ph_file, star_distance, star_radius):
         """Read a PHENIX Stellar Spectrum.
@@ -170,9 +167,7 @@ class Star(Logger):
                 strUnit = hdu[1].header["TUNIT2"]
                 sed = hdu[1].data.field("Flux") * u.Unit(strUnit)
 
-                bolometric_luminosity = (hdu[1].header["PHXLUM"] * u.W).to(
-                    u.Lsun
-                )
+                bolometric_luminosity = (hdu[1].header["PHXLUM"] * u.W).to(u.Lsun)
 
         # todo include more phoenix formats
         # elif 'HiRes.fits' in ph_file:
@@ -222,10 +217,8 @@ class Star(Logger):
         wl = wl[idx]
         sed = sed[idx]
         # Normalise SED to observed SED
-        bolometric_flux = np.trapz(sed, x=wl)  # [W m**-2]
-        bolometric_luminosity = (
-            4 * np.pi * star_radius**2 * bolometric_flux
-        )  # [W]
+        bolometric_flux = np.trapezoid(sed, x=wl)  # [W m**-2]
+        bolometric_luminosity = 4 * np.pi * star_radius**2 * bolometric_flux  # [W]
         sed *= (star_radius / star_distance) ** 2  # [W/m^2/mu]
 
         # When trading two lines below for two above you'll be using the phoenix
@@ -235,15 +228,11 @@ class Star(Logger):
 
         return wl, sed, bolometric_luminosity.to(u.Lsun)
 
-    def __get_star_spectrum(
-        self, wl, star_distance, star_temperature, star_radius
-    ):
+    def __get_star_spectrum(self, wl, star_distance, star_temperature, star_radius):
         omega_star = np.pi * (star_radius / star_distance) ** 2 * u.sr
         sed = omega_star * exolib.planck(wl, star_temperature)
-        bolometric_flux = np.trapz(sed, x=wl)
-        bolometric_luminosity = (
-            4.0 * np.pi * star_distance**2 * bolometric_flux
-        )
+        bolometric_flux = np.trapezoid(sed, x=wl)
+        bolometric_luminosity = 4.0 * np.pi * star_distance**2 * bolometric_flux
         return wl, sed, bolometric_luminosity.to(u.Lsun)
 
 
@@ -254,16 +243,58 @@ class CustomSed(Logger):
         ph_wl = ph["Wavelength"].data * ph["Wavelength"].unit
         ph_sed = ph["Sed"].data * ph["Sed"].unit
 
-        bolometric_flux = np.trapz(ph_sed, x=ph_wl)  # [W m**-2]
+        bolometric_flux = np.trapezoid(ph_sed, x=ph_wl)  # [W m**-2]
         bolometric_luminosity = (
             4 * np.pi * (star_radius.to(u.m)) ** 2 * bolometric_flux
         )  # [W]
-        ph_sed *= (
-            star_radius.to(u.m) / star_distance.to(u.m)
-        ) ** 2  # [W/m^2/mu]
-        self.debug("custom sed used : {}".format(fname))
+        ph_sed *= (star_radius.to(u.m) / star_distance.to(u.m)) ** 2  # [W/m^2/mu]
+        self.debug(f"custom sed used : {fname}")
 
         self.sed = Sed(ph_wl, ph_sed)
         self.filename = fname
         self.luminosity = bolometric_luminosity.to(u.Lsun)
         self.model = "Custom"
+
+
+class DownloadedSed(Logger):
+    """Star SED fetched from an online model grid (PHOENIX-ACES or SVO).
+
+    Thin wrapper around :class:`~exorad.tasks.downloadSed.DownloadSed` that
+    exposes the same ``sed`` / ``luminosity`` / ``model`` / ``filename``
+    attributes as :class:`Star` and :class:`CustomSed`, so it drops into
+    :meth:`~exorad.models.target.Target.update_target` unchanged.
+    """
+
+    def __init__(
+        self,
+        star_radius,
+        star_distance,
+        star_temperature,
+        star_logg,
+        star_metallicity=0.0,
+        model_name="bt-settl-cifist",
+    ):
+        self.set_log_name()
+        from exorad.tasks.downloadSed import DownloadSed
+
+        sed = DownloadSed()(
+            R=star_radius,
+            D=star_distance,
+            T=star_temperature,
+            logg=star_logg,
+            z=star_metallicity,
+            model_name=model_name,
+        )
+
+        # ``sed.data`` is already the flux at the observer, scaled by (R/D)^2.
+        bolometric_flux = np.trapezoid(sed.data, x=sed.wl_grid)  # [W m**-2]
+        bolometric_luminosity = (
+            4 * np.pi * (star_distance.to(u.m)) ** 2 * bolometric_flux
+        )  # [W]
+
+        meta = getattr(sed, "meta", {})
+        self.sed = sed
+        self.filename = meta.get("filename")
+        self.luminosity = bolometric_luminosity.to(u.Lsun)
+        self.model = meta.get("model", model_name)
+        self.debug(f"downloaded sed used : {model_name} ({self.filename})")

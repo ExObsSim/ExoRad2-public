@@ -32,10 +32,10 @@ class PropagateTargetLight(Task):
 
         target = self.get_task_param("target")
         channels = self.get_task_param("channels")
-        self.debug("detectors found : {}".format(channels.keys()))
+        self.debug(f"detectors found : {channels.keys()}")
         table_list = []
         for ch in self.get_task_param("channels"):
-            self.debug("propagating target in {}".format(ch))
+            self.debug(f"propagating target in {ch}")
             table_list.append(channels[ch].propagate_target(target))
         table = vstack_tables(table_list)
         updateTargetTable = UpdateTargetTable()
@@ -73,13 +73,11 @@ class PropagateForegroundLight(Task):
 
         target = self.get_task_param("target")
         channels = self.get_task_param("channels")
-        self.debug("detectors found : {}".format(channels.keys()))
+        self.debug(f"detectors found : {channels.keys()}")
         table_list = []
         for ch in self.get_task_param("channels"):
-            self.debug("propagating target background in {}".format(ch))
-            table_list.append(
-                channels[ch].propagate_diffuse_foreground(target)
-            )
+            self.debug(f"propagating target background in {ch}")
+            table_list.append(channels[ch].propagate_diffuse_foreground(target))
         table = vstack_tables(table_list)
         updateTargetTable = UpdateTargetTable()
         target = updateTargetTable(target=target, table=table)

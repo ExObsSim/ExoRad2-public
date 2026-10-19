@@ -3,8 +3,7 @@ import os
 import numpy as np
 from astropy import units as u
 
-from exorad.models.source import CustomSed
-from exorad.models.source import Star
+from exorad.models.source import CustomSed, DownloadedSed, Star
 from exorad.tasks.task import Task
 from exorad.utils.passVal import PassVal
 
@@ -33,7 +32,10 @@ class LoadSource(Task):
     Examples
     --------
     >>> loadSource = LoadSource()
-    >>> target, source = loadSource(target= target, source={'sourceSpectrum': {'value':'Planck'}})
+    >>> target, source = loadSource(
+    ...     target=target,
+    ...     source={"sourceSpectrum": {"value": "Planck"}},
+    ... )
 
     Raises
     ------
@@ -77,12 +79,8 @@ class LoadSource(Task):
                 if not hasattr(target.star.__getattribute__(attr), "value"):
                     self.error("target information incomplete")
                     raise AttributeError("target information incomplete")
-            star = CustomSed(
-                source["CustomSed"]["value"], target.star.R, target.star.D
-            )
-            self.debug(
-                "custom sed used {}".format(source["CustomSed"]["value"])
-            )
+            star = CustomSed(source["CustomSed"]["value"], target.star.R, target.star.D)
+            self.debug("custom sed used {}".format(source["CustomSed"]["value"]))
 
         else:
             # check if star information are complete
@@ -98,9 +96,7 @@ class LoadSource(Task):
                     star_sed_path=".",
                     starDistance=target.star.D,
                     starTemperature=target.star.Teff,
-                    starLogg=target.star.calc_logg(
-                        target.star.M, target.star.R
-                    ),
+                    starLogg=target.star.calc_logg(target.star.M, target.star.R),
                     starMetallicity=0.0,
                     starRadius=target.star.R,
                     use_planck_spectrum=True,
@@ -115,28 +111,24 @@ class LoadSource(Task):
                     if os.environ.get("PHOENIX_PATH", None) is not None:
                         star_sed_path = os.environ.get("PHOENIX_PATH", None)
                     else:
-                        raise OSError("No phoenix path specificed")
+                        raise OSError("No phoenix path specified") from None
 
                 if not os.path.exists(star_sed_path):
-                    raise OSError(
-                        "Phoenix path does not exist: {}".format(star_sed_path)
-                    )
+                    raise OSError(f"Phoenix path does not exist: {star_sed_path}")
 
                 try:
                     star = Star(
                         star_sed_path=star_sed_path,
                         starDistance=target.star.D,
                         starTemperature=target.star.Teff,
-                        starLogg=target.star.calc_logg(
-                            target.star.M, target.star.R
-                        ),
+                        starLogg=target.star.calc_logg(target.star.M, target.star.R),
                         starMetallicity=0.0,
                         starRadius=target.star.R,
                         use_planck_spectrum=False,
                         wl_min=wl_min,
                         wl_max=wl_max,
                     )
-                    self.debug("stellar sed used {}".format(star.filename))
+                    self.debug(f"stellar sed used {star.filename}")
                 except ValueError:
                     self.warning(
                         "stellar temperature out sed boundaries: Planck star used instead"
@@ -145,23 +137,49 @@ class LoadSource(Task):
                         star_sed_path=".",
                         starDistance=target.star.D,
                         starTemperature=target.star.Teff,
-                        starLogg=target.star.calc_logg(
-                            target.star.M, target.star.R
-                        ),
+                        starLogg=target.star.calc_logg(target.star.M, target.star.R),
                         starMetallicity=0.0,
                         starRadius=target.star.R,
                         use_planck_spectrum=True,
                         wl_min=wl_min,
                         wl_max=wl_max,
                     )
+            elif source["value"].lower() == "sed":
+                model_name = "bt-settl-cifist"
+                if "SedModel" in source:
+                    model_name = source["SedModel"]["value"]
+                try:
+                    star = DownloadedSed(
+                        star_radius=target.star.R,
+                        star_distance=target.star.D,
+                        star_temperature=target.star.Teff,
+                        star_logg=target.star.calc_logg(target.star.M, target.star.R),
+                        star_metallicity=0.0,
+                        model_name=model_name,
+                    )
+                    self.debug(f"downloaded sed used {star.filename}")
+                except Exception as exc:
+                    self.warning(
+                        f"SED download failed ({exc}); Planck spectrum used instead"
+                    )
+                    star = Star(
+                        star_sed_path=".",
+                        starDistance=target.star.D,
+                        starTemperature=target.star.Teff,
+                        starLogg=target.star.calc_logg(target.star.M, target.star.R),
+                        starMetallicity=0.0,
+                        starRadius=target.star.R,
+                        use_planck_spectrum=True,
+                        wl_min=wl_min,
+                        wl_max=wl_max,
+                    )
+
             else:
                 star = Star(
                     star_sed_path=".",
                     starDistance=target.star.D,
                     starTemperature=target.star.Teff,
-                    starLogg=target.star.calc_logg(
-                        target.star.M, target.star.R
-                    ),
+                    starLogg=target.star.calc_logg(target.star.M, target.star.R),
                     starMetallicity=0.0,
                     starRadius=target.star.R,
                     use_planck_spectrum=True,

@@ -51,12 +51,12 @@ class ZodiacalFrg(Logger):
                 A = self.zodiacal_fit_direction(coordinates, map_file)
             except (KeyError, OSError):
                 self.warning("zodiacal fit failed")
-                self._get_radiance(coordinates=None)
+                return self._get_radiance(coordinates=None)
 
         elif "zodiacFactor" in self.description:
             self.debug(" model used for zodiacal foreground")
             A = self.description["zodiacFactor"]["value"]
-            self.debug("zodiac factor : {}".format(A))
+            self.debug(f"zodiac factor : {A}")
         else:
             self.warning("zodiacal description uncompleted")
             A = 0
@@ -81,27 +81,23 @@ class ZodiacalFrg(Logger):
         It's based on Kelsall et al. 1998 model
         """
         import os
-        from astropy.io.misc.hdf5 import read_table_hdf5
-        import numpy as np
         from pathlib import Path
+
+        import numpy as np
+        from astropy.io.misc.hdf5 import read_table_hdf5
 
         ra_input = coord[0]
         dec_input = coord[1]
 
         exorad_path = Path(__file__).parent.parent.parent.absolute()
-        zodi_map_file = (
-            map_file
-            if map_file
-            else os.path.join(exorad_path, "data/Zodi_map.hdf5")
-        )
+        zodi_map_file = map_file or os.path.join(exorad_path, "data/Zodi_map.hdf5")
 
         if not os.path.isfile(zodi_map_file):
             dir_path = Path(__file__).parent.absolute()
 
             i = 0
             while (
-                "data"
-                not in [d.stem for d in Path(dir_path).iterdir() if d.is_dir()]
+                "data" not in [d.stem for d in Path(dir_path).iterdir() if d.is_dir()]
                 and i < 10
             ):
                 dir_path = dir_path.parent
@@ -113,7 +109,7 @@ class ZodiacalFrg(Logger):
             data_path = os.path.join(dir_path.absolute().as_posix(), "data")
             zodi_map_file = os.path.join(data_path, "Zodi_map.hdf5")
 
-        self.debug("map data:{}".format(zodi_map_file))
+        self.debug(f"map data:{zodi_map_file}")
 
         try:
             zodi_table = read_table_hdf5(zodi_map_file)
@@ -122,10 +118,10 @@ class ZodiacalFrg(Logger):
                 zodi_table["dec_icrs"] * u.deg - dec_input
             ) ** 2
             idx = np.argmin(distance)
-            self.debug("selected line {}".format(idx))
+            self.debug(f"selected line {idx}")
             self.debug(zodi_table[idx])
             return zodi_table["zodi_coeff"][idx]
 
         except OSError:
             self.error("Zodi map file not found")
-            raise OSError("Zodi map file not found")
+            raise OSError("Zodi map file not found") from None

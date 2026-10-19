@@ -46,7 +46,11 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+
+from __future__ import annotations
+
 import logging
+from typing import IO, Any
 
 __all__ = ["Logger"]
 
@@ -57,21 +61,19 @@ root_logger.propagate = False
 
 
 class ExoRadHandler(logging.StreamHandler):
-    def __init__(self, stream=None):
+    def __init__(self, stream: IO[str] | None = None) -> None:
         from exorad.utils.mpi import get_rank
 
         super().__init__(stream=stream)
 
         self._rank = get_rank()
 
-    def emit(self, record):
+    def emit(self, record: logging.LogRecord) -> None:
         # print(record)
         if self._rank == 0 or record.levelno >= logging.ERROR:
             # msg = '[{}] {}'.format(self._rank,record.msg)
             # record.msg = msg
-            return super().emit(record)
-        else:
-            pass
+            super().emit(record)
 
 
 formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
@@ -86,31 +88,32 @@ class Logger:
     Standard logging using logger library
     """
 
-    def __init__(self):
+    _log_name: str
+    _logger: logging.Logger
+
+    def __init__(self) -> None:
         self.set_log_name()
 
-    def set_log_name(self):
-        self._log_name = "exorad.{}".format(self.__class__.__name__)
-        self._logger = logging.getLogger(
-            "exorad.{}".format(self.__class__.__name__)
-        )
+    def set_log_name(self) -> None:
+        self._log_name = f"exorad.{self.__class__.__name__}"
+        self._logger = logging.getLogger(f"exorad.{self.__class__.__name__}")
 
-    def info(self, message, *args, **kwargs):
+    def info(self, message: object, *args: Any, **kwargs: Any) -> None:
         """See :class:`logging.Logger`"""
         self._logger.info(message, *args, **kwargs)
 
-    def warning(self, message, *args, **kwargs):
+    def warning(self, message: object, *args: Any, **kwargs: Any) -> None:
         """See :class:`logging.Logger`"""
         self._logger.warning(message, *args, **kwargs)
 
-    def debug(self, message, *args, **kwargs):
+    def debug(self, message: object, *args: Any, **kwargs: Any) -> None:
         """See :class:`logging.Logger`"""
         self._logger.debug(message, *args, **kwargs)
 
-    def error(self, message, *args, **kwargs):
+    def error(self, message: object, *args: Any, **kwargs: Any) -> None:
         """See :class:`logging.Logger`"""
         self._logger.error(message, *args, **kwargs)
 
-    def critical(self, message, *args, **kwargs):
+    def critical(self, message: object, *args: Any, **kwargs: Any) -> None:
         """See :class:`logging.Logger`"""
         self._logger.critical(message, *args, **kwargs)

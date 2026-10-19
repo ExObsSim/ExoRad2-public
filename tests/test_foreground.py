@@ -11,15 +11,13 @@ from test_options import payload_file
 
 from exorad.log import setLogLevel
 from exorad.models.foregrounds.zodiacalForeground import ZodiacalFrg
-from exorad.tasks import LoadTargetList
-from exorad.tasks import PreparePayload
-from exorad.tasks import PrepareTarget
+from exorad.tasks import LoadTargetList, PreparePayload, PrepareTarget
 
 path = pathlib.Path(__file__).parent.absolute()
-data_dir = os.path.join(path.parent.absolute(), 'examples')
+data_dir = os.path.join(path.parent.absolute(), "examples")
 
 options_filename = payload_file()
-target_list = os.path.join(data_dir, 'test_target.csv')
+target_list = os.path.join(data_dir, "test_target.csv")
 
 
 class ZodiacalTest(unittest.TestCase):
@@ -28,10 +26,9 @@ class ZodiacalTest(unittest.TestCase):
     def test_radiance(self):
         setLogLevel(logging.DEBUG)
 
-        payload = {'zodiacal': {'zodiacFactor': {'value': 2.5},
-                                'zodicalFrgMap': False}}
+        payload = {"zodiacal": {"zodiacFactor": {"value": 2.5}, "zodicalFrgMap": False}}
 
-        zodi = ZodiacalFrg(wl=self.wl, description=payload['zodiacal'])
+        zodi = ZodiacalFrg(wl=self.wl, description=payload["zodiacal"])
 
         if not skip_plot:
             zodi.radiance.plot()
@@ -40,20 +37,26 @@ class ZodiacalTest(unittest.TestCase):
     def test_fit_coordinate(self):
         setLogLevel(logging.DEBUG)
 
-        payload = {'zodiacal': {'zodiacalMap': {'value':True}}}
+        payload = {"zodiacal": {"zodiacalMap": {"value": True}}}
 
-        zodi = ZodiacalFrg(wl=self.wl, description=payload['zodiacal'],
-                           coordinates=(90.03841366076144 * u.deg,
-                                        -66.55432012293919 * u.deg))
+        zodi = ZodiacalFrg(
+            wl=self.wl,
+            description=payload["zodiacal"],
+            coordinates=(90.03841366076144 * u.deg, -66.55432012293919 * u.deg),
+        )
 
-        payload = {'zodiacal': {'zodiacFactor': {'value': 1.4536394185097168},
-                                'zodiacalMap': {'value': False}}}
+        payload = {
+            "zodiacal": {
+                "zodiacFactor": {"value": 1.4536394185097168},
+                "zodiacalMap": {"value": False},
+            }
+        }
 
-        zodi_validation = ZodiacalFrg(wl=self.wl,
-                                      description=payload['zodiacal'])
+        zodi_validation = ZodiacalFrg(wl=self.wl, description=payload["zodiacal"])
 
-        self.assertListEqual(list(zodi.radiance.data.value),
-                             list(zodi_validation.radiance.data.value))
+        assert list(zodi.radiance.data.value) == list(
+            zodi_validation.radiance.data.value
+        )
 
 
 class BackgroundHanderTest(unittest.TestCase):
@@ -63,7 +66,8 @@ class BackgroundHanderTest(unittest.TestCase):
     loadTargetList = LoadTargetList()
     prepareTarget = PrepareTarget()
     payload, channels, (wl_min, wl_max) = preparePayload(
-        payload_file=options_filename, output=None)
+        payload_file=options_filename, output=None
+    )
     targets = loadTargetList(target_list=target_list)
     target = targets.target[0]
 
@@ -73,9 +77,11 @@ class BackgroundHanderTest(unittest.TestCase):
         setLogLevel(logging.DEBUG)
 
         from exorad.tasks.foregroundHandler import EstimateZodi
+
         estimateBackground = EstimateZodi()
         target = estimateBackground(
-            zodi=self.payload['common']['foreground']['zodiacal'],
+            zodi=self.payload["common"]["foreground"]["zodiacal"],
             target=self.target,
-            wl_range=(self.wl_min, self.wl_max))
-        print(target.foreground['zodi'].data)
+            wl_range=(self.wl_min, self.wl_max),
+        )
+        print(target.foreground["zodi"].data)

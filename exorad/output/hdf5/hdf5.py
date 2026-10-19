@@ -46,23 +46,25 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+
 import datetime
+import importlib.util
 
 import h5py
 from astropy.table import meta
 
-from exorad import __author__
-from exorad import __citation__
-from exorad import __copyright__
-from exorad import __license__
-from exorad import __pkg_name__
-from exorad import __title__
-from exorad import __url__
-from exorad import __version__
-from exorad.output.hdf5.util import hdf5_group_to_dict
-from exorad.output.hdf5.util import recursively_read_dict_contents
-from exorad.output.output import Output
-from exorad.output.output import OutputGroup
+from exorad import (
+    __author__,
+    __citation__,
+    __copyright__,
+    __license__,
+    __pkg_name__,
+    __title__,
+    __url__,
+)
+from exorad.__version__ import __version__
+from exorad.output.hdf5.util import hdf5_group_to_dict, recursively_read_dict_contents
+from exorad.output.output import Output, OutputGroup
 
 META_KEY = "__table_column_meta__"
 
@@ -75,7 +77,7 @@ class HDF5OutputGroup(OutputGroup):
     def write_array(self, array_name, array, metadata=None):
         if isinstance(array, list):
             for idx, a in enumerate(array):
-                self.write_array("{}{}".format(array_name, idx), a, metadata)
+                self.write_array(f"{array_name}{idx}", a, metadata)
             return
         ds = self._entry.create_dataset(
             str(array_name), data=array, shape=array.shape, dtype=array.dtype
@@ -98,11 +100,11 @@ class HDF5OutputGroup(OutputGroup):
             str(table_name) + "." + META_KEY, data=header_encoded
         )
 
-        tg = self._entry.create_group("{}_to_group".format(str(table_name)))
+        tg = self._entry.create_group(f"{table_name!s}_to_group")
         for col in table.keys():
             tg_c = tg.create_group(str(col))
             tg_c.create_dataset("value", data=table[col])
-            if table[col].unit != None:
+            if table[col].unit is not None:
                 tg_c.create_dataset("unit", data=str(table[col].unit))
 
     def write_scalar(self, scalar_name, scalar, metadata=None):
@@ -149,34 +151,24 @@ class HDF5OutputGroup(OutputGroup):
                 data=quantity.value,
             )
             qg_c.create_dataset("unit", data=str(quantity.unit))
-            pass
 
 
 def _encode_mixins(tbl):
+    from astropy import units as u
     from astropy.table import serialize
     from astropy.table.table import has_info_class
-    from astropy import units as u
     from astropy.utils.data_info import MixinInfo, serialize_context_as
 
-    try:
-        import yaml
-    except ImportError:
+    if importlib.util.find_spec("yaml") is None:
         for col in tbl.itercols():
-            if (
-                has_info_class(col, MixinInfo)
-                and col.__class__ is not u.Quantity
-            ):
+            if has_info_class(col, MixinInfo) and col.__class__ is not u.Quantity:
                 raise TypeError(
-                    "cannot write type {} column '{}' "
-                    "to HDF5 without PyYAML installed.".format(
-                        col.__class__.__name__, col.info.name
-                    )
+                    f"cannot write type {col.__class__.__name__} column '{col.info.name}' "
+                    "to HDF5 without PyYAML installed."
                 )
 
     with serialize_context_as("hdf5"):
-        encode_tbl = serialize.represent_mixins_as_columns(tbl)
-
-    return encode_tbl
+        return serialize.represent_mixins_as_columns(tbl)
 
 
 class HDF5Output(Output):
@@ -243,7 +235,6 @@ class HDF5Output(Output):
             self.fd.close()
 
 
-
 def load(input_group):
     """
     Reads and converts an HDF5 group into a dictionary.
@@ -260,5 +251,4 @@ def load(input_group):
     """
     # Convert the HDF5 group into a dictionary recursively
     input_dict = hdf5_group_to_dict(input_group)
-    input_dict = recursively_read_dict_contents(input_dict)
-    return input_dict
+    return recursively_read_dict_contents(input_dict)

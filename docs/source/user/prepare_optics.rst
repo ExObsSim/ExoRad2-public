@@ -3,24 +3,24 @@
 .. role:: xml(code)
     :language: xml
 
-==========================
-Prepare Optics
-==========================
+==================
+Prepare the optics
+==================
 
-Describing the Optical Path
+Describing the optical path
 ===========================
 
-In ExoRad, the optical path is a key component that dictates how light is propagated from the source (e.g., a star or an exoplanet) through the instrument's various optical elements until it reaches the detector. This path is crucial because each element in the optical train can affect the signal by modifying the light through transmission, reflection, absorption, or emission processes.
+The optical path describes how light travels from the source through the optical elements to the detector. Every element in the train affects the signal, by transmission, reflection, absorption or thermal emission.
 
-Defining the Optical Path in ExoRad
------------------------------------
+Defining the path
+----------------
 
-To define the optical path in your payload description file, you need to list each optical element in the order they appear in the actual setup, from the source to the detector. These elements are wrapped within the :xml:`<optics></optics>` descriptor.
+List the optical elements in the payload file in physical order, from the source to the detector, inside an :xml:`<optics>` section.
 
-Pay special attention to the order of the elements, as ExoRad computes the emission of each component and propagates it through the subsequent elements. This propagation accounts for various effects such as slit apertures (where the signal is convolved with the slit function) or the radiation contributions from an optics box directly irradiating the detector.
+The order matters: ExoRad computes the emission of each element and propagates it through the elements that follow, including slit convolution and the direct irradiation of the detector by an optics box.
 
-Types of Optical Elements
--------------------------
+Types of optical element
+-----------------------
 
 In ExoRad, several types of optical elements can be used within the :xml:`<optics>` section:
 
@@ -97,15 +97,15 @@ For example:
         <emissivity>1</emissivity>
     </opticalElement>
 
-Defining the Optical Path
-=========================
+Where the path lives
+===================
 
 The optical path can be described either within a specific channel or as a common path shared between channels. For example, in the `payload_example.xml` file, the optical path is shared at the beginning, with a filter splitting the light into two channels, each with its own specific path.
 
-In this shared section, you will also define the telescope's **collective area**, represented by :xml:`Atel`, which is used to compute the incoming flux from the observed object.
+In this shared section, you will also define the telescope **collecting area**, :xml:`Atel`, used to compute the incoming flux.
 
-Optical Light Propagation
-=========================
+Light propagation
+================
 
 ExoRad simulates how light propagates through the instrument, from the telescope's optics to the detector. This propagation involves:
 
@@ -117,8 +117,6 @@ Modeling Emission as a Blackbody
 
 The emission from each optical element is modeled as a blackbody at the specified temperature. The emissivity provided for each element modifies the blackbody radiation to account for real-world deviations from ideal blackbody behavior. Specifically, the spectral radiance is calculated using the Planck function at the given temperature and scaled by the emissivity as a function of wavelength.
 
-This approach ensures that the thermal emission accurately reflects both the temperature and the material properties of each optical element, providing a realistic simulation of the instrument's behavior.
-
 Incorporating Solid Angle
 --------------------------
 
@@ -128,7 +126,7 @@ The **pixel field of view** :math:`\Omega` plays a crucial role in determining h
 - **Detector Boxes**: Integrated over a solid angle of :math:`\pi`, as they illuminate the detector uniformly.
 - **Other Optical Elements**: Integrated over a solid angle of :math:`\Omega`.
 
-However, users have the flexibility to specify a custom solid angle for any optical surface by adding the `solid_angle` keyword. This value must be provided in radians.
+You can override the solid angle for any surface with the ``solid_angle`` keyword. The value is given in steradians.
 
 For example, to set a custom solid angle of 0.5 steradians for a specific optical surface:
 
@@ -145,14 +143,14 @@ For example, to set a custom solid angle of 0.5 steradians for a specific optica
 Radiance and Signal Computation
 -----------------------------------
 
-For each surface, ExoRad estimates the radiance and stores it in a dedicated :class:`~exorad.models.signal.Signal` object, called :class:`~exorad.models.optics.opticalPath.InstRadiance`. This radiance is then propagated through the rest of the optical path, applying each element’s transmission function.
+For each surface, ExoRad estimates the radiance and stores it in a dedicated :class:`~exorad.models.signal.Signal` object, called :class:`~exorad.models.optics.opticalPath.InstRadiance`. The radiance is then propagated through the rest of the path, applying each element's transmission.
 
 Finally, ExoRad builds the :class:`~exorad.models.optics.opticalPath.OpticalPath`, which allows the program to estimate the **total channel transmission** and the **signal contribution** from each optical element. The total contribution is stored in the output channel table as `instrument_signal`.
 
 Flux and Signal Calculation
 ---------------------------
 
-Starting from the element's radiance, ExoRad calculates the source flux to the pixels, accounting for the angle :math:`\Omega` seen by the detector. 
+Starting from the element's radiance, ExoRad calculates the source flux to the pixels, accounting for the angle :math:`\Omega` seen by the detector.
 
 Effect of Slits on Light Propagation
 +++++++++++++++++++++++++++++++++++++
@@ -171,7 +169,7 @@ All information about the optical path, including the transmission and signal of
 - The **transmission** of each element.
 - The **signal** contribution of each element.
 
-Other information are stored in the `channel` output table decribed in :ref:`outputs`.
+The rest is stored in the ``channel`` output table described in :ref:`outputs`.
 
 For more detailed information on how ExoRad handles these processes, please refer to the `ArielRad paper <https://link.springer.com/article/10.1007/s10686-020-09676-7>`_.
 

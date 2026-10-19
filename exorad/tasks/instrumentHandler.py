@@ -2,10 +2,10 @@ from collections import OrderedDict
 
 from astropy.io.misc.hdf5 import read_table_hdf5
 
-from .task import Task
-from exorad.models.instruments import Photometer
-from exorad.models.instruments import Spectrometer
+from exorad.models.instruments import Photometer, Spectrometer
 from exorad.output.hdf5 import load
+
+from .task import Task
 
 instruments = {"photometer": Photometer, "spectrometer": Spectrometer}
 
@@ -60,7 +60,7 @@ class BuildInstrument(Task):
             instrumentClass = instruments[self.get_task_param("type")]
         except KeyError:
             self.error("invalid instrument class")
-            raise ValueError
+            raise ValueError("invalid instrument class") from None
         instrument = instrumentClass(
             self.get_task_param("name"),
             self.get_task_param("description"),
@@ -92,7 +92,9 @@ class BuildChannels(Task):
     Examples
     --------
     >>> buildChannels = BuildChannels()
-    >>> channels = buildChannels(payload=payload, write=False, output=None)
+    >>> channels = buildChannels(
+    ...     payload=payload, write=False, output=None
+    ... )
     """
 
     def __init__(self):
@@ -135,9 +137,9 @@ class BuildChannels(Task):
                 if self.get_task_param("write"):
                     channels[det].write(ch)
         else:
-            channel_type = self.get_task_param("payload")["channel"][
-                "channelClass"
-            ]["value"].lower()
+            channel_type = self.get_task_param("payload")["channel"]["channelClass"][
+                "value"
+            ].lower()
             det = self.get_task_param("payload")["channel"]["value"]
             channels[det] = buildInstrument(
                 type=channel_type,
@@ -149,7 +151,7 @@ class BuildChannels(Task):
             )
             if self.get_task_param("write"):
                 channels[det].write(ch)
-        self.debug("channels : {}".format(channels))
+        self.debug(f"channels : {channels}")
         self.set_output(channels)
 
 
@@ -198,7 +200,7 @@ class LoadPayload(Task):
             table = read_table_hdf5(ch_dir, path=ch)
             built_instr = load(ch_dir["built_instr"])
             channels[ch].load(table, built_instr)
-        self.debug("channels loaded: {}".format(channels))
+        self.debug(f"channels loaded: {channels}")
         self.set_output([payload, channels])
 
 
@@ -228,7 +230,9 @@ class PreparePayload(Task):
     Examples
     --------
     >>> preparePayload = PreparePayload()
-    >>> payload, channels, (wl_min, wl_max) = PreparePayload(payload_file=payload, output=output)
+    >>> payload, channels, (wl_min, wl_max) = PreparePayload(
+    ...     payload_file=payload, output=output
+    ... )
 
     """
 
@@ -238,8 +242,9 @@ class PreparePayload(Task):
 
     def execute(self):
         import os
-        from exorad.tasks import LoadOptions
+
         from exorad.output.hdf5 import HDF5Output
+        from exorad.tasks import LoadOptions
 
         loadOptions = LoadOptions()
         buildChannels = BuildChannels()
@@ -259,18 +264,11 @@ class PreparePayload(Task):
             if isinstance(payload_file, dict):
                 payload = payload_file
             if output is not None:
-                if os.path.isfile(output):
-                    append = True
-                else:
-                    append = False
+                append = bool(os.path.isfile(output))
                 with HDF5Output(output, append=append) as out:
-                    channels = buildChannels(
-                        payload=payload, write=True, output=out
-                    )
+                    channels = buildChannels(payload=payload, write=True, output=out)
             else:
-                channels = buildChannels(
-                    payload=payload, write=False, output=None
-                )
+                channels = buildChannels(payload=payload, write=False, output=None)
 
         elif ext in [".h5", ".hdf5"]:
             import h5py
@@ -308,9 +306,7 @@ class MergeChannelsOutput(Task):
         from exorad.utils.util import vstack_tables
 
         channels = self.get_task_param("channels")
-        table_list = []
-        for channel in channels.keys():
-            table_list.append(channels[channel].table)
+        table_list = [channels[channel].table for channel in channels]
         table = vstack_tables(table_list)
         self.set_output(table)
 
@@ -335,10 +331,14 @@ class GetChannelList(Task):
     --------
     >>> from exorad.tasks.loadOptions import LoadOptions
     >>> loadOptions = LoadOptions()
-    >>> options = loadOptions(filename = 'path/to/file.xml')
+    >>> options = loadOptions(filename="path/to/file.xml")
     >>> getDetectorList = GetChannelList()
-    >>> photometers_list = getDetectorList(options = options, channel_type = 'Photometer')
-    >>> spectrometers_list = getDetectorList(options = options, channel_type = 'Spectrometer')
+    >>> photometers_list = getDetectorList(
+    ...     options=options, channel_type="Photometer"
+    ... )
+    >>> spectrometers_list = getDetectorList(
+    ...     options=options, channel_type="Spectrometer"
+    ... )
     """
 
     def __init__(self):
@@ -349,11 +349,7 @@ class GetChannelList(Task):
         self._opt = self.get_task_param("options")
         self._channel_type = self.get_task_param("channel_type")
         self.channel_lst = self.__get_channel_list__()
-        self.info(
-            "{} type channel found: {}".format(
-                self._channel_type, self.channel_lst
-            )
-        )
+        self.info(f"{self._channel_type} type channel found: {self.channel_lst}")
         self.set_output(self.channel_lst)
 
     def __get_channel_list__(self):
@@ -364,7 +360,5 @@ class GetChannelList(Task):
                 == self._channel_type.lower()
             ):
                 channel_lst.append(channel)
-                self.debug(
-                    "{} added as {}".format(channel, self._channel_type)
-                )
+                self.debug(f"{channel} added as {self._channel_type}")
         return channel_lst

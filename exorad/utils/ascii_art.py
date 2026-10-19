@@ -1,4 +1,4 @@
-import exorad.__version__ as version
+from exorad.__version__ import __version__
 
 # ascii_art ="   .-.      _______                             .  '  *   .  . \n\
 #                   {}``; |==|_______D                          .  * * -+-    \n\
@@ -11,9 +11,7 @@ ascii_art_part1 = "   .-.      _______                             .  '  *   .  
               (  /  |        / | \\                    "
 ascii_art_part2 = "  * .  ' .    \n\
                \\(_)_]]      /  |  \\                            *   *  .   .\n "
-ascii_art = "{}{}{}".format(
-    ascii_art_part1, version.__version__, ascii_art_part2
-)
+ascii_art = f"{ascii_art_part1}{__version__}{ascii_art_part2}"
 
 ascii_plot_part1 = "  .    _     *       \\|/   .       .      -*-              +\n\
     .'\\ \\`.     +    -*-     *   .         '       .   *\n\
@@ -24,4 +22,4 @@ ascii_plot_part1 = "  .    _     *       \\|/   .       .      -*-              
 
 ascii_plot_part2 = "__"
 
-ascii_plot = "{}{}{}".format(ascii_plot_part1, version, ascii_plot_part2)
+ascii_plot = f"{ascii_plot_part1}{__version__}{ascii_plot_part2}"

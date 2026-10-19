@@ -3,11 +3,14 @@ import astropy.units as u
 import numpy as np
 from astropy.table import QTable
 
+from exorad.utils.exolib import (
+    binnedPSF,
+    find_aperture_radius,
+    paosPSF,
+    pixel_based_psf,
+)
+
 from .instrument import Instrument
-from exorad.utils.exolib import binnedPSF
-from exorad.utils.exolib import find_aperture_radius
-from exorad.utils.exolib import paosPSF
-from exorad.utils.exolib import pixel_based_psf
 
 
 class Photometer(Instrument):
@@ -17,12 +20,10 @@ class Photometer(Instrument):
 
     def _wavelength_table(self):
         wl_c = 0.5 * (
-            self.description["wl_min"]["value"]
-            + self.description["wl_max"]["value"]
+            self.description["wl_min"]["value"] + self.description["wl_max"]["value"]
         )
         bandwidth = (
-            self.description["wl_max"]["value"]
-            - self.description["wl_min"]["value"]
+            self.description["wl_max"]["value"] - self.description["wl_min"]["value"]
         )
         left_bin_edge = wl_c - 0.5 * bandwidth
         right_bin_edge = wl_c + 0.5 * bandwidth
@@ -30,13 +31,11 @@ class Photometer(Instrument):
         self.table["Wavelength"] = [wl_c.value] * wl_c.unit
         self.table["Bandwidth"] = [bandwidth.value] * bandwidth.unit
         self.table["LeftBinEdge"] = [left_bin_edge.value] * left_bin_edge.unit
-        self.table["RightBinEdge"] = [
-            right_bin_edge.value
-        ] * right_bin_edge.unit
-        self.debug("wavelength table: \n{}".format(self.table))
+        self.table["RightBinEdge"] = [right_bin_edge.value] * right_bin_edge.unit
+        self.debug(f"wavelength table: \n{self.table}")
 
     def builder(self):
-        self.info("building {}".format(self.name))
+        self.info(f"building {self.name}")
         self._wavelength_table()
         # self.table['TR'], transmission_data = self._get_transmission()
         # self._add_data_to_built('transmission_data', transmission_data.to_dict())
@@ -81,7 +80,7 @@ class Photometer(Instrument):
         self._add_data_to_built("extent", extent)
 
         window_size_px = self._windows_size(prf, psf_format)
-        self.debug("window size : {}".format(window_size_px))
+        self.debug(f"window size : {window_size_px}")
         self._add_data_to_built("window_size_px", window_size_px)
         self.table["WindowSize"] = window_size_px
 
@@ -142,17 +141,13 @@ class Photometer(Instrument):
             self.debug("force channel wl edge enabled")
             idx = np.logical_or(
                 wl
-                < self.description["wl_min"]["value"].to(
-                    self.table["Wavelength"].unit
-                ),
+                < self.description["wl_min"]["value"].to(self.table["Wavelength"].unit),
                 wl
-                > self.description["wl_max"]["value"].to(
-                    self.table["Wavelength"].unit
-                ),
+                > self.description["wl_max"]["value"].to(self.table["Wavelength"].unit),
             )
             transmission[idx] = wave_window[idx] = 0.0
 
-        star_flux = np.trapz(
+        star_flux = np.trapezoid(
             wave_window * target.star.sed.data, x=target.star.sed.wl_grid
         ).to(u.W / u.m**2)
         out["starFlux"] = [star_flux.value] * star_flux.unit
@@ -160,7 +155,7 @@ class Photometer(Instrument):
 
         star_signal = (
             self.payload["optics"]["Atel"]["value"]
-            * np.trapz(
+            * np.trapezoid(
                 qe
                 * target.star.sed.data
                 * transmission
@@ -190,19 +185,13 @@ class Photometer(Instrument):
         out["star_signal_inAperture"] = [
             star_signal_aperture.value
         ] * star_signal_aperture.unit
-        self.debug(
-            "star signal in aperture : {}".format(
-                out["star_signal_inAperture"]
-            )
-        )
+        self.debug("star signal in aperture : {}".format(out["star_signal_inAperture"]))
 
         star_signal_in_pixel = self.built_instr["PRF"].max() * star_signal
         out["star_MaxSignal_inPixel"] = [
             star_signal_in_pixel.value
         ] * star_signal_in_pixel.unit
         self.debug(
-            "star signal in pixel MAX : {}".format(
-                out["star_signal_inAperture"]
-            )
+            "star signal in pixel MAX : {}".format(out["star_signal_inAperture"])
         )
         return out

@@ -1,79 +1,61 @@
 .. _installation:
 
-=======================
-Installation & updates
-=======================
+============
+Installation
+============
 
-Installing from PyPi
----------------------
+ExoRad 2 requires **Python 3.12 or newer**.
 
-You can install it simply by doing::
+From PyPI
+=========
 
-    pip install exorad
+.. code-block:: console
 
-Installing from git
--------------------
-You can clone ExoRad from our main git repository::
+   pip install exorad
 
-    git clone https://github.com/ExObsSim/ExoRad_public.git
+From source
+===========
 
-Move into the ExoRad folder::
+.. code-block:: console
 
-    cd /your_path/ExoRad
+   git clone https://github.com/ExObsSim/ExoRad2-public.git
+   cd ExoRad2-public
+   pip install .
 
-ExoRad uses **Poetry** for dependency management and package installation. If you haven't installed Poetry yet, you can do so by running the following command::
+or, for faster dependency resolution, with `uv <https://docs.astral.sh/uv/>`__:
 
-    pip install poetry
+.. code-block:: console
 
-For more details, refer to the [official Poetry documentation](https://python-poetry.org/docs/#installation).
+   uv sync
 
-Once Poetry is installed, you can proceed with installing ExoRad::
+For development — the test, lint and type-check tools — install the ``dev``
+extra in editable mode:
 
-    poetry install
+.. code-block:: console
 
-To test for correct setup you can do::
+   pip install -e ".[dev]"        # or: uv sync --extra dev
 
-    python -c "import exorad"
+An editable install picks up your source edits without reinstalling.
 
-If no errors appeared then it was successfully installed. Additionally the ``exorad`` program
-should now be available in the command line::
+Check the install
+=================
 
-    exorad
+.. code-block:: console
 
+   python -c "import exorad; print(exorad.__version__.__version__)"
+   exorad --help
 
-Uninstall ExoRad
--------------------
+Updating
+========
 
-ExoRad is installed in your system as a standard python package:
-you can uninstall it from your Environment as::
+.. code-block:: console
 
-    pip uninstall exorad
+   pip install --upgrade exorad          # PyPI
+   git pull && pip install .             # a source checkout
 
+Uninstalling
+============
 
-Update ExoRad
----------------
+.. code-block:: console
 
-You can download or pull a newer version of ExoRad over the old one, replacing all modified data.
-
-Then you have to place yourself inside the installation directory with the console::
-
-    cd /your_path/ExoRad
-
-Now you can update ExoRad simply as::
-
-    pip install . --upgrade
-
-or simply::
-
-    pip install .
-
-Modify ExoRad
-~~~~~~~~~~~~~~~~
-
-You can modify ExoRad main code, editing as you prefer, but in order to make the changes effective::
-
-    pip install . --upgrade
-
-or simply::
-
-    pip install .
+   pip uninstall exorad

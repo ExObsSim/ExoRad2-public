@@ -45,18 +45,6 @@ class OpticalElement(Logger):
         Solid angle associated with the optical element in steradians. `None` if
         not specified.
 
-    Methods
-    -------
-    _get_angle()
-        Retrieves and processes the solid angle of the optical element.
-    _get_position()
-        Determines the position of the optical element in the optical path.
-    _get_temperature()
-        Retrieves and processes the temperature of the optical element.
-    _get_transmission()
-        Calculates the transmission of the optical element over the wavelength grid.
-    _get_emissivity()
-        Calculates the emissivity of the optical element over the wavelength grid.
     """
 
     def __init__(self, description, wl):
@@ -95,12 +83,10 @@ class OpticalElement(Logger):
             angle_value = self.description["solid_angle"]["value"]
             if hasattr(angle_value, "unit"):
                 return angle_value.to(u.sr)
-            else:
-                self.debug("Angle assumed to be in steradians (sr)")
-                return angle_value * u.sr
-        else:
-            # If not specified, return None to use the default value from the instrument
-            return None
+            self.debug("Angle assumed to be in steradians (sr)")
+            return angle_value * u.sr
+        # If not specified, return None to use the default value from the instrument
+        return None
 
     def _get_position(self):
         """
@@ -113,10 +99,9 @@ class OpticalElement(Logger):
         """
         if self.type == "detector box":
             return "detector"
-        elif self.type == "optics box":
+        if self.type == "optics box":
             return "optics box"
-        else:
-            return "path"
+        return "path"
 
     def _get_temperature(self):
         """
@@ -131,11 +116,9 @@ class OpticalElement(Logger):
             temp_value = self.description["temperature"]["value"]
             if hasattr(temp_value, "unit"):
                 return temp_value.to(u.K)
-            else:
-                self.debug("Temperature assumed to be in Kelvin (K)")
-                return temp_value * u.K
-        else:
-            return None
+            self.debug("Temperature assumed to be in Kelvin (K)")
+            return temp_value * u.K
+        return None
 
     def _get_transmission(self):
         """
@@ -173,9 +156,11 @@ class OpticalElement(Logger):
                         colname = "Reflectivity"
                         _ = self.description["data"][colname]
                     except KeyError:
-                        error_msg = f"{colname} column name not found in transmission data file"
+                        error_msg = (
+                            f"{colname} column name not found in transmission data file"
+                        )
                         self.error(error_msg)
-                        raise KeyError(error_msg)
+                        raise KeyError(error_msg) from None
 
             # Get the wavelength column name from the data
             wl_colname = get_wl_col_name(
@@ -196,16 +181,18 @@ class OpticalElement(Logger):
                 key = self.description["use"]["value"]
                 transmission = np.ones(self.wl.size) * self.description[key]["value"]
             else:
-                error_msg = (
-                    "Both transmission and reflectivity are included but 'use' is not indicated"
-                )
+                error_msg = "Both transmission and reflectivity are included but 'use' is not indicated"
                 self.error(error_msg)
                 raise KeyError(error_msg)
         elif "transmission" in self.description or "reflectivity" in self.description:
             try:
-                transmission = np.ones(self.wl.size) * self.description["transmission"]["value"]
+                transmission = (
+                    np.ones(self.wl.size) * self.description["transmission"]["value"]
+                )
             except KeyError:
-                transmission = np.ones(self.wl.size) * self.description["reflectivity"]["value"]
+                transmission = (
+                    np.ones(self.wl.size) * self.description["reflectivity"]["value"]
+                )
                 self.debug(
                     f"Reflectivity keyword found for transmission for {self.name}"
                 )

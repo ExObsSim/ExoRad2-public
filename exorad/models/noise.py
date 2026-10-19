@@ -4,8 +4,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 
-from exorad.models.signal import CustomSignal
-from exorad.models.signal import Signal
+from exorad.models.signal import CustomSignal, Signal
 
 logger = logging.getLogger("exorad.noise")
 
@@ -38,9 +37,9 @@ def frame_time(target, channel, out):
     )
     logger.debug("saturation time : {}".format(out["saturation_time"]))
     if "frame_time" in channel["detector"].keys():
-        out["frameTime"] = channel["detector"]["frame_time"][
-            "value"
-        ] * np.ones(out["saturation_time"].size)
+        out["frameTime"] = channel["detector"]["frame_time"]["value"] * np.ones(
+            out["saturation_time"].size
+        )
     else:
         out["frameTime"] = (
             channel["detector"]["f_well_depth"]["value"]
@@ -73,7 +72,7 @@ def multiaccum(channel, t_frame):
 
     if "multiaccumM" in channel["detector"]:
         m = channel["detector"]["multiaccumM"]["value"]
-        logger.debug("multiaccum activated: m = {}".format(m))
+        logger.debug(f"multiaccum activated: m = {m}")
         tf = 0.0 * u.s
     else:
         m = 1
@@ -88,20 +87,10 @@ def multiaccum(channel, t_frame):
         * (nRead**2 + 1.0)
         / (nRead**2 + nRead)
         / 5.0
-        * (
-            1
-            - 5.0
-            / 3.0
-            * (m**2 - 1)
-            / m
-            / (nRead**2 + 1)
-            * tf
-            / (nRead - 1)
-            / t_frame
-        )
+        * (1 - 5.0 / 3.0 * (m**2 - 1) / m / (nRead**2 + 1) * tf / (nRead - 1) / t_frame)
     )
-    logger.debug("read noise gain: {}".format(read_gain))
-    logger.debug("shot noise gain: {}".format(shot_gain))
+    logger.debug(f"read noise gain: {read_gain}")
+    logger.debug(f"shot noise gain: {shot_gain}")
     return read_gain, shot_gain
 
 
@@ -129,98 +118,111 @@ def photon_noise(table, channel, shot_gain, out):
 
     signals = [key for key in table.keys() if "signal" in key]
     for key in signals:
-        noise_key = "{}_noise".format(key)
+        noise_key = f"{key}_noise"
         out[noise_key] = (
             np.sqrt(
-                shot_gain
-                * table[key][table["chName"] == name]
-                * u.count
-                / u.hr
+                shot_gain * table[key][table["chName"] == name] * u.count / u.hr
             ).to(u.count / u.s)
             * u.hr**0.5
         )
-        logger.debug("{} : {}".format(noise_key, out[noise_key]))
+        logger.debug(f"{noise_key} : {out[noise_key]}")
     return out
 
 
 def photon_noise_variance(table, out):
-    '''
     """
-    Given the target table return the sum of photon variances
+    Calculate the sum of photon noise variances from all signal sources.
+
+    Given the target table, this function computes the sum of photon
+    variances from all signal contributions.
 
     Parameters
-    -----------
-    target: Table
-        Target table to investigate
-    out: QTable
-        output table
+    ----------
+    table : QTable
+        Target table containing signal columns to investigate.
+    out : QTable
+        Output table containing the computed noise columns.
 
     Returns
-    --------
-    Array
-        sum of photon variances
+    -------
+    variance : Quantity
+        Sum of photon variances with units of (count/s)^2 * hr.
+
+    Notes
+    -----
+    The function identifies all columns in the table with 'signal' in their
+    name and computes the variance from their corresponding noise columns.
     """
-    '''
     signals = [key for key in table.keys() if "signal" in key]
     _photon_noise_variance = (
         np.zeros(out["frameTime"].size) * (u.count / u.s) ** 2 * u.hr
     )
     for key in signals:
-        noise_key = "{}_noise".format(key)
+        noise_key = f"{key}_noise"
         _photon_noise_variance += out[noise_key] * out[noise_key]
     return _photon_noise_variance
 
 
 def add_custom_noise(custom, wl, out):
-    if "data" in custom:
-        col_name = [
-            col for col in custom["data"].keys() if "Wavelength" not in col
-        ]
-        custom_noise = Signal(
-            custom["data"]["Wavelength"], custom["data"][col_name]
-        )
-        custom_noise.spectral_rebin(wl)
-        out["{}_noise".format(col_name)] = custom_noise.data
-        logger.debug(
-            "{} added as custom noise :{}".format(col_name, custom_noise.data)
-        )
+    """
+    Add custom noise contributions to the output table.
+
+    This function adds user-defined noise sources to the total noise budget.
+    Custom noise can be provided either as wavelength-dependent data or as
+    constant values.
+
+    Parameters
+    ----------
+    custom : dict or OrderedDict
+        Custom noise specification. Can contain either:
+        - 'data' key with wavelength-dependent noise values
+        - Multiple entries with constant noise values
+    wl : Quantity
+        Wavelength grid for rebinning the custom noise data.
+    out : QTable
+        Output table where custom noise will be added.
+
+    Returns
+    -------
+    None
+        The function modifies the `out` table in place, adding custom noise
+        columns and updating the total noise.
+
+    Notes
+    -----
+    Custom noise values are added in quadrature to the existing total noise.
+    Constant noise values should be provided in units of ppm (parts per million)
+    and are converted internally.
+
+    Examples
+    --------
+    >>> custom_noise = {
+    ...     "data": {"Wavelength": wl_array, "jitter": noise_array}
+    ... }
+    >>> add_custom_noise(custom_noise, wl_grid, output_table)
+    """
+
+    def _combine(name, contribution):
+        out[f"{name}_noise"] = contribution
+        logger.debug(f"{name} added as custom noise : {contribution}")
         out["total_noise"] = np.sqrt(
-            out["total_noise"] * out["total_noise"]
-            + custom_noise.data * custom_noise.data
+            out["total_noise"] * out["total_noise"] + contribution * contribution
         )
 
-    if isinstance(custom, OrderedDict):
+    if "data" in custom:
+        col_name = next(col for col in custom["data"].keys() if "Wavelength" not in col)
+        custom_noise = Signal(custom["data"]["Wavelength"], custom["data"][col_name])
+        custom_noise.spectral_rebin(wl)
+        _combine(col_name, custom_noise.data.value * u.hr**0.5)
+    elif isinstance(custom, OrderedDict):
         for contrib in custom:
-            custom_noise = (
-                custom[contrib]["value"]
-                * 1e-6
-                * np.ones(wl.size)
-                * u.hr**0.5
+            contribution = (
+                custom[contrib]["value"] * 1e-6 * np.ones(wl.size) * u.hr**0.5
             )
-            out[
-                "{}_noise".format(custom[contrib]["name"]["value"])
-            ] = custom_noise
-            logger.debug(
-                "{} added as custom noise :{}".format(
-                    custom[contrib]["name"]["value"], custom_noise
-                )
-            )
-            out["total_noise"] = np.sqrt(
-                out["total_noise"] * out["total_noise"]
-                + custom_noise * custom_noise
-            )
+            _combine(custom[contrib]["name"]["value"], contribution)
     else:
-        custom_noise = custom["value"] * 1e-6 * np.ones(wl.size) * u.hr**0.5
-        out["{}_noise".format(custom["name"]["value"])] = custom_noise
-        logger.debug(
-            "{} added as custom noise :{}".format(
-                custom["name"]["value"], custom_noise
-            )
-        )
-        out["total_noise"] = np.sqrt(
-            out["total_noise"] * out["total_noise"]
-            + custom_noise * custom_noise
-        )
+        contribution = custom["value"] * 1e-6 * np.ones(wl.size) * u.hr**0.5
+        _combine(custom["name"]["value"], contribution)
     return out
 
 

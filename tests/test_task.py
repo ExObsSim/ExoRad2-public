@@ -1,6 +1,8 @@
 import logging
 import unittest
 
+import pytest
+
 from exorad.log import setLogLevel
 from exorad.tasks.task import Task
 
@@ -8,19 +10,18 @@ setLogLevel(logging.DEBUG)
 
 
 class TaskTestTask1(Task):
-    class_name = 'testTask'
+    class_name = "testTask"
 
     def __init__(self):
-        self.addTaskParam('input1', 'test input first parameter')
-        self.addTaskParam('input2', 'test input second parameter')
+        self.addTaskParam("input1", "test input first parameter")
+        self.addTaskParam("input2", "test input second parameter")
 
     def execute(self):
         self.set_output(None)
-        self.info('started')
+        self.info("started")
 
 
 class TaskTestTask2(Task):
-
     def __init__(self):
         pass
 
@@ -33,11 +34,11 @@ class TaskTest(unittest.TestCase):
     task2 = TaskTestTask2()
 
     def test_input(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.task1(input1=1, input3=3)
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.task1(1, 2)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.task1(input1=1, input2=2, input3=3)
 
         try:
