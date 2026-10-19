@@ -142,3 +142,12 @@ def test_changelog_extract_runs_as_script():
         text=True,
     )
     assert out.returncode == 2
+
+
+def test_changelog_is_ascii():
+    """Every released exorad up to 2.2.0 downloads CHANGELOG.md from the public
+    repo on import and decodes it as ASCII, so a non-ASCII character in it
+    breaks ``import exorad`` for all installed versions."""
+    root = SCRIPTS.parent
+    for path in [root / "CHANGELOG.md", *sorted((root / "changelog.d").glob("*.md"))]:
+        path.read_bytes().decode("ascii")

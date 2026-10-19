@@ -19,7 +19,7 @@ Unreleased changes live as fragments in `changelog.d/` and are merged here by
 - `ruff check` now runs in CI and pre-commit; the whole tree passes clean
 
 - `exorad/py.typed` marker: the package now ships inline type information
-- static type checking with mypy — a `[tool.mypy]` config (lenient by
+- static type checking with mypy -- a `[tool.mypy]` config (lenient by
   default, strict on the annotated modules), a `nox -s type-check` session
   and a CI gate
 - full type annotations on the core modules: `Signal` and its subclasses,
@@ -33,19 +33,19 @@ Unreleased changes live as fragments in `changelog.d/` and are merged here by
 
 - a step-by-step `Radiometric model` user-guide section: signal, wavelength
   bins, apertures, timing model, multiaccum, photon / dark-current / read /
-  total / custom noise, and foregrounds — each with the equation, the payload
+  total / custom noise, and foregrounds -- each with the equation, the payload
   keys and the code path, replacing the single terse "Light & Noise" page
 
 - online stellar SED downloader: a new `sourceSpectrum` value `sed` fetches the
   spectrum from an online model grid at run time via
   `exorad.tasks.downloadSed.DownloadSed`, so a local PHOENIX directory is no
   longer required. Two backends, chosen with `<SedModel>`: PHOENIX-ACES from the
-  Göttingen server (`phoenix-aces`) and the SVO model grids (`bt-settl`,
-  `bt-settl-cifist`, the default, `bt-nextgen-agss2009`, …). SVO wavelengths are
+  Goettingen server (`phoenix-aces`) and the SVO model grids (`bt-settl`,
+  `bt-settl-cifist`, the default, `bt-nextgen-agss2009`, ...). SVO wavelengths are
   converted from air to vacuum (Ciddor 1996); downloads are cached in the
   astropy cache. On any failure the pipeline falls back to a Planck spectrum.
   This is a port of the ExoSim 2 task and uses only the standard library and
-  astropy — ExoSim 2 is not a dependency. `get_svo_models()` lists the SVO
+  astropy -- ExoSim 2 is not a dependency. `get_svo_models()` lists the SVO
   grids. The local PHOENIX loader (`sourceSpectrum` `phoenix`) is unchanged.
 
 - releases now carry a short name, shown in the CHANGELOG heading and the GitHub Release title
@@ -66,7 +66,7 @@ Unreleased changes live as fragments in `changelog.d/` and are merged here by
 
 - release tooling modelled on ExoSim 2: `setuptools-scm` versioning,
   `scriv` changelog fragments, a `nox -s release` flow and the
-  build → TestPyPI → PyPI → GitHub Release → public-mirror workflows
+  build -> TestPyPI -> PyPI -> GitHub Release -> public-mirror workflows
 
 - documentation rebuilt on the pydata-sphinx-theme with `sphinx-design` cards,
   a version switcher and `sphinx-autoapi` (the hand-written `api/*.rst` stubs
@@ -111,7 +111,7 @@ Unreleased changes live as fragments in `changelog.d/` and are merged here by
 - `Target.update_target` used an invalid `:s` format spec on a type object
   in its "not implemented" warning
 
-- `add_custom_noise` — the scalar and multi-entry forms (the ones payloads
+- `add_custom_noise` -- the scalar and multi-entry forms (the ones payloads
   actually use) were fine, but the wavelength-`data` form was unusable (a
   list used as a table key, mismatched units) and, being an `if` rather
   than `elif`, it fell through into the scalar branch and raised
@@ -142,7 +142,7 @@ Unreleased changes live as fragments in `changelog.d/` and are merged here by
   factor), the photon-noise column names, the multiaccum shot-noise gain
   (`t_f = 0` in the current implementation) and the fixed-R bin-edge count
 
-- the ported Göttingen URL builder fixes a bug carried over from ExoSim 2: a
+- the ported Goettingen URL builder fixes a bug carried over from ExoSim 2: a
   solar metallicity was formatted as `+0.0`, but the server directory and file
   names use `-0.0`, so `model_name="phoenix-aces"` on a solar-metallicity star
   hit a 404.
