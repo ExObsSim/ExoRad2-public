@@ -6,6 +6,8 @@
 [![ASCL.net](https://img.shields.io/badge/ascl-2210.006-blue.svg?colorB=262255)](https://ascl.net/2210.006)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8367214.svg)](https://doi.org/10.5281/zenodo.8367214)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.05348/status.svg)](https://doi.org/10.21105/joss.05348)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ExObsSim/ExoRad2-public)
+[![GitDiagram](https://img.shields.io/badge/GitDiagram-architecture-4c1)](https://gitdiagram.com/ExObsSim/ExoRad2-public)
 
 # ExoRad 2.0: The generic point source radiometric model
 
@@ -66,11 +68,18 @@ The code output will appear in a directory called `example_run`
 ## Documentation
 The full documentation is available [here](https://exorad2-public.readthedocs.io/en/latest/)
 
-Or you can build the documentation yourself using `sphinx` . To install it run
+An AI-generated overview of the codebase is also available on
+[DeepWiki](https://deepwiki.com/ExObsSim/ExoRad2-public), and an interactive
+architecture diagram on [GitDiagram](https://gitdiagram.com/ExObsSim/ExoRad2-public).
+Both are generated automatically from the code and may be out of date or
+inaccurate: the documentation above is the reference.
 
-    pip install sphinx sphinx_rtd_theme
+Or you can build the documentation yourself using `sphinx`. Install the
+documentation dependencies with
 
-From the `ExoRad2/docs` folder running
+    pip install ".[docs]"
+
+and then run
 
     cd docs
     make html
