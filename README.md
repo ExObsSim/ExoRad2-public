@@ -1,4 +1,4 @@
-[![PyPI version](https://badge.fury.io/py/exorad.svg)](https://badge.fury.io/py/exorad)
+[![PyPI version](https://img.shields.io/pypi/v/exorad?label=pypi%20package)](https://pypi.org/project/exorad/)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/ExObsSim/Exorad2-public?color=gree&label=GitHub%20release)
 [![Downloads](https://pepy.tech/badge/exorad)](https://pepy.tech/project/exorad)
 [![Documentation Status](https://readthedocs.org/projects/exorad2-public/badge/?version=latest)](https://exorad2-public.readthedocs.io/en/latest/?badge=latest)
@@ -6,7 +6,7 @@
 [![ASCL.net](https://img.shields.io/badge/ascl-2210.006-blue.svg?colorB=262255)](https://ascl.net/2210.006)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8367214.svg)](https://doi.org/10.5281/zenodo.8367214)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.05348/status.svg)](https://doi.org/10.21105/joss.05348)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ExObsSim/ExoRad2-public)
+[![Ask DeepWiki](https://img.shields.io/badge/DeepWiki-Ask-0a7bbb)](https://deepwiki.com/ExObsSim/ExoRad2-public)
 [![GitDiagram](https://img.shields.io/badge/GitDiagram-architecture-4c1)](https://gitdiagram.com/ExObsSim/ExoRad2-public)
 
 # ExoRad 2.0: The generic point source radiometric model
