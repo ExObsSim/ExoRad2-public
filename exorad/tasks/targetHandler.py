@@ -1,4 +1,5 @@
 import os
+import re
 from copy import deepcopy
 
 from exorad.__version__ import __version__
@@ -261,6 +262,17 @@ class ObserveTarget(Task):
         self.set_output(target)
 
 
+def safe_file_stem(name):
+    """File-name stem derived from a target name.
+
+    Every character that is not a letter, digit, ``_ . + - ( )`` or a space
+    (in particular path separators) is replaced by ``_`` and leading dots are
+    dropped, so that the name can never point outside the output directory.
+    """
+    stem = re.sub(r"[^\w.+\-() ]", "_", str(name)).lstrip(".")
+    return stem or "target"
+
+
 def pipeline_to_dict(
     target,
     payload,
@@ -288,6 +300,8 @@ def pipeline_to_dict(
             wl_range=wl_range,
         )
         enableLogging()
+        # one line per finished target: the MCP job manager counts it as progress
+        root_logger.info(f"target {target.name} observed")
         outputDict = deepcopy(target)
 
         if plot:
@@ -299,7 +313,9 @@ def pipeline_to_dict(
             matplotlib.use("Agg")
             plotter = Plotter(input_table=target.table)
             plotter.plot_table()
-            plotter.save_fig(os.path.join(out_dir, f"{target.name}.png"))
+            plotter.save_fig(
+                os.path.join(out_dir, f"{safe_file_stem(target.name)}.png")
+            )
             plt.close()
         return target.name, outputDict
     except Exception:
@@ -307,7 +323,20 @@ def pipeline_to_dict(
         root_logger.warning(
             f"target {target.name} skipped. Please check for previous error messages"
         )
-        return None, None
+        # the name is kept so that the caller can report which target failed
+        return target.name, None
+
+
+def check_unique_target_names(targets):
+    """Raise ``ValueError`` when two targets share a name.
+
+    Duplicated names would collapse silently into one result, so the list is
+    refused up front, before anything is observed or written.
+    """
+    names = [t.name for t in targets]
+    duplicates = sorted({n for n in names if names.count(n) > 1}, key=str)
+    if duplicates:
+        raise ValueError(f"target names must be unique, duplicated: {duplicates}")
 
 
 class ObserveTargetlist(Task):
@@ -361,6 +390,13 @@ class ObserveTargetlist(Task):
         out_dir = self.get_task_param("out_dir")
         debug = self.get_task_param("debug")
 
+        targets = list(targets)
+        try:
+            check_unique_target_names(targets)
+        except ValueError as exc:
+            self.error(str(exc))
+            raise
+
         if n_thread > 1:
             from concurrent.futures import (
                 ProcessPoolExecutor,
@@ -370,7 +406,7 @@ class ObserveTargetlist(Task):
             # Does the distribution and chunking for you
             # Switch to ThreadPoolExecutor if you want to use python threading
             with ProcessPoolExecutor(max_workers=n_thread) as executor:
-                outputDict = dict(
+                results = list(
                     executor.map(
                         pipeline_to_dict,
                         targets,
@@ -383,12 +419,25 @@ class ObserveTargetlist(Task):
                     )
                 )
         else:
-            outputDict = {}
-            for target in targets:
-                t_name, output = pipeline_to_dict(
+            results = [
+                pipeline_to_dict(
                     target, payload, channels, wl_range, plot, out_dir, debug
                 )
-                outputDict[t_name] = output
+                for target in targets
+            ]
+
+        # keep every target that was observed, report the others
+        outputDict = {name: out for name, out in results if out is not None}
+        skipped = [name for name, out in results if out is None]
+        if skipped:
+            self.warning(
+                f"{len(skipped)} of {len(targets)} target(s) skipped: {skipped}"
+            )
+            if not outputDict:
+                raise RuntimeError(
+                    f"no target could be observed, all {len(targets)} target(s) "
+                    f"were skipped: {skipped}"
+                )
 
         self.set_output(outputDict)
 

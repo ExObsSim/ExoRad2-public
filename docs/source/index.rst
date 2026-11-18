@@ -101,6 +101,16 @@ standalone command-line tool or as a library.
         ^^^
         What changed in each release.
 
+    .. grid-item-card:: AI assistants
+        :text-align: center
+        :shadow: md
+        :link: agentic_support
+        :link-type: doc
+
+        :octicon:`dependabot;2em;sd-text-secondary`
+        ^^^
+        Repository-local guidance and an MCP server for LLM tools.
+
 .. toctree::
     :hidden:
     :maxdepth: 1
@@ -108,6 +118,7 @@ standalone command-line tool or as a library.
     User guide <user/index>
     Developer guide <contributing/index>
     API reference <api/exorad/index>
+    Agentic support <agentic_support>
     FAQs <faqs>
     License <license>
     Changelog <changelog>

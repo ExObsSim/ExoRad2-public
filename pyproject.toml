@@ -32,6 +32,8 @@ classifiers = [
 
 dependencies = [
     "astropy>=7.0.0",
+    "click>=8.1",
+    "rich-click>=1.8.5",
     "matplotlib>=3.9.0",
     "mpmath",
     "numpy>=2.0.0",
@@ -69,14 +71,29 @@ docs = [
     "matplotlib>=3.9.0",
 ]
 
+mcp = [
+    # Only the 2.x SDK (MCPServer) is supported; see
+    # exorad.mcp.server._load_server_class.
+    "mcp>=2,<3",
+]
+
+mcp-embeddings = [
+    # Optional semantic retrieval backend (EXORAD_MCP_RETRIEVAL=hybrid).
+    "sentence-transformers>=3,<6",
+]
+
 [project.scripts]
 exorad = "exorad.exorad:main"
 exorad-plot = "exorad.utils.plotter:main"
+exorad-mcp = "exorad.mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/ExObsSim/ExoRad2-public"
 Repository = "https://github.com/ExObsSim/ExoRad2-public"
 Documentation = "https://exorad2-public.readthedocs.io/en/latest/"
+Changelog = "https://github.com/ExObsSim/ExoRad2-public/blob/master/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/ExObsSim/ExoRad2-public/issues"
+Paper = "https://doi.org/10.21105/joss.05348"
 
 [tool.setuptools]
 include-package-data = true
@@ -86,6 +103,10 @@ include = ["exorad*"]
 
 [tool.setuptools.package-data]
 exorad = ["py.typed"]
+# exorad/mcp/_data (MCP knowledge base, examples, reference configs) is generated
+# from the repository files by setup.py's build_py (see exorad/mcp/assets.py);
+# it is copied into the build tree, never committed. MANIFEST.in keeps the sdist
+# lean and holds the inputs of that hook.
 
 # ============================================================================
 # Version management - setuptools-scm (git-tag driven, PEP 440)
@@ -200,6 +221,8 @@ max-complexity = 12
 [tool.ruff.lint.per-file-ignores]
 "exorad/**/__init__.py" = ["F401"]
 "exorad/__init__.py" = ["F401", "E402"]  # metadata is defined before the imports
+"exorad/mcp/server.py" = ["T20"]  # CLI entry point: startup banner on stderr
+"exorad/mcp/jobs.py" = ["T20"]  # writes to the per-job log via print()
 "examples/**" = ["T20"]
 "scripts/**" = ["T20", "S603", "S607"]
 "noxfile.py" = ["T20"]
@@ -227,6 +250,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "slow: runs the radiometric pipeline or another long computation",
+]
 filterwarnings = [
     # plotting helpers call plt.show(); the test suite forces the Agg backend
     "ignore:FigureCanvasAgg is non-interactive:UserWarning",

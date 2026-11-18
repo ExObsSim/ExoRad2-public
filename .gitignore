@@ -97,6 +97,12 @@ coverage.xml
 .pytest_cache/
 cover/
 
+# ExoRad run outputs (HDF5 results). The only HDF5 tracked in the repo is the
+# package data exorad/data/Zodi_map.hdf5, kept via the negation.
+*.h5
+*.hdf5
+!exorad/data/Zodi_map.hdf5
+
 # Translations
 *.mo
 *.pot
@@ -296,3 +302,6 @@ docs/source/api/
 
 # Written to the repo root by tests/test_instrument.py and tests/test_target.py
 /test.h5
+
+# MCP server run directory
+mcp-runs/

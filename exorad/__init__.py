@@ -52,13 +52,8 @@ __title__ = "ExoRad2"
 __copyright__ = f"2020-{date.today().year:d}, {__author__}"
 __citation__ = "Mugnai et al., 2023, 'ExoRad 2.0: The generic point source radiometric model'. Journal of Open Source Software, 8(89), 5348,"
 
-from exorad.__version__ import __version__ as _pkg_version
-from exorad.utils.version_control import VersionControl
-
 from .exorad import standard_pipeline
 
-# Only nag about a newer release for tagged builds; development checkouts are
-# always "ahead" of the last release and the check just adds noise and a
-# network round-trip on every import.
-if "dev" not in _pkg_version and _pkg_version != "unknown":
-    VersionControl()
+# The online version check (network access) is NOT run at import time: it is
+# run by the ``exorad`` command-line entry point only, see
+# ``exorad.exorad.check_version``.

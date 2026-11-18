@@ -1,0 +1,48 @@
+{
+    "title": "ExoRad 2.0: The generic point source radiometric model",
+    "description": "ExoRad 2 is a generic radiometric model for point-source photometry and spectroscopy. Given the description of an observational target and of an instrument, it estimates signal and noise budgets, saturation and frame times, photometric apertures and wavelength bins, without simulating the time-domain focal plane. It is the radiometric core of ArielRad and of ExoSim 2.",
+    "license": "BSD-3-Clause",
+    "upload_type": "software",
+    "access_right": "open",
+    "creators": [
+        {
+            "name": "Mugnai, Lorenzo V.",
+            "orcid": "0000-0002-9007-9802",
+            "affiliation": "La Sapienza Università di Roma"
+        },
+        {
+            "name": "Bocchieri, Andrea",
+            "orcid": "0000-0002-8846-7961",
+            "affiliation": "La Sapienza Università di Roma"
+        },
+        {
+            "name": "Pascale, Enzo",
+            "orcid": "0000-0002-3242-8154",
+            "affiliation": "La Sapienza Università di Roma"
+        }
+    ],
+    "keywords": [
+        "exoplanets",
+        "radiometry",
+        "astronomy",
+        "simulation",
+        "instrumentation"
+    ],
+    "related_identifiers": [
+        {
+            "identifier": "10.21105/joss.05348",
+            "relation": "isSupplementTo",
+            "scheme": "doi"
+        },
+        {
+            "identifier": "https://github.com/ExObsSim/ExoRad2-public",
+            "relation": "isSupplementTo",
+            "scheme": "url"
+        },
+        {
+            "identifier": "ascl:2210.006",
+            "relation": "isIdenticalTo",
+            "scheme": "ascl"
+        }
+    ]
+}

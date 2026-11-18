@@ -1,17 +1,57 @@
+# This CITATION.cff lets GitHub show a "Cite this repository" button and lets
+# tools export BibTeX/RIS. The `preferred-citation` is the peer-reviewed JOSS
+# paper; the top-level metadata describes the software archive on Zenodo.
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
-authors:
-  - family-names: Mugnai
-    given-names: Lorenzo V.
-    orcid: https://orcid.org/0000-0002-9007-9802
-  - family-names: Bocchieri
-    given-names: Andrea
-    orcid: http://orcid.org/0000-0002-8846-7961
-  - family-names: Pascale
-    given-names: Enzo
-    orcid: http://orcid.org/0000-0002-3242-8154
-
 title: "ExoRad 2.0: The generic point source radiometric model"
-doi: 10.21105/joss.05348
-version: 2.2.1
-date-released: 2026-10-19
+message: >-
+  If you use this software, please cite both the article (preferred-citation)
+  and the software archive (the Zenodo DOI below).
+type: software
+authors:
+  - given-names: Lorenzo V.
+    family-names: Mugnai
+    orcid: "https://orcid.org/0000-0002-9007-9802"
+    affiliation: "La Sapienza Università di Roma"
+  - given-names: Andrea
+    family-names: Bocchieri
+    orcid: "https://orcid.org/0000-0002-8846-7961"
+    affiliation: "La Sapienza Università di Roma"
+  - given-names: Enzo
+    family-names: Pascale
+    orcid: "https://orcid.org/0000-0002-3242-8154"
+    affiliation: "La Sapienza Università di Roma"
+repository-code: "https://github.com/ExObsSim/ExoRad2-public"
+url: "https://exorad2-public.readthedocs.io/en/latest/"
+license: BSD-3-Clause
+doi: 10.5281/zenodo.8367214
+version: 2.3.0
+date-released: 2026-11-18
+keywords:
+  - exoplanets
+  - radiometry
+  - astronomy
+  - simulation
+  - instrumentation
+preferred-citation:
+  type: article
+  title: "ExoRad 2.0: The generic point source radiometric model"
+  authors:
+    - given-names: Lorenzo V.
+      family-names: Mugnai
+      orcid: "https://orcid.org/0000-0002-9007-9802"
+    - given-names: Andrea
+      family-names: Bocchieri
+      orcid: "https://orcid.org/0000-0002-8846-7961"
+    - given-names: Enzo
+      family-names: Pascale
+      orcid: "https://orcid.org/0000-0002-3242-8154"
+  journal: "Journal of Open Source Software"
+  publisher:
+    name: "The Open Journal"
+  year: 2023
+  date-published: 2023-09-26
+  volume: 8
+  issue: 89
+  start: 5348
+  doi: 10.21105/joss.05348
+  url: "https://doi.org/10.21105/joss.05348"

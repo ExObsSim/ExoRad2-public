@@ -2,12 +2,15 @@ import logging
 import os
 
 import astropy.units as u
+import click
 import h5py
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io.misc.hdf5 import read_table_hdf5
+from rich_click import RichCommand
 
+from exorad.__version__ import __version__
 from exorad.log import Logger, setLogLevel
 
 mpl_logger = logging.getLogger("matplotlib")
@@ -399,88 +402,84 @@ class Plotter(Logger):
             )
 
 
-def main():
-    import argparse
+@click.command(cls=RichCommand)
+@click.version_option(
+    version=__version__,
+    prog_name="ExoRad",
+    message="%(prog)s v%(version)s",
+)
+@click.option(
+    "-i",
+    "--input",
+    "input_file",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False),
+    help="Input HDF5 results file.",
+)
+@click.option(
+    "-o",
+    "--out",
+    "out",
+    required=True,
+    type=click.Path(file_okay=False),
+    help="Output directory for the plots (created if missing).",
+)
+@click.option(
+    "-n",
+    "--target-number",
+    "target_number",
+    default="all",
+    show_default=True,
+    help="A single index, a range (0:3) or a list (1,2,50) of targets to plot.",
+)
+@click.option(
+    "-t",
+    "--target-name",
+    "target_name",
+    default=None,
+    help="Name of a single target to plot. Mutually exclusive with -n.",
+)
+@click.option(
+    "-d",
+    "--debug",
+    is_flag=True,
+    help="Print debug-level logging to the screen.",
+)
+def main(input_file, out, target_number, target_name, debug):
+    """Re-plot the signal and noise tables of an ExoRad results file.
 
-    from exorad.__version__ import __version__
+    Reads the HDF5 file written by exorad and saves one PNG per target in
+    the output directory.
+    """
+    from exorad.exorad import check_version
+    from exorad.utils.ascii_art import ascii_plot
     from exorad.utils.util import parse_range
 
-    parser = argparse.ArgumentParser(description=f"ExoRad {__version__}")
-    parser.add_argument(
-        "-i",
-        "--input",
-        dest="input",
-        type=str,
-        required=True,
-        help="Input h5 file to pass",
-    )
-    parser.add_argument(
-        "-o",
-        "--out",
-        dest="out",
-        type=str,
-        default="None",
-        required=True,
-        help="Output directory",
-    )
-    parser.add_argument(
-        "-n",
-        "--target-number",
-        dest="target_number",
-        type=str,
-        default="all",
-        required=False,
-        help="A list or range of targets to run",
-    )
-    parser.add_argument(
-        "-t",
-        "--target-name",
-        dest="target_name",
-        type=str,
-        default="None",
-        required=False,
-        help="name of the target to plot",
-    )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        dest="debug",
-        default=False,
-        required=False,
-        help="log output on screen",
-        action="store_true",
-    )
+    check_version()  # same opt-out as the exorad command: EXORAD_NO_VERSION_CHECK
 
-    args = parser.parse_args()
+    if target_number != "all" and target_name is not None:
+        raise click.UsageError("use either --target-number or --target-name, not both")
 
     logger = logging.getLogger("exorad")
-    from exorad.utils.ascii_art import ascii_plot
-
     logger.info(ascii_plot)
     logger.info(f"code version {__version__}")
 
-    if args.debug:
+    if debug:
         setLogLevel(logging.DEBUG)
 
-    if not os.path.exists(args.out):
-        os.makedirs(args.out)
+    if not os.path.exists(out):
+        os.makedirs(out)
         logger.info("output directory created")
 
-    logger.info(f"reading {args.input}")
-    file = h5py.File(args.input)
-
-    if args.target_number != "all" and args.target_name != "None":
-        logger.error("you cannot use both target number and target name")
-        raise ValueError
+    logger.info(f"reading {input_file}")
+    file = h5py.File(input_file)
 
     targets_dir = file["targets"]
-    targets_to_run_id = parse_range(args.target_number, len(targets_dir.keys()))
+    targets_to_run_id = parse_range(target_number, len(targets_dir.keys()))
     targets_to_run = [list(targets_dir.keys())[n] for n in targets_to_run_id]
 
-    if args.target_name != "None":
-        targets_to_run = [
-            target for target in targets_to_run if target == args.target_name
-        ]
+    if target_name is not None:
+        targets_to_run = [target for target in targets_to_run if target == target_name]
 
     for target in targets_to_run:
         target_dir = targets_dir[target]
@@ -489,5 +488,5 @@ def main():
 
         plotter = Plotter(input_table=table)
         plotter.plot_table()
-        plotter.save_fig(os.path.join(args.out, f"{target}.png"))
+        plotter.save_fig(os.path.join(out, f"{target}.png"))
         plt.close()

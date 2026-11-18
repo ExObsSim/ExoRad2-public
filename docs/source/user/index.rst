@@ -36,3 +36,9 @@ output, and explains the radiometric model step by step.
 
     Outputs <outputs>
     Troubleshooting <troubleshooting>
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Working with AI assistants
+
+    MCP server <mcp>

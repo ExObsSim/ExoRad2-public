@@ -10,6 +10,203 @@ Unreleased changes live as fragments in `changelog.d/` and are merged here by
 
 <!-- scriv-insert-here -->
 
+## [2.3.0] - MCP server
+
+### Added
+
+- `AGENTS.md` and `docs/ai-agents/` - repository-local, tool-neutral guidance
+  for AI coding assistants (codebase map, parameter-setup guide), surfaced in
+  the docs as the "Agentic support" page
+
+- an optional Model Context Protocol (MCP) server, `exorad-mcp` (new console
+  script and new package `exorad.mcp`), so that an MCP-compatible AI assistant
+  can work with ExoRad: install it with `pip install "exorad[mcp]"` (needs the
+  `mcp` SDK 2.x, `mcp>=2,<3`; the optional `mcp-embeddings` extra adds semantic
+  search). It is an access layer around `exorad.standard_pipeline` and adds no
+  scientific capability. The user guide is `docs/source/user/mcp.rst`
+- 21 tools, in four groups. Information and grounding: `capabilities`,
+  `search_knowledge_base` (answers with file and line citations, or
+  `insufficient_evidence`), `knowledge_base_manifest`, `exorad_project_context`,
+  `customisation_guide`, `list_pipelines`, `describe_pipeline`, `list_examples`
+  and `diagnose_error`. Configuration: `config_requirements`, `draft_config`,
+  `draft_target_list`, `validate_config` (optionally `deep=True`) and
+  `compare_configs`, which draft and check a payload XML and a target list with
+  the rules the library really enforces. Pipeline and jobs: `run_pipeline`,
+  `get_job_status`, `cancel_job` and `list_jobs`. Outputs: `inspect_output`,
+  `explain_output` (every HDF5 node, the result-table columns and a per-target
+  noise budget) and `plot_output` (signal and noise panels, and the
+  transmission and quantum-efficiency curves of each channel)
+- the knowledge base is browsable as the resource `exorad://kb` and
+  `exorad://kb/{+path}`, and four prompts start common workflows
+  (`new_simulation`, `set_up_channel`, `diagnose_failed_run`, `explain_output`)
+- transports: stdio (default), and `sse` or `http` on `127.0.0.1:8000`
+  (`--host`, `--port`). The network transports have no authentication
+- retrieval over the documentation, the examples and the pipeline source is
+  lexical (BM25) by default; `EXORAD_MCP_RETRIEVAL=hybrid` adds sentence
+  embeddings when the `mcp-embeddings` extra is installed
+- pipeline runs are supervised background jobs in separate processes: status
+  `running`, `succeeded`, `failed`, `cancelled` or `timeout`, a wall-clock
+  watchdog, a cap on concurrent jobs (a run beyond it is `refused`), cancellation
+  of the whole process group, and clean-up of the children when the server exits.
+  A run in which only some targets fail ends as `failed` with `outcome` set to
+  `partial` and the `skipped_targets`, and keeps the good targets in the output;
+  the job status reports `targets_started` and `targets_done` (targets that
+  finished observing), counted from the job log
+- safety: every path is confined to a sandbox (the content root, a working
+  directory and the directories added with `--allow-dir`); URLs, pickle and
+  Python files and `sourceSpectrum` set to `sed` (the network SED download) are
+  refused; internet access is blocked in the server and its job processes; HDF5
+  files with external links are not read; limits on targets, spectral bins,
+  table and output sizes, run time and threads are set by `EXORAD_MCP_*`
+  environment variables (deep validation and plots run in child processes
+  capped at `EXORAD_MCP_MAX_JOBS` in a pool separate from the background jobs);
+  `--no-exec` removes the five tools that run code
+  (`run_pipeline`, `get_job_status`, `cancel_job`, `list_jobs`, `plot_output`)
+- `pip install "exorad[mcp]"` is self-contained: the wheel carries the knowledge
+  base, the examples and the reference payload under `exorad/mcp/_data` (about
+  1.2 MB unpacked), so no checkout is needed. The packaged example payload reads a small
+  demo stellar SED, `customsed_demo.csv`, in place of the 21 MB `customsed.csv`
+  (star signals agree within 0.5 % per bin); `capabilities()` reports where the
+  content comes from
+- paths in tool results are shown as `work:<path>`, `content:<path>` or
+  `allow[i]:<path>` instead of absolute paths, and these forms are accepted back
+  as input by every tool that takes a path; log tails, job errors and failure
+  text also hide the interpreter (`<python>`, `<site-packages>`) and the home
+  directory (`~`)
+- the static scan of a payload covers `<comment>` subtrees and refuses XML
+  attributes other than `unit` (`ATTRIBUTE_REFUSED`); `compare_configs` scans both
+  inputs before loading either and ignores comment text
+- the payload checks were tightened: `<config_dict>` is not accepted
+  (`CONFIG_DICT_REFUSED`; it replaces part of the payload with the content of a
+  file that the limits cannot see) and neither is a second `<ConfigPath>`
+  (`CONFIGPATH_MULTIPLE`); HDF5 inputs are scanned for external links by their
+  signature, not only by suffix, and always for a `paos` PSF; an HDF5 input that
+  declares more than 8 times `EXORAD_MCP_MAX_DATA_MB` uncompressed, and a text
+  table with more than 5 million lines, a line over 1 MiB or over 1000 columns,
+  is refused; every file a `<PSF>` or `<StellarModels>` directory can yield must be
+  a regular file inside the readable directories, and a directory that is a
+  sandbox root is refused; a job checks its target list and data files again
+  when it starts, and `validate_config` and `compare_configs` do so just before
+  parsing. A process that can write to the working directory can still swap a
+  file after the last check; this is narrowed, not eliminated
+- errors reach the client as `Error executing tool X: <message>`, and the
+  server's logging goes to stderr only
+- extension points for other packages that build on the MCP server:
+  `jobs.register_entry_prefix` now reaches the spawned job child;
+  `tools.load_tools`, `server.build_server` and `server.main` take a tool
+  registry, hidden tools, a server name, a program name, help text, extra
+  prompts and resources and a `setup` hook; the static scan can check a
+  configuration that is not an ExoRad payload (`payload_checks=False`,
+  `exclude_reference_tags`). See "Extending the server" in
+  `docs/source/user/mcp.rst`. ExoRad's own server is unchanged
+- the MCP server refuses what would make two runs corrupt each other or the
+  user's files: an output (or output directory) that a running job uses is
+  `refused` whatever `overwrite` says (`reason` `output_in_use`), an output below
+  a path that is a regular file is refused before the job starts, and
+  `overwrite=True` can re-run into the directory of an earlier run of the same
+  output (its input copies are replaced, other files still refused)
+- the MCP server starts from any directory: if the default work directory cannot
+  be created (for example in `/`) it uses `~/.exorad/mcp-runs` and warns once; an
+  unusable `--work-dir` is one clear error line and a non-zero exit status;
+  with `--no-exec` the directory is created only when a tool writes. A missing or
+  broken `mcp` SDK is one clean error line that names the real cause
+- deep validation and plots wait up to 20 seconds for a free child and then
+  answer `status` `busy` (`valid` or `plottable` null) instead of reporting a
+  correct payload as invalid; `run_pipeline` waits at most 50 seconds; durations
+  from the environment must be finite and are clamped to 1e6 seconds
+- the plot folder of an output carries a short hash of its path, `target` with
+  `kind` `efficiency` is refused, unreadable tables name the file, a broken ECSV
+  header is reported, and the `set_up_channel` prompt no longer promises that
+  `draft_config` can add a channel
+
+- `.zenodo.json` to control the Zenodo deposition metadata, and a richer
+  `CITATION.cff` (authors with ORCIDs, repository and documentation URLs,
+  keywords, the Zenodo software DOI and the JOSS paper as the preferred
+  citation). The `version` and `date-released` fields are still updated by the
+  release script.
+- `Changelog`, `Bug Tracker` and `Paper` entries in the project URLs.
+
+### Changed
+
+- documentation rebuilt on the pydata-sphinx-theme with `sphinx-design` cards,
+  a version switcher and `sphinx-autoapi` (the hand-written `api/*.rst` stubs
+  are gone; the API reference is generated from the source)
+- the developer guide is now a section (`contributing/`) with the guidelines
+  and the release guide; new FAQ, License and Changelog pages
+
+- the `exorad` and `exorad-plot` command-line interfaces are rebuilt on
+  **click + rich-click** (new runtime dependencies `click>=8.1` and
+  `rich-click>=1.8.5`, the same as ArielRad): formatted `--help`, a `--version`
+  option and input paths validated for existence (usage errors exit with
+  status 2). Every existing flag keeps working (`-p`, `-t`, `-o`, `-c`, `-n`,
+  `-d`, `-l`, `-P` for `exorad`; `-i`, `-o`, `-n`, `-t`, `-d` for
+  `exorad-plot`); the camelCase long options gained hyphenated aliases
+  (`--target-list`, `--n-threads`, `--full-contrib`). The online version check
+  (opt-out `EXORAD_NO_VERSION_CHECK`) still runs first in both commands, and
+  `exorad` still exits with status 1 after writing the good targets when any
+  target was skipped. `exorad-mcp` is unchanged.
+
+- `.gitignore` now excludes ExoRad run outputs (`*.h5` and `*.hdf5`), keeping
+  the tracked package data `exorad/data/Zodi_map.hdf5`.
+
+- the README is refreshed: it opens with what ExoRad 2 estimates and points to
+  ExoSim 2 for the time-domain simulation, shows the `exorad` / `exorad-plot`
+  commands (including `--version`, the exit status 1 on skipped targets and the
+  `EXORAD_NO_VERSION_CHECK` opt-out), and carries the BibTeX entry and the
+  Zenodo DOI next to the JOSS citation
+- the quickstart flag table lists the hyphenated aliases and `--version`
+
+### Fixed
+
+- `import exorad` no longer contacts the network: the online version check
+  (DNS probe to 8.8.8.8 and a request to api.github.com, run for every release
+  build) moved from `exorad/__init__.py` to the `exorad` and `exorad-plot`
+  command-line entry points. The CLI prints the same message as before. Set the environment
+  variable `EXORAD_NO_VERSION_CHECK` to any non-empty value to skip the check
+  altogether.
+
+- one failing target no longer costs the good ones: failed targets are skipped
+  and reported in a warning, every other target is observed and written to the
+  output (serial run and `-n N` parallel run), and a clear `RuntimeError`
+  naming the targets is raised only if no target could be observed. Before,
+  the run crashed with `'NoneType' object has no attribute 'write'` and left a
+  half-written file. The `exorad` command line still exits with status 1 after
+  writing the output when any target was skipped (and prints the skipped names
+  on stderr), so a batch script notices a partial run; `standard_pipeline()`
+  returns the list of skipped names (empty when all succeeded) and raises only
+  when no target could be observed
+- target names must be unique: duplicated names used to collapse silently into
+  one result, they now raise a `ValueError` before any target is observed, and
+  before the output file or directory is created, so nothing is left behind
+- the per-target plot file name is derived from the target name with path
+  separators and leading dots replaced, so a name such as `../x` can no longer
+  write the plot outside the output directory
+
+- `standard_pipeline(..., replace=False)` with an existing output file now
+  raises a `FileExistsError` naming the file and the `replace` option before
+  any work or input copy is done. Before, it failed late inside h5py with
+  `ValueError: Unable to synchronously create dataset (name already exists)`.
+  `replace=True` (the default, and what the `exorad` command does) behaves as
+  before
+
+- `exorad-plot` checks for a newer release and prints the update notice again,
+  like the `exorad` command. `import exorad` still never touches the network, and
+  `EXORAD_NO_VERSION_CHECK` skips the check in both commands
+
+- `exorad --help` printed `ExoRad <module '...'>`: it was formatting the
+  version module instead of the version string.
+- `exorad-plot -o` declared a `"None"` string default on a required option;
+  `exorad-plot` now reports `-n` together with `-t` as a usage error (status 2)
+  instead of a bare `ValueError`.
+
+### Security
+
+- `uv.lock` refreshed to patched releases flagged by GitHub security
+  advisories: Pillow 13.0.0, certifi 2026.10.23, filelock 4.2.10, urllib3
+  2.8.0 and virtualenv 21.15.6. The lock is what `uv sync`, CI and
+  development environments install; the requirements declared by the package
+  are unchanged, so a `pip install` already resolves to current releases.
+
 ## [2.2.1] - Safe version check
 
 ### Fixed

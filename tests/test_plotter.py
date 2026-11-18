@@ -2,9 +2,10 @@ import logging
 import os
 import pathlib
 import unittest
+from unittest import mock
 
 import matplotlib.pyplot as plt
-import pytest
+from click.testing import CliRunner
 from test_options import payload_file
 
 from exorad import tasks
@@ -99,14 +100,10 @@ class PlotterTest(unittest.TestCase):
 
 
 class PlotterMainTest(unittest.TestCase):
-    def test_main_writes_png_per_target(self):
-        import sys
-        import tempfile
-
+    @staticmethod
+    def _run_pipeline(tmpdir):
         from exorad.exorad import standard_pipeline
-        from exorad.utils import plotter
 
-        tmpdir = tempfile.mkdtemp()
         h5_path = os.path.join(tmpdir, "out.h5")
         disableLogging()
         standard_pipeline(
@@ -115,53 +112,102 @@ class PlotterMainTest(unittest.TestCase):
             output=h5_path,
         )
         enableLogging()
+        return h5_path
 
+    def setUp(self):
+        self._env = mock.patch.dict(os.environ, {"EXORAD_NO_VERSION_CHECK": "1"})
+        self._env.start()
+        self.addCleanup(self._env.stop)
+
+    def test_main_writes_png_per_target(self):
+        import tempfile
+
+        from exorad.utils import plotter
+
+        tmpdir = tempfile.mkdtemp()
+        h5_path = self._run_pipeline(tmpdir)
         out_dir = os.path.join(tmpdir, "plots")
-        old = sys.argv
-        sys.argv = ["exorad-plot", "-i", h5_path, "-o", out_dir]
+
         try:
-            plotter.main()
+            result = CliRunner().invoke(plotter.main, ["-i", h5_path, "-o", out_dir])
         finally:
-            sys.argv = old
             plt.close("all")
 
+        assert result.exit_code == 0, result.output
         pngs = [f for f in os.listdir(out_dir) if f.endswith(".png")]
         assert len(pngs) >= 1
 
-    def test_main_rejects_both_target_selectors(self):
-        import sys
+    def test_main_target_name_selects_one_target(self):
         import tempfile
 
-        from exorad.exorad import standard_pipeline
         from exorad.utils import plotter
 
         tmpdir = tempfile.mkdtemp()
-        h5_path = os.path.join(tmpdir, "out.h5")
-        disableLogging()
-        standard_pipeline(
-            options=payload_file(),
-            target_list=os.path.join(data_dir, "test_target.csv"),
-            output=h5_path,
-        )
-        enableLogging()
-
-        old = sys.argv
-        sys.argv = [
-            "exorad-plot",
-            "-i",
-            h5_path,
-            "-o",
-            os.path.join(tmpdir, "plots"),
-            "-n",
-            "0",
-            "-t",
-            "myTest",
-        ]
+        h5_path = self._run_pipeline(tmpdir)
+        out_dir = os.path.join(tmpdir, "plots")
         try:
-            with pytest.raises(ValueError):
-                plotter.main()
+            result = CliRunner().invoke(
+                plotter.main,
+                ["-i", h5_path, "-o", out_dir, "--target-name", "no-such-target"],
+            )
         finally:
-            sys.argv = old
+            plt.close("all")
+        assert result.exit_code == 0, result.output
+        assert [f for f in os.listdir(out_dir) if f.endswith(".png")] == []
+
+    def test_main_rejects_both_target_selectors(self):
+        import tempfile
+
+        from exorad.utils import plotter
+
+        tmpdir = tempfile.mkdtemp()
+        h5_path = self._run_pipeline(tmpdir)
+
+        result = CliRunner().invoke(
+            plotter.main,
+            [
+                "-i",
+                h5_path,
+                "-o",
+                os.path.join(tmpdir, "plots"),
+                "-n",
+                "0",
+                "-t",
+                "myTest",
+            ],
+        )
+        assert result.exit_code == 2
+        assert "not both" in result.output
+
+    def test_missing_input_is_rejected_by_click(self):
+        import tempfile
+
+        from exorad.utils import plotter
+
+        tmpdir = tempfile.mkdtemp()
+        result = CliRunner().invoke(
+            plotter.main,
+            ["-i", os.path.join(tmpdir, "nope.h5"), "-o", tmpdir],
+        )
+        assert result.exit_code == 2
+        assert "nope.h5" in result.output
+
+    def test_version_flag(self):
+        from exorad.__version__ import __version__
+        from exorad.utils import plotter
+
+        result = CliRunner().invoke(plotter.main, ["--version"])
+        assert result.exit_code == 0
+        assert f"ExoRad v{__version__}" in result.output
+
+    def test_help_lists_options(self):
+        from exorad.utils import plotter
+
+        result = CliRunner().invoke(plotter.main, ["--help"])
+        assert result.exit_code == 0
+        assert "<module" not in result.output
+        for flag in ("--input", "--out", "--target-number", "--target-name"):
+            assert flag in result.output
 
 
 if __name__ == "__main__":

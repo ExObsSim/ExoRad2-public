@@ -7,7 +7,9 @@ Guidelines
 Found a bug? Open an issue on the
 `GitHub repository <https://github.com/ExObsSim/ExoRad2-public/issues>`__.
 
-The rest of this page is for anyone changing the code.
+The rest of this page is for anyone changing the code. ``AGENTS.md`` at the
+repository root and the notes under ``docs/ai-agents/`` carry the same
+information for AI coding assistants — see :ref:`agentic_support`.
 
 Coding conventions
 ==================

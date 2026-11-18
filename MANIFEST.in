@@ -1,0 +1,31 @@
+# The sdist must stay lean: setuptools-scm would otherwise pull in every
+# git-tracked file (notebooks, PDFs, documentation images).
+#
+# The wheel's MCP content (exorad/mcp/_data) is generated at build time by
+# setup.py from the files listed here (see exorad/mcp/assets.py), so a wheel
+# built FROM the sdist finds every input of ASSET_RULES.
+
+graft exorad
+# a stale build-hook output must never enter the sdist
+prune exorad/mcp/_data
+prune exorad/mcp/__pycache__
+
+include pyproject.toml setup.py LICENSE CITATION.cff
+include README.md CHANGELOG.md AGENTS.md
+include docs/ai-agents/*.md
+recursive-include docs/source *.rst *.md
+recursive-include examples *.xml *.csv *.ecsv *.txt
+# the tests stay in the sdist; examples/customsed.csv too (tests/test_star.py,
+# tests/test_loadsource.py and tests/test_target.py read it). Its size keeps it
+# out of the wheel (1 MiB cap per asset in exorad/mcp/assets.py).
+graft tests
+
+# internal planning notes: not for the sdist, the wheel, the KB or the mirror
+exclude docs/ai-agents/mcp-plan.md
+exclude docs/ai-agents/mcp-spec.md
+prune docs/source/_static
+prune docs/source/user/_static
+prune mcp-runs
+
+global-exclude __pycache__ *.py[cod]
+global-exclude .DS_Store *.swp *~

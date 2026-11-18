@@ -1,4 +1,5 @@
 import base64
+import os
 import socket
 
 import requests
@@ -17,6 +18,8 @@ class VersionControl(Logger):
         super().__init__()
 
         self.current_version = current_version
+        if os.environ.get("EXORAD_NO_VERSION_CHECK"):
+            return
         try:
             self._run_check(package_url, force)
         except VersionError:

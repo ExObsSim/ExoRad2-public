@@ -56,20 +56,22 @@ Run ``exorad --help`` for the full list of flags. The most useful ones:
      - Description
    * - ``-p``, ``--payload``
      - input payload description file
-   * - ``-t``, ``--targetList``
+   * - ``-t``, ``--targetList``, ``--target-list``
      - input target list file
    * - ``-o``, ``--output``
      - output HDF5 file
-   * - ``-c``, ``--full_contrib``
+   * - ``-c``, ``--full-contrib``
      - keep every contribution to the signal in the output
    * - ``-P``, ``--plot``
      - save diagnostic plots
-   * - ``-n``, ``--nThreads``
+   * - ``-n``, ``--nThreads``, ``--n-threads``
      - number of threads for parallel processing
    * - ``-d``, ``--debug``
      - log to the screen
    * - ``-l``, ``--log``
      - also write the log to a file
+   * - ``--version``
+     - print the ExoRad version and exit
 
 Producing some plots
 ====================
